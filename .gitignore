@@ -102,3 +102,7 @@ dist
 
 # TernJS port file
 .tern-port
+
+# koishi config
+koishi.config.js
+koishi.config.ts
