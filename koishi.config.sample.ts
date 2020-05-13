@@ -1,4 +1,4 @@
-module.exports = {
+const config = {
   type: "ws",
   server: "ws://localhost:6700",
   selfId: 0,
@@ -6,6 +6,9 @@ module.exports = {
   token: "",
   plugins: [
     "common",
-    "schedule"
-  ]
-}
+    "schedule",
+    ["./src/requestRedirector", { admin: 0 }],
+  ],
+};
+
+export = config;
