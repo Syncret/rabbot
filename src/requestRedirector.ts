@@ -23,7 +23,7 @@ export function apply(ctx: Context, options: Options) {
     if (admin) {
       ctx.sender.sendPrivateMsgAsync(
         admin,
-        `Receive friend request\nId:${meta.userId}\nComment:${meta.comment}}`
+        `Receive friend request\nId:${meta.userId}\nComment:${meta.comment}}\nFlag:${meta.flag}`
       );
       ctx.sender.getStrangerInfo(meta.userId).then((info) => {
         ctx.sender.sendPrivateMsgAsync(
@@ -65,6 +65,7 @@ export function apply(ctx: Context, options: Options) {
     .option("-l, --list", "list all friend requests")
     .option("-a, --all", "apply to all pending requests")
     .option("-r, --reject", "reject requests")
+    .option("-f, --flag [flag]", "specify the request of a specific flag")
     .option("-i, --id [id]", "specify the request of a specific user id")
     .option("-c, --comment [comment]", "add remark to the accepted friend")
     .action(({ meta, options }) => {
@@ -73,32 +74,38 @@ export function apply(ctx: Context, options: Options) {
       }
       let message: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
-      const handleRequest = (info: RequestInfo) => {
+      const handleRequest = (flag: string) => {
         if (!options.reject && options.comment) {
-          return ctx.sender.setFriendAddRequest(info.flag, options.comment);
+          return ctx.sender.setFriendAddRequest(flag, options.comment);
         } else {
-          return ctx.sender.setFriendAddRequest(info.flag, !options.reject);
+          return ctx.sender.setFriendAddRequest(flag, !options.reject);
         }
       };
       if (options.list) {
-        message = Array.from(pendingFriendRequests.values())
-          .map((r) => `Id:${r.id} Name:${r.name} Comment:${r.comment}`)
-          .join("\n");
+        if (pendingFriendRequests.size === 0) {
+          message = "No pending requests";
+        } else {
+          message = Array.from(pendingFriendRequests.values())
+            .map((r) => `Id:${r.id} Name:${r.name} Comment:${r.comment}`)
+            .join("\n");
+        }
+      } else if (options.flag) {
+        response = handleRequest(options.flag);
       } else if (options.id) {
         const info = pendingFriendRequests.get(options.id);
         if (info == null) {
-          message = `Failed to get info of Id ${options.id}`;
+          message = `Failed to get info of Id ${options.id}, try using flag to accept request`;
         } else {
-          response = handleRequest(info);
+          response = handleRequest(info.flag);
         }
       } else if (options.all) {
         response = Promise.all(
           Array.from(pendingFriendRequests.values()).map((info) =>
-            handleRequest(info)
+            handleRequest(info.flag)
           )
         );
       } else {
-        return;
+        message = "Specify an option to execute, use help to get command information";
       }
       response.then(() => meta.$send(message));
     });
