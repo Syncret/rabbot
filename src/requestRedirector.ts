@@ -59,6 +59,46 @@ export function apply(ctx: Context, options: Options) {
     }
   });
 
+  ctx.receiver.on("request/group/invite", async (meta) => {
+    if (admin) {
+      ctx.sender.sendPrivateMsgAsync(
+        admin,
+        `Receive group invite request\nId:${meta.userId}\nComment:${meta.comment}\nFlag:${meta.flag}`
+      );
+      ctx.sender.getStrangerInfo(meta.userId).then((info) => {
+        ctx.sender.sendPrivateMsgAsync(
+          admin,
+          `${meta.userId} Info\nNickname:${info.nickname}\nSex:${info.sex}\nAge:${info.age}`
+        );
+        const cacheInfo = pendingGroupRequests.get(meta.userId);
+        if (cacheInfo) {
+          cacheInfo.name = info.nickname;
+        }
+      });
+    }
+    if (typeof acceptGroupInvite === "boolean") {
+      return acceptGroupInvite
+        ? meta.$approve().then(() => {
+            ctx.sender.sendPrivateMsgAsync(
+              admin,
+              `Auto accepted group invite\nId:${meta.userId}`
+            );
+          })
+        : meta.$reject().then(() => {
+            ctx.sender.sendPrivateMsgAsync(
+              admin,
+              `Auto rejected group invite\nId:${meta.userId}`
+            );
+          });
+    } else {
+      pendingGroupRequests.set(meta.userId, {
+        id: meta.userId,
+        flag: meta.flag,
+        comment: meta.comment,
+      });
+    }
+  });
+
   ctx
     .command("request", "handle friend and group requests")
     .subcommand("friend", "handle friend requests")
@@ -70,16 +110,19 @@ export function apply(ctx: Context, options: Options) {
     .option("-c, --comment [comment]", "add remark to the accepted friend")
     .action(({ meta, options }) => {
       if (meta.userId !== admin) {
+        meta.$send("Not authorized");
         return;
       }
       let message: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
       const handleRequest = (flag: string) => {
+        let response: Promise<void>;
         if (!options.reject && options.comment) {
-          return ctx.sender.setFriendAddRequest(flag, options.comment);
+          response = ctx.sender.setFriendAddRequest(flag, options.comment);
         } else {
-          return ctx.sender.setFriendAddRequest(flag, !options.reject);
+          response = ctx.sender.setFriendAddRequest(flag, !options.reject);
         }
+        return response;
       };
       if (options.list) {
         if (pendingFriendRequests.size === 0) {
@@ -90,22 +133,35 @@ export function apply(ctx: Context, options: Options) {
             .join("\n");
         }
       } else if (options.flag) {
-        response = handleRequest(options.flag);
+        response = handleRequest(options.flag).then(() => {
+          Array.from(pendingFriendRequests.values()).forEach((r) => {
+            if (r.flag === options.flag) {
+              pendingFriendRequests.delete(options.id);
+            }
+          });
+        });
       } else if (options.id) {
         const info = pendingFriendRequests.get(options.id);
         if (info == null) {
           message = `Failed to get info of Id ${options.id}, try using flag to accept request`;
         } else {
-          response = handleRequest(info.flag);
+          response = handleRequest(info.flag).then(() => {
+            pendingFriendRequests.delete(info.id);
+            return;
+          });
         }
       } else if (options.all) {
         response = Promise.all(
           Array.from(pendingFriendRequests.values()).map((info) =>
-            handleRequest(info.flag)
+            handleRequest(info.flag).then(() => {
+              pendingFriendRequests.delete(info.id);
+              return;
+            })
           )
         );
       } else {
-        message = "Specify an option to execute, use help to get command information";
+        message =
+          "Specify an option to execute, use help to get command information";
       }
       response.then(() => meta.$send(message));
     });
