@@ -45,7 +45,7 @@ const friendRequestHandlerInfo: RequestHandlerInfo = {
   ) => {
     ctx.sender.sendPrivateMsgAsync(
       admin,
-      `Receive friend request\nId:${meta.userId}\nComment:${meta.comment}}\nFlag:${meta.flag}`
+      `Receive friend request\nId:${meta.userId}\nComment:${meta.comment}\nFlag:${meta.flag}`
     );
     ctx.sender.getStrangerInfo(meta.userId).then((info) => {
       ctx.sender.sendPrivateMsgAsync(
