@@ -22,10 +22,15 @@ export function apply(ctx: Context, options: Options) {
       }
       let responseMessage: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
-      const splitIDs = (ids: string) =>
-        ids.split(",").map((id) => parseInt(id));
+      const splitIDs = (ids: string | number) => {
+        if (typeof ids === "number") {
+          return [ids];
+        } else {
+          return ids.split(",").map((id) => parseInt(id));
+        }
+      };
       if (options.user) {
-        const ids = splitIDs(options.user as string);
+        const ids = splitIDs(options.user);
         response = response.then(() =>
           Promise.all(
             ids.map((id) => ctx.sender.sendPrivateMsgAsync(id, message))
@@ -33,7 +38,7 @@ export function apply(ctx: Context, options: Options) {
         );
       }
       if (options.group) {
-        const ids = splitIDs(options.group as string);
+        const ids = splitIDs(options.group);
         response = response.then(() =>
           Promise.all(
             ids.map((id) => ctx.sender.sendGroupMsgAsync(id, message))
@@ -41,7 +46,7 @@ export function apply(ctx: Context, options: Options) {
         );
       }
       if (options.discuss) {
-        const ids = splitIDs(options.discuss as string);
+        const ids = splitIDs(options.discuss);
         response = response.then(() =>
           Promise.all(
             ids.map((id) => ctx.sender.sendDiscussMsgAsync(id, message))
