@@ -8,7 +8,7 @@ export function apply(ctx: Context, options: Options) {
   const { admins = [] } = options;
   ctx
     .command("message", "redirect messages")
-    .subcommand("send <message>", "send message to user/group/discuss")
+    .subcommand("send <message...>", "send message to user/group/discuss")
     .option("-g, --group [group]", "send message to group")
     .option("-u, --user [user]", "send message to user")
     .option("-d, --discuss [discuss]", "send message to discuss")
