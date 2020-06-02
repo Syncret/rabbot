@@ -12,6 +12,7 @@ export function apply(ctx: Context, options: Options) {
     .option("-g, --group [group]", "send message to group")
     .option("-u, --user [user]", "send message to user")
     .option("-d, --discuss [discuss]", "send message to discuss")
+    .option("-e, --echo", "echo message body (for test)")
     .action(({ meta, options }, message) => {
       if (meta.messageType !== "private") {
         return;
@@ -22,6 +23,9 @@ export function apply(ctx: Context, options: Options) {
       }
       let responseMessage: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
+      if (options.echo) {
+        response = response.then(() => meta.$send(message, true));
+      }
       const splitIDs = (ids: string | number) => {
         if (typeof ids === "number") {
           return [ids];
