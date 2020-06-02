@@ -8,6 +8,7 @@ const config = {
     "common",
     "schedule",
     ["./src/requestRedirector", { admin: 0 }],
+    ["./src/messageRedirector", { admins: 0 }],
   ],
 };
 
