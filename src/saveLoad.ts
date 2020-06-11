@@ -47,10 +47,15 @@ export function apply(ctx: Context, options: Options) {
         responseMessage = "Please enter a message";
       } else {
         const autoDelete = !options.keep;
-        const timeInterval = options.time || "1d";
         let timeIndex = new Date().getTime();
         const timeIndexString = timeIndex.toString();
-        const interval = String2TimeInterval(timeInterval);
+        let interval = timeUnitInMillis[timeUnit.day];
+        if (options.time) {
+          const testInterval = String2TimeInterval(options.time);
+          if (!isNaN(testInterval)) {
+            interval = testInterval;
+          }
+        }
         const expireTime = timeIndex + interval;
         while (messageCache.has(timeIndexString)) {
           timeIndex++;
