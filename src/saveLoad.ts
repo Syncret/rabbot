@@ -6,10 +6,14 @@ interface cachedMessage {
   message: string;
   autoDelete: boolean;
 }
-
 const messageCache = new Map<string, cachedMessage>();
 
-export function apply(ctx: Context) {
+export interface Options {
+  admins?: number[];
+}
+
+export function apply(ctx: Context, options: Options) {
+  const { admins = [] } = options;
   ctx
     .command("save <message...>", "save message")
     .option("-t, --time", "specify the expire time(sample: 7d8h)")
@@ -18,25 +22,27 @@ export function apply(ctx: Context) {
     .option("-l, --list", "list all cached message")
     .option("-c, --clear", "clear all the message")
     .action(({ meta, options }, message) => {
-      if (meta.messageType !== "private") {
-        return; // only support in private message
-      }
       let responseMessage: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
       if (options.echo) {
         response = response.then(() => meta.$send(message, true));
       }
+      const isAdmin = admins.includes(meta.userId);
       if (options.list) {
-        Array.from(messageCache.entries())
-          .map(
-            ([index, value]) =>
-              `Id:${index}; Expire:${new Date(
-                value.expireTime
-              ).toLocaleString()}; AutoDelete: ${value.autoDelete}`
-          )
-          .join("\n");
+        if (isAdmin) {
+          Array.from(messageCache.entries())
+            .map(
+              ([index, value]) =>
+                `Id:${index}; Expire:${new Date(
+                  value.expireTime
+                ).toLocaleString()}; AutoDelete: ${value.autoDelete}`
+            )
+            .join("\n");
+        }
       } else if (options.clear) {
-        messageCache.clear();
+        if (isAdmin) {
+          messageCache.clear();
+        }
       } else if (!message) {
         responseMessage = "Please enter a message";
       } else {
@@ -83,7 +89,7 @@ export function apply(ctx: Context) {
   setInterval(() => {
     const curTime = new Date().getTime();
     Array.from(messageCache.entries()).forEach(([id, value]) => {
-      if(curTime>=value.expireTime){
+      if (curTime >= value.expireTime) {
         messageCache.delete(id);
       }
     });

@@ -9,7 +9,7 @@ const config = {
     "schedule",
     ["./src/requestRedirector", { admin: 0 }],
     ["./src/messageRedirector", { admins: [0] }],
-    "./src/saveLoad",
+    ["./src/saveLoad", { admins: [0] }],
   ],
 };
 
