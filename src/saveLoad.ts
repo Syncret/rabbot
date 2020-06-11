@@ -16,7 +16,7 @@ export function apply(ctx: Context, options: Options) {
   const { admins = [] } = options;
   ctx
     .command("save <message...>", "save message")
-    .option("-t, --time", "specify the expire time(sample: 7d8h)")
+    .option("-t, --time <time>", "specify the expire time(sample: 7d8h)")
     .option("-e, --echo", "echo message body (for test)")
     .option("-k, --keep", "keep the message instead of auto delete")
     .option("-l, --list", "list all cached message")
