@@ -30,7 +30,7 @@ export function apply(ctx: Context, options: Options) {
       const isAdmin = admins.includes(meta.userId);
       if (options.list) {
         if (isAdmin) {
-          Array.from(messageCache.entries())
+          responseMessage = Array.from(messageCache.entries())
             .map(
               ([index, value]) =>
                 `Id:${index}; Expire:${new Date(
