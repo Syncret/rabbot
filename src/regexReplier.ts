@@ -50,7 +50,6 @@ function getResponse(message: string): string | undefined {
       if (candidate) {
         if (item.interval) {
           item.timer = time + item.interval;
-          console.log(item.timer);
         }
         return candidate;
       }
