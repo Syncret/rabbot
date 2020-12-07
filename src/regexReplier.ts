@@ -3,6 +3,13 @@ import { MessagePatterns } from "./regexReplier.config";
 
 export interface Options {}
 
+const MessagePatternsRuntime = (MessagePatterns || []).map((pattern) => {
+  return {
+    ...pattern,
+    timer: 0, // store the time the regex should be triggered, used when the pattern has throttle interval time
+  };
+});
+
 function getCandidateResponse(responses: string[]): string {
   if (responses.length > 1) {
     return responses[Math.floor(responses.length * Math.random())];
@@ -15,16 +22,21 @@ function getResponse(message: string): string | undefined {
   if (!message) {
     return;
   }
-  for (const item of MessagePatterns) {
+  const time = new Date().getTime();
+  for (const item of MessagePatternsRuntime) {
+    if (time < item.timer) {
+      return undefined;
+    }
+    let candidate: string;
     for (const pattern of item.patterns) {
       if (typeof pattern === "string") {
         if (message === pattern) {
-          return getCandidateResponse(item.responses);
+          candidate = getCandidateResponse(item.responses);
         }
       } else if (pattern instanceof RegExp) {
         const matchResult = pattern.exec(message);
         if (matchResult) {
-          let candidate = getCandidateResponse(item.responses);
+          candidate = getCandidateResponse(item.responses);
           if (candidate) {
             for (let i = 0; i < matchResult.length; i++) {
               candidate = candidate.replace(
@@ -33,8 +45,14 @@ function getResponse(message: string): string | undefined {
               );
             }
           }
-          return candidate;
         }
+      }
+      if (candidate) {
+        if (item.interval) {
+          item.timer = time + item.interval;
+          console.log(item.timer);
+        }
+        return candidate;
       }
     }
   }
@@ -45,7 +63,7 @@ function test(): void {
   [""]
     .map(getResponse)
     .filter((s) => !!s)
-    .forEach((s)=>console.log(s));
+    .forEach((s) => console.log(s));
 }
 
 export function apply(ctx: Context, options: Options) {
