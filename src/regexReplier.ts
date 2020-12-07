@@ -42,12 +42,11 @@ function getResponse(message: string): string | undefined {
 }
 
 function test(): void {
-  ["废物机器人", "tst2", "fw机器人","不是fw机器人呢","w机器人呢","ssbaga兔兔呢"]
+  [""]
     .map(getResponse)
     .filter((s) => !!s)
     .forEach((s)=>console.log(s));
 }
-test();
 
 export function apply(ctx: Context, options: Options) {
   ctx.middleware((meta, next) => {

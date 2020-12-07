@@ -10,6 +10,7 @@ const config = {
     ["./src/requestRedirector", { admin: 0 }],
     ["./src/messageRedirector", { admins: [0] }],
     ["./src/saveLoad", { admins: [0] }],
+    ["./src/regexReplier"],
   ],
 };
 
