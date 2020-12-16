@@ -39,7 +39,7 @@ export function apply(ctx: Context, options: Options) {
           } else {
             resMsg = "看起来还蛮健全的呢...";
           }
-          resMsg = resMsg + ` 综合色情指数: ${tags.normal_hot_porn}`;
+          resMsg = resMsg + ` 综合瑟琴指数: ${tags.normal_hot_porn}`;
 
           if (options.detail) {
             const tagMsg = Object.entries(tags)
