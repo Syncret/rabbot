@@ -40,6 +40,13 @@ export function TimeInterval2String(time: number) {
   }
 }
 
+export function compareIgnoreCase(string1: string, string2: string): boolean {
+  if (string1 === string2) return true;
+  if (string1 == null || string2 == null) return false;
+  return string1.toLowerCase() === string2.toLowerCase();
+}
+
+
 function test(): void {
   const a = String2TimeInterval("189h");
   console.log(a);

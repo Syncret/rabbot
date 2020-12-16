@@ -21,7 +21,11 @@
     "url": "https://github.com/Syncret/rabbot/issues"
   },
   "homepage": "https://github.com/Syncret/rabbot#readme",
-  "dependencies": {},
+  "dependencies": {
+    "@types/crypto-js": "^4.0.1",
+    "axios": "^0.21.0",
+    "crypto-js": "^4.0.0"
+  },
   "devDependencies": {
     "@types/node": "^13.13.2",
     "koishi": "^1.12.0",
