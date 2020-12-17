@@ -8,6 +8,20 @@ export const MessagePatterns: IMessagePattern[] = [
     ],
   },
   {
+    patterns: [/^兔兔(呢|在|去哪|？|\?|$)/],
+    responses: [
+      "嗯？",
+      "有事吗",
+      "活着呢",
+      "嗯哼",
+      "Kira!",
+      "什么？",
+      "兔兔去远方了",
+      "别喊啦",
+      "(✧◡✧)/",
+    ],
+  },
+  {
     patterns: [/^我也\.*$/],
     responses: ["兔兔也...", ,],
     interval: 30 * 1000,
