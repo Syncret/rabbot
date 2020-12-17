@@ -3,12 +3,14 @@ import { TencentAi } from "./apiKey.config";
 import * as crypto from "crypto-js";
 import { getEnumFromObjectKeys } from "./util";
 
-export interface TecentAIVisionPornResponse {
+export interface TecentAIResponse<T> {
   ret: number;
   msg: string;
-  data: {
-    tag_list: PornTag[];
-  };
+  data: T;
+}
+
+export interface TecentAIResponseVisionPornData {
+  tag_list: PornTag[];
 }
 
 export interface PornTag {
@@ -29,10 +31,24 @@ export const PornTagStringMap = {
   sex: "性行为",
   normal_hot_porn: "图像为色情的综合值",
 };
-
 export const PornTags = getEnumFromObjectKeys(PornTagStringMap);
-
 export type PornTagType = keyof typeof PornTagStringMap;
+
+export const LanTypeStringMap = {
+  zh: "中文",
+  en: "英文",
+  jp: "日文",
+  kr: "韩文",
+};
+export const LanTypes = getEnumFromObjectKeys(LanTypeStringMap);
+export type LanType = keyof typeof LanTypeStringMap;
+export interface TecentAIResponseNlpTextDetectData {
+  lang: LanType;
+}
+export interface TecentAIResponseNlpTextTranslateData {
+  source_text: string;
+  target_text: string;
+}
 
 function getReqBody(param: Record<string, any>, sort?: boolean) {
   // 1. 字典升序排序
@@ -41,14 +57,14 @@ function getReqBody(param: Record<string, any>, sort?: boolean) {
     keys.sort();
   }
   // 2. 拼按URL键值对
-  let result: string[] = [];
+  let result = new URLSearchParams();
   for (const key of keys) {
     const value = param[key];
     if (value) {
-      result.push(key + "=" + encodeURIComponent(value));
+      result.append(key, value);
     }
   }
-  return result.join("&");
+  return result.toString();
 }
 
 function getReqSign(param: Record<string, any>, appkey: string) {
@@ -60,7 +76,7 @@ function getReqSign(param: Record<string, any>, appkey: string) {
   return result;
 }
 
-const axiosURLconfig: AxiosRequestConfig = {
+const axiosConfig: AxiosRequestConfig = {
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",
   },
@@ -88,28 +104,77 @@ class TencentAIApis {
   public async visionPorn(imageUrl: string) {
     this.authorize();
     const payload = this._createRequestPayload({ image_url: imageUrl });
-    
-    const response = await Axios.post<TecentAIVisionPornResponse>(
+
+    const responseData = await this._sendRequest<TecentAIResponseVisionPornData>(
       // "https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
-      // getReqBody(payload),
+      // payload,
       "https://ai.qq.com/cgi-bin/appdemo_imageporn?g_tk=837557226",
-      getReqBody({ image_url: imageUrl }),
-      axiosURLconfig
+      { image_url: imageUrl }
+    );
+    const tagList = responseData.tag_list || [];
+    const result: Partial<Record<PornTagType, number>> = {};
+    tagList.forEach((tag) => {
+      result[tag.tag_name] = tag.tag_confidence;
+    });
+    return result;
+  }
+
+  public async nlpTextDetect(text: string) {
+    this.authorize();
+    const payload = this._createRequestPayload({ text, force: "0" });
+    const responseData = await this._sendRequest<TecentAIResponseNlpTextDetectData>(
+      "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textdetect",
+      payload
+    );
+    return responseData.lang;
+  }
+
+  public async nlpTextTranslate(
+    text: string,
+    source: LanType,
+    target: LanType
+  ) {
+    this.authorize();
+    const payload = this._createRequestPayload({ text, source, target });
+    const responseData = await this._sendRequest<TecentAIResponseNlpTextTranslateData>(
+      "https://api.ai.qq.com/fcgi-bin/nlp/nlp_texttranslate",
+      payload
+    );
+    return responseData.target_text;
+  }
+
+  private async _sendRequest<T>(
+    url: string,
+    payload: Record<string, any>
+  ): Promise<T> {
+    const response = await Axios.post<TecentAIResponse<T>>(
+      url,
+      getReqBody(payload),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        timeout: 10000,
+      }
     );
     if (response.status === 200) {
-      const responseData = response.data as TecentAIVisionPornResponse;
+      const responseData = response.data;
       if (responseData.ret === 0) {
-        const tagList = responseData.data.tag_list || [];
-        const result: Partial<Record<PornTagType, number>> = {};
-        tagList.forEach((tag) => {
-          result[tag.tag_name] = tag.tag_confidence;
-        });
-        return result;
+        return responseData.data;
       } else {
-        throw Error(responseData.ret + ":" + responseData.msg);
+        throw Error(
+          "Api Error: " +
+            responseData.ret +
+            ", " +
+            responseData.msg +
+            "\n" +
+            JSON.stringify(payload)
+        );
       }
     } else {
-      console.warn(response.status + JSON.stringify(response.data));
+      throw Error(
+        "Http Error: " + response.status + ", " + response.statusText
+      );
     }
   }
 

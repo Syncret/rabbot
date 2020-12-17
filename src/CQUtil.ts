@@ -1,4 +1,4 @@
-const CQRegex = /\[CQ:(\w+).*?]/gi;
+export const CQRegex = /\[CQ:(\w+).*?]/gi;
 
 export const CQCodeType = {
   image: "image",
