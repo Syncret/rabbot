@@ -12,6 +12,21 @@ export const MessagePatterns: IMessagePattern[] = [
     responses: ["兔兔也...", ,],
     interval: 30 * 1000,
   },
+  {
+    patterns: [/^震惊$/],
+    responses: ["SHOCK！", , ,],
+    interval: 30 * 1000,
+  },
+  {
+    patterns: [/^这样啊\.*$/],
+    responses: ["そう…ですか…", , ,],
+    interval: 30 * 1000,
+  },
+  {
+    patterns: [/^好厉害\.*$/],
+    responses: ["すごい…", , ,],
+    interval: 30 * 1000,
+  },
 ];
 
 export interface IMessagePattern {
