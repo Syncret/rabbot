@@ -51,6 +51,7 @@ export function apply(ctx: Context, options: Options) {
 
           if (options.detail) {
             const tagMsg = Object.entries(tags)
+              .filter(([key, value]) => value > 0)
               .map(([key, value]) => {
                 return `${PornTags[key]}: ${value}%`;
               })
@@ -60,7 +61,8 @@ export function apply(ctx: Context, options: Options) {
           meta.$send(resMsg);
         })
         .catch((e) => {
-          meta.$send(e);
+          meta.$send(e.message);
+          console.warn(e);
         });
     });
 }
