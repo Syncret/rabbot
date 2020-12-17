@@ -32,17 +32,3 @@ export function parseCQ(message: string): CQCode[] {
   }
   return result;
 }
-
-function test(): void {
-  [
-    "sdf[CQ:image, file=sadf, url=adfsdf],[CQ:images, file=sadf, url=adfsdf]sadf",
-    "[CQ:image,fi2le=sadf, urdl=adfsdf]",
-    "asdfsdf[CQ:adf,sdf",
-    "asdfsdf[CQ:adf,sdf], [asdf",
-  ].forEach((s) => {
-    const r = parseCQ(s);
-    if (r) {
-      console.log(JSON.stringify(r));
-    }
-  });
-}

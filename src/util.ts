@@ -46,13 +46,11 @@ export function compareIgnoreCase(string1: string, string2: string): boolean {
   return string1.toLowerCase() === string2.toLowerCase();
 }
 
-
-function test(): void {
-  const a = String2TimeInterval("189h");
-  console.log(a);
-  const b = TimeInterval2String(a);
-  console.log(b);
-  const c = new Date();
-  const d = new Date(c.getTime() + a);
-  console.log(d);
+// {a:1, b:2, c:3} => {a:"a", b:"b", c:"c"}
+export function getEnumFromObjectKeys<T extends string>(
+  source: Record<T, any>
+): Record<T, T> {
+  const target = {};
+  Object.keys(source).forEach((key) => (target[key] = key));
+  return target as Record<T, T>;
 }

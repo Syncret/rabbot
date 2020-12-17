@@ -58,13 +58,6 @@ function getResponse(message: string): string | undefined {
   return undefined;
 }
 
-function test(): void {
-  [""]
-    .map(getResponse)
-    .filter((s) => !!s)
-    .forEach((s) => console.log(s));
-}
-
 export function apply(ctx: Context, options: Options) {
   ctx.middleware((meta, next) => {
     const response = getResponse(meta.message);
