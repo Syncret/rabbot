@@ -62,9 +62,9 @@ export function apply(ctx: Context, options: Options) {
   ctx.middleware((meta, next) => {
     const response = getResponse(meta.message);
     if (response) {
-      meta.$send(response);
+      return meta.$send(response);
     } else {
-      next();
+      return next();
     }
   });
 }
