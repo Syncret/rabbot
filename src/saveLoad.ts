@@ -21,13 +21,13 @@ export function apply(ctx: Context, options: Options) {
     .option("-k, --keep", "keep the message instead of auto delete")
     .option("-l, --list", "list all cached message")
     .option("-c, --clear", "clear all the message")
-    .action(({ meta, options }, message) => {
+    .action(({ meta, options = {} }, message) => {
       let responseMessage: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
       if (options.echo) {
-        response = response.then(() => meta.$send(message, true));
+        response = response.then(() => meta.$send!(message, true));
       }
-      const isAdmin = admins.includes(meta.userId);
+      const isAdmin = admins.includes(meta.userId!);
       if (options.list) {
         if (isAdmin) {
           responseMessage = Array.from(messageCache.entries())
@@ -69,18 +69,18 @@ export function apply(ctx: Context, options: Options) {
         responseMessage = `消息已保存，私聊兔兔${timeIndex}查看，有效期至${expireTimeString}`;
       }
       response
-        .then(() => meta.$send(responseMessage))
-        .catch((e) => meta.$send(e));
+        .then(() => meta.$send!(responseMessage))
+        .catch((e) => meta.$send!(e));
     });
 
   ctx.receiver.on("message", (meta) => {
     if (meta.messageType !== "private") {
       return;
     }
-    if (messageCache.has(meta.message)) {
-      const cacheContent = messageCache.get(meta.message);
+    if (messageCache.has(meta.message!)) {
+      const cacheContent = messageCache.get(meta.message!)!;
       ctx.sender
-        .sendPrivateMsg(meta.userId, cacheContent.message)
+        .sendPrivateMsg(meta.userId!, cacheContent.message)
         .then((messageId) => {
           if (messageId && cacheContent.autoDelete) {
             setTimeout(() => {

@@ -13,18 +13,18 @@ export function apply(ctx: Context, options: Options) {
     .option("-u, --user [user]", "send message to user")
     .option("-d, --discuss [discuss]", "send message to discuss")
     .option("-e, --echo", "echo message body (for test)")
-    .action(({ meta, options }, message) => {
+    .action(({ meta, options = {} }, message) => {
       if (meta.messageType !== "private") {
         return;
       }
-      if (!admins.includes(meta.userId)) {
-        meta.$send("Not authorized");
+      if (!admins.includes(meta.userId!)) {
+        meta.$send!("Not authorized");
         return;
       }
       let responseMessage: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
       if (options.echo) {
-        response = response.then(() => meta.$send(message, true));
+        response = response.then(() => meta.$send!(message, true));
       }
       const splitIDs = (ids: string | number) => {
         if (typeof ids === "number") {
@@ -58,7 +58,7 @@ export function apply(ctx: Context, options: Options) {
         );
       }
       response
-        .then(() => meta.$send(responseMessage))
-        .catch((e) => meta.$send(e));
+        .then(() => meta.$send!(responseMessage))
+        .catch((e) => meta.$send!(e));
     });
 }

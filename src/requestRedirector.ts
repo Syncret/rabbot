@@ -1,7 +1,7 @@
 import { Context, Meta, Events, Command } from "koishi-core";
 
 export interface Options {
-  admin?: number;
+  admin: number;
   acceptFriend?: boolean; // true: accept, false: reject, undefined: do nothing
   acceptGroupInvite?: boolean;
 }
@@ -36,7 +36,7 @@ interface RequestHandlerInfo {
 const friendRequestHandlerInfo: RequestHandlerInfo = {
   requestType: "request/friend",
   pendingRequest: pendingFriendRequests,
-  getId: (meta: Meta<"request">) => meta.userId,
+  getId: (meta: Meta<"request">) => meta.userId!,
   commandName: ".friend",
   sendRequestInfoToAdmin: (
     ctx: Context,
@@ -47,12 +47,12 @@ const friendRequestHandlerInfo: RequestHandlerInfo = {
       admin,
       `Receive friend request\nId:${meta.userId}\nComment:${meta.comment}\nFlag:${meta.flag}`
     );
-    ctx.sender.getStrangerInfo(meta.userId).then((info) => {
+    ctx.sender.getStrangerInfo(meta.userId!).then((info) => {
       ctx.sender.sendPrivateMsgAsync(
         admin,
         `${meta.userId} Info\nNickname:${info.nickname}\nSex:${info.sex}\nAge:${info.age}`
       );
-      const cacheInfo = pendingFriendRequests.get(meta.userId);
+      const cacheInfo = pendingFriendRequests.get(meta.userId!);
       if (cacheInfo) {
         cacheInfo.name = info.nickname;
       }
@@ -72,7 +72,7 @@ const friendRequestHandlerInfo: RequestHandlerInfo = {
 const groupInviteRequestHandlerInfo: RequestHandlerInfo = {
   requestType: "request/group/invite",
   pendingRequest: pendingGroupRequests,
-  getId: (meta: Meta<"request">) => meta.groupId,
+  getId: (meta: Meta<"request">) => meta.groupId!,
   commandName: ".group",
   sendRequestInfoToAdmin: (
     ctx: Context,
@@ -83,12 +83,12 @@ const groupInviteRequestHandlerInfo: RequestHandlerInfo = {
       admin,
       `Receive group invite request\nUserId:${meta.userId}\nGroupId:${meta.groupId}\nFlag:${meta.flag}`
     );
-    ctx.sender.getGroupInfo(meta.groupId).then((info) => {
+    ctx.sender.getGroupInfo(meta.groupId!).then((info) => {
       ctx.sender.sendPrivateMsgAsync(
         admin,
         `${meta.groupId} Info\nGroupName:${info.groupName}\nMemberCount:${info.memberCount}\nMaxMemberCount:${info.maxMemberCount}`
       );
-      const cacheInfo = pendingGroupRequests.get(meta.groupId);
+      const cacheInfo = pendingGroupRequests.get(meta.groupId!);
       if (cacheInfo) {
         cacheInfo.name = info.groupName;
       }
@@ -103,22 +103,22 @@ function createReceiver(
   ctx: Context,
   admin: number,
   handlerInfo: RequestHandlerInfo,
-  autoAccept: boolean
+  autoAccept?: boolean
 ) {
-  ctx.receiver.on(handlerInfo.requestType, async (meta) => {
+  ctx.receiver.on(handlerInfo.requestType, async (meta:Meta<'request'>) => {
     const id = handlerInfo.getId(meta);
     if (admin) {
       handlerInfo.sendRequestInfoToAdmin(ctx, admin, meta);
     }
     if (typeof autoAccept === "boolean") {
       return autoAccept
-        ? meta.$approve().then(() => {
+        ? meta.$approve!().then(() => {
             ctx.sender.sendPrivateMsgAsync(
               admin,
               `Auto accepted ${handlerInfo.requestType}\nId:${id}`
             );
           })
-        : meta.$reject().then(() => {
+        : meta.$reject!().then(() => {
             ctx.sender.sendPrivateMsgAsync(
               admin,
               `Auto rejected ${handlerInfo.requestType}\nId:${id}`
@@ -127,7 +127,7 @@ function createReceiver(
     } else {
       handlerInfo.pendingRequest.set(id, {
         id,
-        flag: meta.flag,
+        flag: meta.flag!,
         comment: meta.comment,
       });
     }
@@ -151,9 +151,9 @@ function createCommand(
     .option("-f, --flag [flag]", "specify the request of a specific flag")
     .option("-i, --id [id]", "specify the request of a specific id")
     .option("-c, --comment [comment]", "add remark to the accepted friend")
-    .action(({ meta, options }) => {
+    .action(({ meta, options = {} }) => {
       if (meta.userId !== admin) {
-        meta.$send("Not authorized");
+        meta.$send!("Not authorized");
         return;
       }
       let message: string = "Completed";
@@ -199,7 +199,7 @@ function createCommand(
         message =
           "Specify an option to execute, use help to get command information";
       }
-      response.then(() => meta.$send(message));
+      response.then(() => meta.$send!(message));
     });
 }
 

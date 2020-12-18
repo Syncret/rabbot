@@ -1,3 +1,6 @@
+import Axios, { AxiosRequestConfig } from "axios";
+import * as crypto from "crypto-js";
+
 export const timeUnit = {
   second: "s",
   minute: "m",
@@ -18,8 +21,8 @@ export function String2TimeInterval(time: string): number {
   const units = Object.values(timeUnit).join("|");
   const regex = new RegExp(`(\\d+)\\s*(${units})`, "g");
   let timeInMs = 0;
-  let match: RegExpExecArray;
-  let x: number;
+  let match: RegExpExecArray | null;
+  let x: number = 0;
   while ((match = regex.exec(time))) {
     x = Number(match[1]) * (timeUnitInMillis[match[2]] || 0);
     timeInMs += x;
@@ -50,7 +53,34 @@ export function compareIgnoreCase(string1: string, string2: string): boolean {
 export function getEnumFromObjectKeys<T extends string>(
   source: Record<T, any>
 ): Record<T, T> {
-  const target = {};
+  const target: Record<string, string> = {};
   Object.keys(source).forEach((key) => (target[key] = key));
   return target as Record<T, T>;
+}
+
+export function base64Encode(text: string): string {
+  const encodedWord = crypto.enc.Utf8.parse(text);
+  const encoded = crypto.enc.Base64.stringify(encodedWord);
+  return encoded;
+}
+export function base64Decode(encoded: string): string {
+  const encodedWord = crypto.enc.Base64.parse(encoded);
+  const decoded = crypto.enc.Utf8.stringify(encodedWord);
+  return decoded;
+}
+
+export async function getUrlContentInBase64(
+  url: string,
+  axiosConfig?: AxiosRequestConfig
+): Promise<{ type: string; data: string }> {
+  const imageRes = await Axios.get(url, {
+    ...axiosConfig,
+    responseType: "arraybuffer",
+  });
+  const imageType = imageRes.headers["content-type"];
+  const imageData = imageRes.data;
+  return {
+    type: imageType,
+    data: Buffer.from(imageData, "binary").toString("base64"),
+  };
 }

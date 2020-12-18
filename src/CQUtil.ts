@@ -1,3 +1,5 @@
+import { compareIgnoreCase } from "./util";
+
 export const CQRegex = /\[CQ:(\w+).*?]/gi;
 
 export const CQCodeType = {
@@ -22,7 +24,7 @@ export function parseCQ(message: string): CQCode[] {
       .substr(1, match.length - 2)
       .split(",")
       .map((s) => s.trim());
-    const type = groups.shift().substr(3);
+    const type = (groups.shift() || "").substr(3);
     const attributes: Record<string, string> = {};
     groups.forEach((group) => {
       const pair = group.split("=").map((s) => s.trim());
@@ -31,4 +33,17 @@ export function parseCQ(message: string): CQCode[] {
     result.push({ type, attributes });
   }
   return result;
+}
+
+export function removeCQ(message: string): string {
+  return (message || "").replace(CQRegex, "");
+}
+
+export function getCQImageUrlFromMsg(message: string): string | undefined {
+  const CQs = parseCQ(message);
+  const sampleCode = CQs[0];
+  if (!compareIgnoreCase(sampleCode && sampleCode.type, CQCodeType.image)) {
+    return undefined;
+  }
+  return sampleCode.attributes.url;
 }

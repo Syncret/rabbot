@@ -10,7 +10,9 @@ const MessagePatternsRuntime = (MessagePatterns || []).map((pattern) => {
   };
 });
 
-function getCandidateResponse(responses: string[]): string {
+function getCandidateResponse(
+  responses: (string | undefined)[]
+): string | undefined {
   if (responses.length > 1) {
     return responses[Math.floor(responses.length * Math.random())];
   } else {
@@ -18,7 +20,7 @@ function getCandidateResponse(responses: string[]): string {
   }
 }
 
-function getResponse(message: string): string | undefined {
+function getResponse(message?: string): string | undefined {
   if (!message) {
     return;
   }
@@ -27,7 +29,7 @@ function getResponse(message: string): string | undefined {
     if (time < item.timer) {
       return undefined;
     }
-    let candidate: string;
+    let candidate: string | undefined;
     for (const pattern of item.patterns) {
       if (typeof pattern === "string") {
         if (message === pattern) {
@@ -62,7 +64,7 @@ export function apply(ctx: Context, options: Options) {
   ctx.middleware((meta, next) => {
     const response = getResponse(meta.message);
     if (response) {
-      return meta.$send(response);
+      return meta.$send!(response);
     } else {
       return next();
     }

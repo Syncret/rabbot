@@ -42,6 +42,11 @@ export const MessagePatterns: IMessagePattern[] = [
     responses: ["すごい…", , ,],
     interval: 30 * 1000,
   },
+  {
+    patterns: [/^好羡慕\.*$/],
+    responses: ["羨ましい…", , ,],
+    interval: 30 * 1000,
+  },
 ];
 
 export interface IMessagePattern {

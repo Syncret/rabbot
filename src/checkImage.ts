@@ -1,5 +1,5 @@
 import { Context } from "koishi-core";
-import { CQCodeType, parseCQ } from "./CQUtil";
+import { CQCodeType, getCQImageUrlFromMsg, parseCQ } from "./CQUtil";
 import {
   PornTagStringMap,
   PornTags,
@@ -10,17 +10,8 @@ import { compareIgnoreCase } from "./util";
 
 export interface Options {}
 
-function getImageUrlFromMsg(message: string): string | undefined {
-  const CQs = parseCQ(message);
-  const sampleCode = CQs[0];
-  if (!compareIgnoreCase(sampleCode && sampleCode.type, CQCodeType.image)) {
-    return undefined;
-  }
-  return sampleCode.attributes.url;
-}
-
 function getResponseMessageAsync(
-  imageUrl: string,
+  imageUrl: string | undefined,
   options: Record<string, any>
 ): Promise<string> {
   if (!imageUrl) {
@@ -48,7 +39,7 @@ function getResponseMessageAsync(
       resMsg = resMsg + ` 综合瑟琴指数: ${tags.normal_hot_porn}`;
       if (options.detail) {
         const tagMsg = Object.entries(tags)
-          .filter(([key, value]: [PornTagType, number]) => {
+          .filter(([key, value]) => {
             if (value === 0 || key === PornTags.normal_hot_porn) {
               return false; // remove 0 values
             }
@@ -63,7 +54,7 @@ function getResponseMessageAsync(
             return true;
           })
           .map(([key, value]) => {
-            return `${PornTagStringMap[key]}: ${value}%`;
+            return `${PornTagStringMap[key as PornTagType]}: ${value}%`;
           })
           .join("\n");
         resMsg += "\n" + tagMsg;
@@ -83,11 +74,11 @@ export function apply(ctx: Context, options: Options) {
       const matches = /^\.(\s*)judge(\[*)/.exec(msg);
       if (matches && (matches[1] || matches[2])) {
         // won't be catched in command
-        const imageUrl = getImageUrlFromMsg(msg);
+        const imageUrl = getCQImageUrlFromMsg(msg);
         if (imageUrl) {
           return getResponseMessageAsync(imageUrl, {}).then((msg) => {
             if (msg) {
-              meta.$send(msg);
+              meta.$send!(msg);
             }
           });
         }
@@ -99,16 +90,16 @@ export function apply(ctx: Context, options: Options) {
     .command("judge <message...>", "judge if an image is safe")
     .option("-u, --url <url>", "specify the url")
     .option("-d, --detail", "view the detail result")
-    .action(({ meta, options }, message) => {
-      let imageUrl = "";
+    .action(({ meta, options = {} }, message) => {
+      let imageUrl;
       if (options.url) {
         imageUrl = options.url;
       } else {
-        imageUrl = getImageUrlFromMsg(message);
+        imageUrl = getCQImageUrlFromMsg(message);
       }
       getResponseMessageAsync(imageUrl, options).then((msg) => {
         if (msg) {
-          meta.$send(msg);
+          meta.$send!(msg);
         }
       });
     });

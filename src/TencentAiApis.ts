@@ -1,7 +1,7 @@
 import Axios, { AxiosRequestConfig } from "axios";
 import { TencentAi } from "./apiKey.config";
 import * as crypto from "crypto-js";
-import { getEnumFromObjectKeys } from "./util";
+import { getEnumFromObjectKeys, getUrlContentInBase64 } from "./util";
 
 export interface TecentAIResponse<T> {
   ret: number;
@@ -49,6 +49,17 @@ export interface TecentAIResponseNlpTextTranslateData {
   source_text: string;
   target_text: string;
 }
+export interface TecentAIResponseNlpImageTranslateData {
+  session_id: string;
+  image_records: {
+    source_text: string;
+    target_text: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }[];
+}
 
 function getReqBody(param: Record<string, any>, sort?: boolean) {
   // 1. 字典升序排序
@@ -83,6 +94,10 @@ const axiosConfig: AxiosRequestConfig = {
   timeout: 10000,
 };
 
+function getRandomString(): string {
+  return ("" + Math.random()).substr(2);
+}
+
 class TencentAIApis {
   private _appid: string;
   private _appkey: string;
@@ -116,7 +131,7 @@ class TencentAIApis {
     tagList.forEach((tag) => {
       result[tag.tag_name] = tag.tag_confidence;
     });
-    return result;
+    return result as Record<PornTagType, number>;
   }
 
   public async nlpTextDetect(text: string) {
@@ -141,6 +156,33 @@ class TencentAIApis {
       payload
     );
     return responseData.target_text;
+  }
+
+  public async nlpImageTranslate(
+    imageUrl: string,
+    scene: "word" | "doc",
+    source: LanType,
+    target: LanType
+  ) {
+    this.authorize();
+    const imageRes = await getUrlContentInBase64(imageUrl);
+    if (!imageRes.type.startsWith("image")) {
+      throw Error("Not an image, content-type: " + imageRes.type);
+    }
+    const payload = this._createRequestPayload({
+      image: imageRes.data,
+      session_id: getRandomString(),
+      scene,
+      source,
+      target,
+    });
+
+    const responseData = await this._sendRequest<TecentAIResponseNlpImageTranslateData>(
+      "https://api.ai.qq.com/fcgi-bin/nlp/nlp_imagetranslate",
+      payload
+    );
+    const records = responseData.image_records;
+    return records;
   }
 
   private async _sendRequest<T>(
@@ -182,7 +224,7 @@ class TencentAIApis {
     const payload: Record<string, any> = {
       app_id: this._appid,
       time_stamp: Math.floor(new Date().getTime() / 1000),
-      nonce_str: ("" + Math.random()).substr(2),
+      nonce_str: getRandomString(),
       ...data,
     };
     payload.sign = getReqSign(payload, this._appkey);
