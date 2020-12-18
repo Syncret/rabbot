@@ -51,6 +51,6 @@ export const MessagePatterns: IMessagePattern[] = [
 
 export interface IMessagePattern {
   patterns: Array<RegExp | string>;
-  responses: string[];
+  responses: (string | undefined)[];
   interval?: number;
 }
