@@ -165,7 +165,9 @@ class TencentAIApis {
     target: LanType
   ) {
     this.authorize();
-    const imageRes = await getUrlContentInBase64(imageUrl);
+    const imageRes = await getUrlContentInBase64(imageUrl, {
+      maxContentLength: 1000 * 1000,
+    });
     if (!imageRes.type.startsWith("image")) {
       throw Error("Not an image, content-type: " + imageRes.type);
     }
