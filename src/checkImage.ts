@@ -70,18 +70,16 @@ function getResponseMessageAsync(
 export function apply(ctx: Context, options: Options) {
   ctx.addMiddleware((meta, next) => {
     const msg = meta.message;
-    if (msg) {
-      const matches = /^\.(\s*)judge(\[*)/.exec(msg);
-      if (matches && (matches[1] || matches[2])) {
-        // won't be catched in command
-        const imageUrl = getCQImageUrlFromMsg(msg);
-        if (imageUrl) {
-          return getResponseMessageAsync(imageUrl, {}).then((msg) => {
-            if (msg) {
-              meta.$send!(msg);
-            }
-          });
-        }
+    if (msg && msg.startsWith("兔兔鉴黄")) {
+      const imageUrl = getCQImageUrlFromMsg(msg);
+      if (imageUrl) {
+        return getResponseMessageAsync(imageUrl, {}).then((msg) => {
+          if (msg) {
+            meta.$send!(msg);
+          }
+        });
+      } else {
+        return meta.$send!("哪有图");
       }
     }
     return next();

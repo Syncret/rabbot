@@ -1,6 +1,8 @@
 export const MessagePatterns: IMessagePattern[] = [
   {
-    patterns: [/^[^不]*((fw|five|废物|白痴|baga|baka|巴嘎|八嘎|辣鸡)(兔兔|机器人))/i],
+    patterns: [
+      /^[^不]*((fw|five|废物|白痴|baga|baka|巴嘎|八嘎|辣鸡)(兔兔|机器人))/i,
+    ],
     responses: [
       "兔兔才不是{1}呢！",
       "说别人是{2}的人才是{2}呢！",
@@ -20,6 +22,10 @@ export const MessagePatterns: IMessagePattern[] = [
       "兔兔去远方了",
       "别喊啦",
       "(✧◡✧)/",
+      "听着呢",
+      "说",
+      "又想白嫖兔兔了吗",
+      "兔兔拿不到工钱，兔兔罢工了",
     ],
   },
   {
