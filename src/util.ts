@@ -1,5 +1,6 @@
 import Axios, { AxiosRequestConfig } from "axios";
 import * as crypto from "crypto-js";
+import { promises } from "fs";
 
 export const timeUnit = {
   second: "s",
@@ -83,4 +84,11 @@ export async function getUrlContentInBase64(
     type: imageType,
     data: Buffer.from(imageData, "binary").toString("base64"),
   };
+}
+
+export async function writeBase64ToFile(
+  content: string,
+  fileName: string
+): Promise<void> {
+  return promises.writeFile(fileName, Buffer.from(content, "base64"));
 }

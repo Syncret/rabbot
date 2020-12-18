@@ -60,6 +60,11 @@ export interface TecentAIResponseNlpImageTranslateData {
     height: number;
   }[];
 }
+export interface TecentAIResponseAaiTtsData {
+  format: number;
+  speech: string;
+  md5sum: string;
+}
 
 function getReqBody(param: Record<string, any>, sort?: boolean) {
   // 1. 字典升序排序
@@ -71,7 +76,7 @@ function getReqBody(param: Record<string, any>, sort?: boolean) {
   let result = new URLSearchParams();
   for (const key of keys) {
     const value = param[key];
-    if (value) {
+    if (value != null && value !== "") {
       result.append(key, value);
     }
   }
@@ -185,6 +190,33 @@ class TencentAIApis {
     );
     const records = responseData.image_records;
     return records;
+  }
+
+  public async aaiTts(
+    text: string,
+    options: {
+      speaker?: number;
+      volume?: number;
+      speed?: number;
+      aht?: number;
+    } = {}
+  ) {
+    this.authorize();
+    const { speaker = 6, volume = 5, speed = 120, aht = 4 } = options;
+    const payload = this._createRequestPayload({
+      speaker, //1男, 5,6,7女
+      format: 3, // 1:pcm, 2:wav, 3:mp3
+      volume, // [-10, 10]
+      speed, // [50,200]
+      text,
+      aht, // 合成语音降低/升高半音个数，即改变音高	[-24, 24]
+      apc: 58, // 控制频谱翘曲的程度，改变说话人的音色，默认58 [0, 100]
+    });
+    const responseData = await this._sendRequest<TecentAIResponseAaiTtsData>(
+      "https://api.ai.qq.com/fcgi-bin/aai/aai_tts",
+      payload
+    );
+    return responseData.speech;
   }
 
   private async _sendRequest<T>(
