@@ -11,7 +11,7 @@ export const MessagePatterns: IMessagePattern[] = [
     ],
   },
   {
-    patterns: [/^兔兔(呢|在|去哪|活着|？|\?|！|!|$)/],
+    patterns: [/^兔兔(呢|在|去哪|还?活着吗|？|\?|！|!|$)/],
     responses: [
       "嗯？",
       "有事吗",
