@@ -1,4 +1,5 @@
 import { Context } from "koishi-core";
+import { removeCQ } from "./CQUtil";
 import { tencentAIApis } from "./TencentAiApis";
 import { pickRandomly } from "./util";
 
@@ -17,7 +18,7 @@ export function apply(ctx: Context, options: Options = {}) {
     if (meta.message) {
       let msg = meta.message;
       if (msg.startsWith("兔兔说 ")) {
-        msg = msg.substr(4).trim();
+        msg = removeCQ(msg.substr(4)).trim();
         if (!msg) {
           return;
         }
@@ -64,7 +65,7 @@ export function apply(ctx: Context, options: Options = {}) {
         meta.$send!(`Switch voice ${on ? "on" : "off"}`);
         return;
       }
-      message = message.trim();
+      message = removeCQ(message).trim();
       if (message) {
         if (message.length > 100) {
           message = "太长了！不想念";
