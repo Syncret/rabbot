@@ -62,7 +62,7 @@ function getResponseMessageAsync(
       return resMsg;
     })
     .catch((e) => {
-      console.warn(e.message);
+      console.error(`visionPorn Error, Source Image: ${imageUrl}\n${e.message}`);
       return e.message + "";
     });
 }

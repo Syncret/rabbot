@@ -58,7 +58,9 @@ export async function translate(
     const res = await tencentAIApis.nlpTextTranslate(text, source, target);
     return res;
   } catch (e) {
-    console.error(e.message);
+    console.error(
+      `translate Error, Source text: ${source},${target},${text}\n${e.message}`
+    );
     return e.message + "";
   }
 }
