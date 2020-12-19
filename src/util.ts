@@ -92,3 +92,7 @@ export async function writeBase64ToFile(
 ): Promise<void> {
   return promises.writeFile(fileName, Buffer.from(content, "base64"));
 }
+
+export function pickRandomly<T>(candidates: T[]): T {
+  return candidates[Date.now() % (candidates.length || 1)];
+}
