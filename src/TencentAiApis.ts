@@ -202,7 +202,7 @@ class TencentAIApis {
     } = {}
   ) {
     this.authorize();
-    const { speaker = 6, volume = 5, speed = 120, aht = 4 } = options;
+    const { speaker = 6, volume = 2, speed = 120, aht = 4 } = options;
     const payload = this._createRequestPayload({
       speaker, //1男, 5,6,7女
       format: 3, // 1:pcm, 2:wav, 3:mp3
