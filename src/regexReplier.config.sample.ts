@@ -36,27 +36,27 @@ export const MessagePatterns: IMessagePattern[] = [
   },
   {
     patterns: [/^震惊$/],
-    responses: ["SHOCK！", ,,],
+    responses: ["SHOCK！", , ,],
     interval: 30 * 1000,
   },
   {
     patterns: [/^这样啊\.*$/],
-    responses: ["そう…ですか…", ,],
+    responses: ["そう…ですか…", , ,],
     interval: 30 * 1000,
   },
   {
-    patterns: [/^也?是呢\.*$/],
-    responses: ["そう…ですね…", ,],
+    patterns: [/^也是呢\.*$/],
+    responses: ["そう…ですね…", , ,],
     interval: 30 * 1000,
   },
   {
     patterns: [/^好厉害\.*$/],
-    responses: ["すごい…", ,],
+    responses: ["すごい…", , ,],
     interval: 30 * 1000,
   },
   {
     patterns: [/^好羡慕\.*$/],
-    responses: ["羨ましい…", ,],
+    responses: ["羨ましい…", , ,],
     interval: 30 * 1000,
   },
 ];
