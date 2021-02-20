@@ -82,7 +82,7 @@ class TencentCloudApis {
       },
       (innerError, rep) => {
         error = innerError;
-        result = rep.ImageRecord?.Value;
+        result = rep?.ImageRecord?.Value;
       }
     );
     if (error) {

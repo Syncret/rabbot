@@ -30,6 +30,11 @@ export const MessagePatterns: IMessagePattern[] = [
     ],
   },
   {
+    patterns: [/不愧是兔兔/],
+    responses: ["诶嘿嘿~", "哼，兔兔和你们可不一样", "现在知道兔兔的厉害了吧"],
+    interval: 30 * 1000,
+  },
+  {
     patterns: [/^我也\.*$/],
     responses: ["兔兔也...", ,],
     interval: 30 * 1000,
