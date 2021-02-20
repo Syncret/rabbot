@@ -102,7 +102,7 @@ export async function translateImage(
     })
     .join("\n");
   if (!detail && concat) {
-    const concatSourceText = response.map((i) => i.source_text).join("");
+    const concatSourceText = response.map((i) => i.source_text).join(" ");
     console.log(concatSourceText);
     result = await tencentAIApis.nlpTextTranslate(
       concatSourceText,
