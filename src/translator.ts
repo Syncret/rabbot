@@ -37,7 +37,7 @@ export async function translate(
       return "翻什么啦";
     }
     if (text.length > 1000) {
-      return "太长不看！";
+      return `太长不看！有${text.length}个字诶！`;
     }
     target = target || "zh";
     if (source === target) {
@@ -92,23 +92,23 @@ export async function translateImage(
     source,
     target
   );
-  let result = response
-    .map((item) => {
-      if (detail) {
-        return `x,y: [${item.x},${item.y}]; w,h:[${item.width},${item.height}]\n${item.source_text}\n${item.target_text}`;
-      } else {
-        return item.target_text;
-      }
-    })
-    .join("\n");
-  if (!detail && concat) {
+  let result = "";
+  if (!concat) {
+    result = response
+      .map((item) => {
+        if (detail) {
+          return `x,y: [${item.x},${item.y}]; w,h:[${item.width},${item.height}]\n${item.source_text}\n${item.target_text}`;
+        } else {
+          return item.target_text;
+        }
+      })
+      .join("\n");
+  } else {
     const concatSourceText = response.map((i) => i.source_text).join(" ");
-    console.log(concatSourceText);
-    result = await tencentAIApis.nlpTextTranslate(
-      concatSourceText,
-      source,
-      target
-    );
+    if (detail) {
+      result = concatSourceText + "\n\n";
+    }
+    result += await translate(concatSourceText, source, target);
   }
   return result || "好像找不到文字诶";
 }
@@ -124,7 +124,14 @@ export function apply(ctx: Context, options: Options) {
       if (matches[1] && matches[3]) {
         // 1图片，3翻译
         // translate image
-        return translateImage(rawMsg, "doc", source, target, false, matches[1].includes("段")).then((msg) => {
+        return translateImage(
+          rawMsg,
+          "doc",
+          source,
+          target,
+          false,
+          matches[1].includes("段")
+        ).then((msg) => {
           if (msg) {
             meta.$send!(msg);
           }
