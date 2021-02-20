@@ -1,4 +1,10 @@
 export const TencentAi = {
-  appid: "test",
-  appkey: "test",
+  appid: "",
+  appkey: "",
 };
+
+export const TencentCloudKey = {
+  secretId: "",
+  secretKey: "",
+  projectId: 0,
+}

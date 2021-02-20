@@ -1,74 +1,65 @@
 import { Context } from "koishi-core";
 import {
-  CQCodeType,
-  CQRegex,
   getCQImageUrlFromMsg,
-  parseCQ,
   removeCQ,
 } from "./CQUtil";
-import {
-  PornTagStringMap,
-  PornTags,
-  PornTagType,
-  tencentAIApis,
-  LanType,
-  LanTypeStringMap,
-  LanTypes,
-} from "./TencentAiApis";
-import { compareIgnoreCase } from "./util";
+import { tencentCloudApis } from "./TencentCloudApis";
 
 export interface Options {}
-export const translatorKeywordRegex = /^兔兔(图片?像?里?整?段?落?)?(中|英|日|韩)?(?:文|语)?(翻?译?到?)(中|英|日|韩)?(?:文|语)?\S*/;
+export const translatorKeywordRegex = /^兔兔(图片整?段?落?)?(?:(.+?)[文|语])?([翻|译|到]+)(?:(.+?)[文|语])?\S*/;
 
-const lanMap: Record<string, LanType> = {
+const lanMap: Record<string, string> = {
   中: "zh",
+  繁体中: "zh-TW",
   英: "en",
-  日: "jp",
-  韩: "kr",
+  日: "ja",
+  韩: "ko",
+  法: "fr",
+  西班牙: "es",
+  意大利: "it",
+  德: "de",
+  土耳其: "tr",
+  俄: "ru",
+  葡萄牙: "pt",
+  越南: "vi",
+  印尼: "id",
+  泰: "th",
+  马来西亚: "ms",
+  阿拉伯: "ar",
+  印地: "hi",
 };
 export async function translate(
   text: string,
-  source?: LanType,
-  target?: LanType
+  source?: string,
+  target?: string
 ): Promise<string> {
   try {
     text = removeCQ(text);
     if (!text) {
       return "翻什么啦";
     }
-    if (text.length > 1000) {
+    if (text.length >= 2000) {
       return `太长不看！有${text.length}个字诶！`;
     }
-    target = target || "zh";
+    source = source || "auto";
+    if (source === "zh" && !target) {
+      return "想翻什么语言嘛";
+    }
     if (source === target) {
       return "这不是相同的语言吗！";
     }
-    if (!source) {
-      source = await tencentAIApis.nlpTextDetect(text);
-      if (!source) {
-        return "兔兔认不出这个语言...";
-      }
-    }
-    if (source !== LanTypes.zh && target !== LanTypes.zh) {
-      return "不会！";
-    }
-    if (source === target) {
-      return `这看上去已经是${LanTypeStringMap[target]}了呢..`;
-    }
-    const res = await tencentAIApis.nlpTextTranslate(text, source, target);
+    target = target || "zh";
+    const res = await tencentCloudApis.textTranslate(text, source, target);
     return res;
   } catch (e) {
-    console.error(
-      `translate Error, Source text: ${source},${target},${text}\n${e.message}`
-    );
-    return e.message + "";
+    console.error(`Translate Error: ${e}\n${source},${target},${text}`);
+    return e + "";
   }
 }
 export async function translateImage(
   text: string,
-  scene: "word" | "doc",
-  source?: LanType,
-  target?: LanType,
+  source?: string,
+  target?: string,
   detail?: boolean,
   concat?: boolean
 ): Promise<string> {
@@ -76,19 +67,16 @@ export async function translateImage(
   if (!imageUrl) {
     return "找不到图片...";
   }
-  if (!source) {
-    return "要翻啥语言呀";
+  source = source || "auto";
+  if (source === "zh" && !target) {
+    return "想翻什么语言嘛";
   }
-  target = target || "zh";
   if (source === target) {
     return "这不是相同的语言吗！";
   }
-  if (source !== LanTypes.zh && target !== LanTypes.zh) {
-    return "不会！";
-  }
-  const response = await tencentAIApis.nlpImageTranslate(
+  target = target || "zh";
+  const response = await tencentCloudApis.imageTranslate(
     imageUrl,
-    scene,
     source,
     target
   );
@@ -97,14 +85,14 @@ export async function translateImage(
     result = response
       .map((item) => {
         if (detail) {
-          return `x,y: [${item.x},${item.y}]; w,h:[${item.width},${item.height}]\n${item.source_text}\n${item.target_text}`;
+          return `x,y: [${item.X},${item.Y}]; w,h:[${item.W},${item.H}]\n${item.SourceText}\n${item.TargetText}`;
         } else {
-          return item.target_text;
+          return item.TargetText;
         }
       })
       .join("\n");
   } else {
-    const concatSourceText = response.map((i) => i.source_text).join(" ");
+    const concatSourceText = response.map((i) => i.SourceText).join(" ");
     if (detail) {
       result = concatSourceText + "\n\n";
     }
@@ -112,21 +100,23 @@ export async function translateImage(
   }
   return result || "好像找不到文字诶";
 }
-export function apply(ctx: Context, options: Options) {
+export function apply(ctx: Context) {
   ctx.addMiddleware(async (meta, next) => {
     const rawMsg = meta.message || "";
-    // /^兔兔(图片?像?里?整?段?落?)?(中|英|日|韩)?(?:文|语)?(翻?译?到?)(中|英|日|韩)?(?:文|语)?\S*/
+    // /^兔兔(图片整?段?落?)?(?:(.+?)[文|语])?([翻|译|到]+)(?:(.+?)[文|语])?\S*/;
     const matches = translatorKeywordRegex.exec(rawMsg);
     if (matches) {
       // "兔兔图片中文翻译英语 测试"=>[0"兔兔图片中文翻译英语",1"图片",2"中",3"翻译",4"英"]
       let source = lanMap[matches[2]];
       let target = lanMap[matches[4]];
+      if ((matches[2] && !source) || (matches[4] && !target)) {
+        return meta.$send!("谁懂那种语言啦！！");
+      }
       if (matches[1] && matches[3]) {
         // 1图片，3翻译
         // translate image
         return translateImage(
           rawMsg,
-          "doc",
           source,
           target,
           false,
@@ -166,13 +156,11 @@ export function apply(ctx: Context, options: Options) {
     .option("-i, --image", "translate image")
     .option("-c, --concat", "concat text in source image")
     .option("-d, --detail", "return image translate detail result")
-    .option("-w, --word", "specify the scene to be word (default doc)")
     .action(({ meta, options }, message) => {
-      const { source, target, image, concat, detail, word } = options || {};
+      const { source, target, image, concat, detail } = options || {};
       if (image) {
         translateImage(
           message,
-          word ? "word" : "doc",
           source,
           target,
           detail,

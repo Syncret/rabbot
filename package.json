@@ -25,7 +25,8 @@
   "dependencies": {
     "@types/crypto-js": "^4.0.1",
     "axios": "^0.21.0",
-    "crypto-js": "^4.0.0"
+    "crypto-js": "^4.0.0",
+    "tencentcloud-sdk-nodejs": "^4.0.65"
   },
   "devDependencies": {
     "@types/jasmine": "^3.6.2",

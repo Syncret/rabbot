@@ -70,6 +70,14 @@ export function base64Decode(encoded: string): string {
   return decoded;
 }
 
+export function GenerateUUIDV4(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c == "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export async function getUrlContentInBase64(
   url: string,
   axiosConfig?: AxiosRequestConfig
