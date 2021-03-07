@@ -62,33 +62,38 @@ function getResponseMessageAsync(
       return resMsg;
     })
     .catch((e) => {
-      console.error(`visionPorn Error, Source Image: ${imageUrl}\n${e.message}`);
+      console.error(
+        `visionPorn Error, Source Image: ${imageUrl}\n${e.message}`
+      );
       return e.message + "";
     });
 }
 
 export function apply(ctx: Context, options: Options) {
-  ctx.addMiddleware((meta, next) => {
-    const msg = meta.message;
+  ctx.middleware((session, next) => {
+    const msg = session.content;
     if (msg && msg.startsWith("兔兔鉴黄")) {
       const imageUrl = getCQImageUrlFromMsg(msg);
       if (imageUrl) {
         return getResponseMessageAsync(imageUrl, {}).then((msg) => {
           if (msg) {
-            meta.$send!(msg);
+            session.send(msg);
           }
         });
       } else {
-        return meta.$send!("哪有图");
+        return session.send("哪有图");
       }
     }
     return next();
   });
   ctx
-    .command("judge <message...>", "judge if an image is safe")
-    .option("-u, --url <url>", "specify the url")
-    .option("-d, --detail", "view the detail result")
-    .action(({ meta, options = {} }, message) => {
+    .command("judge <message:text>", "judge if an image is safe")
+    .option("url", "-u <url:string>") // specify the url
+    .option("detail", "-d") // view the detail result
+    .action(({ session, options = {} }, message) => {
+      if (!session) {
+        return;
+      }
       let imageUrl;
       if (options.url) {
         imageUrl = options.url;
@@ -97,8 +102,9 @@ export function apply(ctx: Context, options: Options) {
       }
       getResponseMessageAsync(imageUrl, options).then((msg) => {
         if (msg) {
-          meta.$send!(msg);
+          session.send(msg);
         }
       });
     });
 }
+export const name = "CheckPornImage";

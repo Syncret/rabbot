@@ -1,8 +1,5 @@
 import { Context } from "koishi-core";
-import {
-  getCQImageUrlFromMsg,
-  removeCQ,
-} from "./CQUtil";
+import { getCQImageUrlFromMsg, removeCQ } from "./CQUtil";
 import { tencentCloudApis } from "./TencentCloudApis";
 
 export interface Options {}
@@ -101,8 +98,8 @@ export async function translateImage(
   return result || "好像找不到文字诶";
 }
 export function apply(ctx: Context) {
-  ctx.addMiddleware(async (meta, next) => {
-    const rawMsg = meta.message || "";
+  ctx.middleware(async (session, next) => {
+    const rawMsg = session.content || "";
     // /^兔兔(图片整?段?落?)?(?:(.+?)[文|语])?([翻|译|到]+)(?:(.+?)[文|语])?\S*/;
     const matches = translatorKeywordRegex.exec(rawMsg);
     if (matches) {
@@ -110,7 +107,7 @@ export function apply(ctx: Context) {
       let source = lanMap[matches[2]];
       let target = lanMap[matches[4]];
       if ((matches[2] && !source) || (matches[4] && !target)) {
-        return meta.$send!("谁懂那种语言啦！！");
+        return session.send("谁懂那种语言啦！！");
       }
       if (matches[1] && matches[3]) {
         // 1图片，3翻译
@@ -123,7 +120,7 @@ export function apply(ctx: Context) {
           matches[1].includes("段")
         ).then((msg) => {
           if (msg) {
-            meta.$send!(msg);
+            session.send(msg);
           }
         });
       }
@@ -133,7 +130,7 @@ export function apply(ctx: Context) {
         if (tarMsg) {
           return translate(tarMsg, source, target).then((msg) => {
             if (msg) {
-              meta.$send!(msg);
+              session.send(msg);
             }
           });
         }
@@ -144,36 +141,27 @@ export function apply(ctx: Context) {
   });
 
   ctx
-    .command("translate <message...>", "translate message")
-    .option(
-      "-s, --source <source>",
-      "specify source language, supported lans [zh, en, jp, kr]"
-    )
-    .option(
-      "-t, --target <target>",
-      "specify target language, supported lans [zh, en, jp, kr]"
-    )
-    .option("-i, --image", "translate image")
-    .option("-c, --concat", "concat text in source image")
-    .option("-d, --detail", "return image translate detail result")
-    .action(({ meta, options }, message) => {
-      const { source, target, image, concat, detail } = options || {};
+    .command("translate <message:text>", "translate message")
+    .option("source", "-s <source>") // specify source language, supported lans [zh, en, jp, kr]
+    .option("target", "-t <target>") // specify target language, supported lans [zh, en, jp, kr]
+    .option("image", "-i") // translate image
+    .option("concat", "-c") // concat text in source image
+    .option("detail", "-d") // return image translate detail result
+    .action(({ session, options = {} }, message) => {
+      if (!session) {
+        return;
+      }
+      const { source, target, image, concat, detail } = options;
       if (image) {
-        translateImage(
-          message,
-          source,
-          target,
-          detail,
-          concat
-        ).then((msg) => {
+        translateImage(message, source, target, detail, concat).then((msg) => {
           if (msg) {
-            meta.$send!(msg);
+            session.send(msg);
           }
         });
       } else {
         translate(message, source, target).then((msg) => {
           if (msg) {
-            meta.$send!(msg);
+            session.send(msg);
           }
         });
       }

@@ -1,143 +1,136 @@
-import { Context, Meta, Events, Command } from "koishi-core";
+import { Bot, Session } from "koishi";
+import { Context, Command } from "koishi-core";
+import "koishi-adapter-onebot";
 
 export interface Options {
-  admin: number;
+  admin: string;
   acceptFriend?: boolean; // true: accept, false: reject, undefined: do nothing
   acceptGroupInvite?: boolean;
 }
 
 interface RequestInfo {
-  id: number;
+  id: string;
   flag: string;
   comment?: string;
   name?: string;
 }
 
-const pendingFriendRequests = new Map<number, RequestInfo>();
-const pendingGroupRequests = new Map<number, RequestInfo>();
+const pendingFriendRequests = new Map<string, RequestInfo>();
+const pendingGroupRequests = new Map<string, RequestInfo>();
 
+type RequestType = "friend-request" | "group-request";
+type RequestSession = Session<never, never, "onebot", RequestType>;
 interface RequestHandlerInfo {
-  requestType: Events;
-  pendingRequest: Map<number, RequestInfo>;
-  getId: (meta: Meta<"request">) => number;
+  requestType: RequestType;
+  pendingRequest: Map<string, RequestInfo>;
+  getId: (session: RequestSession) => string;
   commandName: string;
-  sendRequestInfoToAdmin: (
-    ctx: Context,
-    admin: number,
-    meta: Meta<"request">
-  ) => void;
+  sendRequestInfoToAdmin: (admin: string, session: RequestSession) => void;
   handleRequest: (
-    ctx: Context,
+    bot: Bot,
     flag: string,
-    options: Record<string, any>
+    approve: boolean,
+    comment?: string
   ) => Promise<void>;
 }
 
 const friendRequestHandlerInfo: RequestHandlerInfo = {
-  requestType: "request/friend",
+  requestType: "friend-request",
   pendingRequest: pendingFriendRequests,
-  getId: (meta: Meta<"request">) => meta.userId!,
+  getId: (session: RequestSession) => session.userId!,
   commandName: ".friend",
-  sendRequestInfoToAdmin: (
-    ctx: Context,
-    admin: number,
-    meta: Meta<"request">
-  ) => {
-    ctx.sender.sendPrivateMsgAsync(
+  sendRequestInfoToAdmin: (admin, session) => {
+    session.bot.sendPrivateMessage(
       admin,
-      `Receive friend request\nId:${meta.userId}\nComment:${meta.comment}\nFlag:${meta.flag}`
+      `Receive friend request\nId:${session.userId}\nComment:${session.content}\nId:${session.messageId}`
     );
-    ctx.sender.getStrangerInfo(meta.userId!).then((info) => {
-      ctx.sender.sendPrivateMsgAsync(
+    session.bot.getUser(session.userId!).then((info) => {
+      session.bot.sendPrivateMessage(
         admin,
-        `${meta.userId} Info\nNickname:${info.nickname}\nSex:${info.sex}\nAge:${info.age}`
+        `${session.userId} Info\nName:${info.username}\n; ${JSON.stringify(
+          info
+        )}`
       );
-      const cacheInfo = pendingFriendRequests.get(meta.userId!);
+      const cacheInfo = pendingFriendRequests.get(session.userId!);
       if (cacheInfo) {
-        cacheInfo.name = info.nickname;
+        cacheInfo.name = info.username;
       }
     });
   },
-  handleRequest: (ctx: Context, flag: string, options: Record<string, any>) => {
+  handleRequest: (bot, id, approve, comment) => {
     let response: Promise<void>;
-    if (!options.reject && options.comment) {
-      response = ctx.sender.setFriendAddRequest(flag, options.comment);
-    } else {
-      response = ctx.sender.setFriendAddRequest(flag, !options.reject);
-    }
+    response = bot.handleFriendRequest(id, approve, comment);
     return response;
   },
 };
 
 const groupInviteRequestHandlerInfo: RequestHandlerInfo = {
-  requestType: "request/group/invite",
+  requestType: "group-request",
   pendingRequest: pendingGroupRequests,
-  getId: (meta: Meta<"request">) => meta.groupId!,
+  getId: (session: RequestSession) => session.groupId!,
   commandName: ".group",
-  sendRequestInfoToAdmin: (
-    ctx: Context,
-    admin: number,
-    meta: Meta<"request">
-  ) => {
-    ctx.sender.sendPrivateMsgAsync(
+  sendRequestInfoToAdmin: (admin, session) => {
+    session.bot.sendPrivateMessage(
       admin,
-      `Receive group invite request\nUserId:${meta.userId}\nGroupId:${meta.groupId}\nFlag:${meta.flag}`
+      `Receive group invite request\nUserId:${session.userId}\nGroupId:${session.groupId}\nId:${session.messageId}`
     );
-    ctx.sender.getGroupInfo(meta.groupId!).then((info) => {
-      ctx.sender.sendPrivateMsgAsync(
+    session.bot.getGroup(session.groupId!).then((info) => {
+      session.bot.sendPrivateMessage(
         admin,
-        `${meta.groupId} Info\nGroupName:${info.groupName}\nMemberCount:${info.memberCount}\nMaxMemberCount:${info.maxMemberCount}`
+        `${session.groupId} Info\nGroupName:${
+          info.groupName
+        }\n; ${JSON.stringify(info)}`
       );
-      const cacheInfo = pendingGroupRequests.get(meta.groupId!);
+      const cacheInfo = pendingGroupRequests.get(session.groupId!);
       if (cacheInfo) {
         cacheInfo.name = info.groupName;
       }
     });
   },
-  handleRequest: (ctx: Context, flag: string, options: Record<string, any>) => {
-    return ctx.sender.setGroupAddRequest(flag, "invite", !options.reject);
+  handleRequest: (bot, id, approve, comment) => {
+    return bot.handleGroupRequest(id, approve, comment);
   },
 };
 
 function createReceiver(
   ctx: Context,
-  admin: number,
+  admin: string,
   handlerInfo: RequestHandlerInfo,
   autoAccept?: boolean
 ) {
-  ctx.receiver.on(handlerInfo.requestType, async (meta:Meta<'request'>) => {
-    const id = handlerInfo.getId(meta);
-    if (admin) {
-      handlerInfo.sendRequestInfoToAdmin(ctx, admin, meta);
-    }
-    if (typeof autoAccept === "boolean") {
-      return autoAccept
-        ? meta.$approve!().then(() => {
-            ctx.sender.sendPrivateMsgAsync(
+  ctx.on(
+    handlerInfo.requestType,
+    async (session: Session<never, never, "onebot", RequestType>) => {
+      const id = handlerInfo.getId(session);
+      if (admin) {
+        handlerInfo.sendRequestInfoToAdmin(admin, session);
+      }
+      if (typeof autoAccept === "boolean") {
+        return handlerInfo
+          .handleRequest(session.bot, session.messageId!, autoAccept)
+          .then(() => {
+            session.bot.sendPrivateMessage(
               admin,
-              `Auto accepted ${handlerInfo.requestType}\nId:${id}`
-            );
-          })
-        : meta.$reject!().then(() => {
-            ctx.sender.sendPrivateMsgAsync(
-              admin,
-              `Auto rejected ${handlerInfo.requestType}\nId:${id}`
+              `Auto ${autoAccept ? "accepted" : "reject"} ${
+                handlerInfo.requestType
+              }\nId:${id}`
             );
           });
-    } else {
-      handlerInfo.pendingRequest.set(id, {
-        id,
-        flag: meta.flag!,
-        comment: meta.comment,
-      });
+      } else {
+        handlerInfo.pendingRequest.set(id, {
+          id,
+          flag: session.messageId!,
+          comment: session.content,
+        });
+      }
     }
-  });
+  );
 }
 
 function createCommand(
   ctx: Context,
   parentCommand: Command,
-  admin: number,
+  admin: string,
   handlerInfo: RequestHandlerInfo
 ) {
   return parentCommand
@@ -145,15 +138,18 @@ function createCommand(
       handlerInfo.commandName,
       `handle ${handlerInfo.requestType} requests`
     )
-    .option("-l, --list", "list all requests")
-    .option("-a, --all", "apply to all pending requests")
-    .option("-r, --reject", "reject requests")
-    .option("-f, --flag [flag]", "specify the request of a specific flag")
-    .option("-i, --id [id]", "specify the request of a specific id")
-    .option("-c, --comment [comment]", "add remark to the accepted friend")
-    .action(({ meta, options = {} }) => {
-      if (meta.userId !== admin) {
-        meta.$send!("Not authorized");
+    .option("list", "-l") // list all requests
+    .option("all", "-a") // apply to all pending requests
+    .option("reject", "-r") // reject requests
+    .option("flag", "-f [flag:string]") // specify the request of a specific flag
+    .option("id", "-i [id:string]") // specify the request of a specific id
+    .option("comment", "-c [comment:string]") // add remark to the accepted friend
+    .action(({ session, options = {} }) => {
+      if (!session) {
+        return;
+      }
+      if (session.userId !== admin) {
+        session.send("Not authorized");
         return;
       }
       let message: string = "Completed";
@@ -169,10 +165,15 @@ function createCommand(
             .join("\n");
         }
       } else if (options.flag) {
-        response = handleRequest(ctx, options.flag, options).then(() => {
+        response = handleRequest(
+          session.bot,
+          options.flag,
+          !options.reject,
+          options.comment
+        ).then(() => {
           Array.from(pendingRequests.values()).forEach((r) => {
             if (r.flag === options.flag) {
-              pendingRequests.delete(options.id);
+              pendingRequests.delete(r.id);
             }
           });
         });
@@ -181,7 +182,12 @@ function createCommand(
         if (info == null) {
           message = `Failed to get info of Id ${options.id}, try using flag to speficy request`;
         } else {
-          response = handleRequest(ctx, info.flag, options).then(() => {
+          response = handleRequest(
+            session.bot,
+            info.flag,
+            !options.reject,
+            options.comment
+          ).then(() => {
             pendingRequests.delete(info.id);
             return;
           });
@@ -189,7 +195,12 @@ function createCommand(
       } else if (options.all) {
         response = Promise.all(
           Array.from(pendingRequests.values()).map((info) =>
-            handleRequest(ctx, info.flag, options).then(() => {
+            handleRequest(
+              session.bot,
+              info.flag,
+              !options.reject,
+              options.comment
+            ).then(() => {
               pendingRequests.delete(info.id);
               return;
             })
@@ -199,14 +210,29 @@ function createCommand(
         message =
           "Specify an option to execute, use help to get command information";
       }
-      response.then(() => meta.$send!(message));
+      response.then(() => session.send(message));
     });
 }
 
 export function apply(ctx: Context, options: Options) {
   const { admin, acceptFriend, acceptGroupInvite } = options;
+  if (!admin) {
+    throw `admin must be set`;
+  }
   createReceiver(ctx, admin, friendRequestHandlerInfo, acceptFriend);
   createReceiver(ctx, admin, groupInviteRequestHandlerInfo, acceptGroupInvite);
+  ctx.on("friend-added", (session) => {
+    session.bot.sendPrivateMessage(admin, `${JSON.stringify(session)}`);
+  });
+  ctx.on("friend-deleted", (session) => {
+    session.bot.sendPrivateMessage(admin, `${JSON.stringify(session)}`);
+  });
+  ctx.on("group-member-deleted", (session) => {
+    session.bot.sendGroupMessage(
+      session.groupId!,
+      `${session.username} 离开了我们...`
+    );
+  });
 
   const requestCommand = ctx.command(
     "request",
@@ -215,3 +241,4 @@ export function apply(ctx: Context, options: Options) {
   createCommand(ctx, requestCommand, admin, friendRequestHandlerInfo);
   createCommand(ctx, requestCommand, admin, groupInviteRequestHandlerInfo);
 }
+export const name = "RequestRedirector";

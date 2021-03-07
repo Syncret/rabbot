@@ -61,10 +61,10 @@ function getResponse(message?: string): string | undefined {
 }
 
 export function apply(ctx: Context, options: Options) {
-  ctx.middleware((meta, next) => {
-    const response = getResponse(meta.message);
+  ctx.middleware((session, next) => {
+    const response = getResponse(session.content);
     if (response) {
-      return meta.$send!(response);
+      return session.send(response);
     } else {
       return next();
     }

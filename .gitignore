@@ -106,6 +106,7 @@ dist
 # configs that might include private info
 *.config.js
 *.config.ts
+index.ts
 
 #test files
 testReceiver.ts

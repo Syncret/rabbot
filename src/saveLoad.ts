@@ -9,25 +9,29 @@ interface cachedMessage {
 const messageCache = new Map<string, cachedMessage>();
 
 export interface Options {
-  admins?: number[];
+  admins?: string[];
 }
 
+export const name = "SaveLoad";
 export function apply(ctx: Context, options: Options) {
   const { admins = [] } = options;
   ctx
-    .command("save <message...>", "save message")
-    .option("-t, --time <time>", "specify the expire time(sample: 7d8h)")
-    .option("-e, --echo", "echo message body (for test)")
-    .option("-k, --keep", "keep the message instead of auto delete")
-    .option("-l, --list", "list all cached message")
-    .option("-c, --clear", "clear all the message")
-    .action(({ meta, options = {} }, message) => {
+    .command("save <message:text>", "save message")
+    .option("time", "-t <time>") // "specify the expire time(sample: 7d8h)
+    .option("echo", "-e") // "echo message body (for test)
+    .option("keep", "-k") // "keep the message instead of auto delete
+    .option("list", "-l") // "list all cached message
+    .option("clear", "-c") // "clear all the message
+    .action(({ session, options = {} }, message) => {
+      if (!session) {
+        return;
+      }
       let responseMessage: string = "Completed";
       let response: Promise<void | void[]> = Promise.resolve();
       if (options.echo) {
-        response = response.then(() => meta.$send!(message, true));
+        response = response.then(() => session.send(message));
       }
-      const isAdmin = admins.includes(meta.userId!);
+      const isAdmin = admins.includes(session.userId!);
       if (options.list) {
         if (isAdmin) {
           responseMessage = Array.from(messageCache.entries())
@@ -69,22 +73,22 @@ export function apply(ctx: Context, options: Options) {
         responseMessage = `消息已保存，私聊兔兔${timeIndex}查看，有效期至${expireTimeString}`;
       }
       response
-        .then(() => meta.$send!(responseMessage))
-        .catch((e) => meta.$send!(e));
+        .then(() => session.send(responseMessage))
+        .catch((e) => session.send(e));
     });
 
-  ctx.receiver.on("message", (meta) => {
-    if (meta.messageType !== "private") {
+  ctx.on("message", (session) => {
+    if (session.subtype !== "private") {
       return;
     }
-    if (messageCache.has(meta.message!)) {
-      const cacheContent = messageCache.get(meta.message!)!;
-      ctx.sender
-        .sendPrivateMsg(meta.userId!, cacheContent.message)
+    if (messageCache.has(session.content!)) {
+      const cacheContent = messageCache.get(session.content!)!;
+      session.bot
+        .sendPrivateMessage(session.userId!, cacheContent.message)
         .then((messageId) => {
           if (messageId && cacheContent.autoDelete) {
             setTimeout(() => {
-              ctx.sender.deleteMsgAsync(messageId);
+              session.bot.$deleteMsgAsync(messageId);
             }, timeUnitInMillis[timeUnit.minute]);
           }
         });
