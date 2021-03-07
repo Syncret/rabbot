@@ -167,3 +167,4 @@ export function apply(ctx: Context) {
       }
     });
 }
+export const name = "TencentTranslator";

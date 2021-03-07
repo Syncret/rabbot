@@ -94,3 +94,4 @@ export function apply(ctx: Context, options: Options = {}) {
       }
     });
 }
+export const name = "TencentAIVoice";
