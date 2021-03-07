@@ -7,4 +7,4 @@ export const TencentCloudKey = {
   secretId: "",
   secretKey: "",
   projectId: 0,
-}
+};
