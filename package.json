@@ -24,7 +24,7 @@
   "homepage": "https://github.com/Syncret/rabbot#readme",
   "dependencies": {
     "@types/crypto-js": "^4.0.1",
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "crypto-js": "^4.0.0",
     "tencentcloud-sdk-nodejs": "^4.0.65"
   },
