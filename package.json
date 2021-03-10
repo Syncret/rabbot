@@ -6,6 +6,7 @@
   "scripts": {
     "start": "koishi start -- -r ts-node/register",
     "watch": "koishi start --watch -- -r ts-node/register",
+    "dev": "ts-node index.ts",
     "init": "koishi init",
     "test": "ts-node node_modules/jasmine/bin/jasmine"
   },
@@ -29,6 +30,7 @@
     "koishi": "^3.0.1",
     "koishi-adapter-onebot": "^3.0.0",
     "koishi-plugin-common": "^4.0.0",
+    "koishi-plugin-puppeteer": "^2.0.0",
     "tencentcloud-sdk-nodejs": "^4.0.65"
   },
   "devDependencies": {
