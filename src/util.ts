@@ -104,3 +104,64 @@ export async function writeBase64ToFile(
 export function pickRandomly<T>(candidates: T[]): T {
   return candidates[Date.now() % (candidates.length || 1)];
 }
+
+export function assert(
+  truthy: boolean,
+  errorMessage: string = "Asset failed!"
+) {
+  if (!truthy) throw Error(errorMessage);
+}
+
+export class FixedSizeRecord<T> {
+  private _record: Record<string, T> = {};
+  private _keyArray: string[] = [];
+  constructor(private _size: number) {
+    assert(_size > 0, "size must be larger than 0.");
+  }
+  public set(key: string, value: T) {
+    this._record[key] = value;
+    if (!this._keyArray.includes(key)) {
+      this._keyArray.push(key);
+    }
+    if (this._keyArray.length > this._size) {
+      delete this._record[this._keyArray.shift()!];
+    }
+  }
+  public get(key: string): T | undefined;
+  public get(key: string, defaultValue: T): T;
+  public get(key: string, defaultValue?: T): T | undefined {
+    if (this._record[key] != null) {
+      return this._record[key];
+    } else if (defaultValue != null) {
+      this.set(key, defaultValue);
+      return defaultValue;
+    }
+  }
+  public removeByKey(key: string) {
+    delete this._record[key];
+    this._keyArray = this._keyArray.filter((i) => i !== key);
+  }
+  public clear() {
+    this._record = {};
+    this._keyArray = [];
+  }
+  public keys() {
+    return this._keyArray;
+  }
+  public values() {
+    return this._keyArray.map((key) => this._record[key]);
+  }
+  public entries() {
+    return Object.entries(this._record);
+  }
+  public length() {
+    return this._keyArray.length;
+  }
+  public at(index: number) {
+    return this._record[this._keyArray[index]];
+  }
+  public debug() {
+    console.debug(this._keyArray);
+    console.debug(this._record);
+  }
+}
