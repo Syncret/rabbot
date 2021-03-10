@@ -38,6 +38,7 @@ export function apply(ctx: Context, options: Options) {
   ctx
     .command("recalled", "list recalled messages")
     .option("last", "-l [count:number] last recalled messages")
+    .option("unescape", "-u unescape message")
     .option(
       "channelId",
       "-c [channelId:string] list corresponding channel's recall messages"
@@ -61,7 +62,8 @@ export function apply(ctx: Context, options: Options) {
       if (deletedMessages.length() === 0) {
         return session.sendQueued("No recalled message records");
       }
-      const last = options.last || 1;segment.escape
+      const last = options.last || 1;
+      segment.escape;
       const keys = deletedMessages
         .keys()
         .slice(deletedMessages.length() - last, deletedMessages.length());
@@ -74,7 +76,9 @@ export function apply(ctx: Context, options: Options) {
             .map((msg) => {
               return `${
                 msg?.timestamp ? new Date(msg.timestamp).toISOString() : ""
-              }, ${msg?.author?.username}: ${segment.escape(msg?.content)}`;
+              }, ${msg?.author?.username}: ${
+                options.unescape ? msg?.content : segment.escape(msg?.content)
+              }`;
             })
             .join("\n")
       );
