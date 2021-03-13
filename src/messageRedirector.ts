@@ -11,8 +11,8 @@ export function apply(ctx: Context, options: Options) {
   ctx
     .command("message", "redirect messages")
     .subcommand("send <message:text>", "send message to user/group/discuss")
-    .option("group", "-g <group>") // send message to group
-    .option("user", "-u <user>") // send message to user
+    .option("group", "-g <group:string>") // send message to group
+    .option("user", "-u <user:string>") // send message to user
     .option("echo", "-e") // echo message body (for test)
     .action(({ session, options = {} }, message) => {
       if (session?.subtype !== "private") {
