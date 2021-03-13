@@ -21,9 +21,9 @@ export const repeaterConfig: Config = {
     if (state.times > 2 && !state.repeated && Random.bool(0.4)) {
       return state.content;
     }
-    if (state.times > 4 && Random.bool(0.3)) {
+    if (state.times >= 4 && Random.bool(0.3)) {
       const banUser = pickRandomly(Object.keys(state.users));
-      ban(session, state.times * 60);
+      ban(session, banUser, state.times * 60);
       return (
         `复读机失控了！兔兔不得不随机逮捕一个复读机禁言。` +
         `那个人就是...${segment.at(banUser)}! 禁言时间为复读次数${
@@ -40,8 +40,8 @@ const rolePermissionMap = {
   member: 1,
 };
 
-async function ban(session: Session, time: number): Promise<void> {
-  const { groupId, selfId, userId } = session;
+async function ban(session: Session, userId:string,  time: number): Promise<void> {
+  const { groupId, selfId } = session;
   if (!groupId || !selfId || !userId) {
     throw Error("Invalid parameters.");
   }
