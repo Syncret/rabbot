@@ -11,6 +11,10 @@ import * as checkImage from "./src/checkImage";
 import * as translator from "./src/translator";
 import * as recalledMessage from "./src/recalledMessage";
 import * as voice from "./src/voice";
+import * as Teach from "koishi-plugin-teach";
+import * as ImageSearch from "koishi-plugin-image-search";
+import * as Schedule from "koishi-plugin-schedule";
+import * as RSS from "koishi-plugin-rss";
 import { config } from "./rabbot.config";
 
 const { admin, selfId, secret, token, sqlUser, sqlPassword, server } = config;
@@ -48,6 +52,11 @@ app.plugin(checkImage);
 app.plugin(translator);
 app.plugin(recalledMessage);
 app.plugin(voice, { admins: [admin], on: true });
+app.plugin(Teach);
+app.plugin(ImageSearch);
+app.plugin(Schedule);
+app.plugin(RSS);
+
 app.plugin(PostPlugins);
 
 // 启动应用
