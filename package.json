@@ -30,6 +30,7 @@
     "koishi": "^3.0.1",
     "koishi-adapter-onebot": "^3.0.0",
     "koishi-plugin-common": "^4.0.0",
+    "koishi-plugin-mysql": "^3.0.0",
     "koishi-plugin-puppeteer": "^2.0.0",
     "tencentcloud-sdk-nodejs": "^4.0.65"
   },
