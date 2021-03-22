@@ -45,7 +45,14 @@ app.plugin(MySql, {
   password: sqlPassword,
   database: "koishi",
 });
-app.plugin(puppeteer);
+app.plugin(puppeteer, {
+  browser: {
+    defaultViewport: {
+      width: 1024,
+      height: 1024,
+    },
+  },
+});
 app.plugin(regexReplier);
 app.plugin(saveLoad, { admins: [admin] });
 app.plugin(checkImage);
