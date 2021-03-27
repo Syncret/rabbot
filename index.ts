@@ -16,6 +16,7 @@ import * as ImageSearch from "koishi-plugin-image-search";
 import * as Schedule from "koishi-plugin-schedule";
 import * as RSS from "koishi-plugin-rss";
 import { config } from "./rabbot.config";
+import { DailyCheckin } from "./src/dailyCheckin";
 
 const { admin, selfId, secret, token, sqlUser, sqlPassword, server } = config;
 
@@ -62,6 +63,7 @@ app.plugin(voice, { admins: [admin], on: true });
 app.plugin(Teach);
 app.plugin(ImageSearch);
 app.plugin(Schedule);
+app.plugin(DailyCheckin);
 app.plugin(RSS);
 
 app.plugin(PostPlugins);
