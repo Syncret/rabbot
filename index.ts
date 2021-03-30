@@ -64,7 +64,9 @@ app.plugin(Teach);
 app.plugin(ImageSearch);
 app.plugin(Schedule);
 app.plugin(DailyCheckin);
-app.plugin(RSS);
+app.plugin(RSS, {
+  refresh: 30 * Time.minute
+});
 
 app.plugin(PostPlugins);
 
