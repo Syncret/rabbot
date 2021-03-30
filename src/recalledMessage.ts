@@ -36,7 +36,7 @@ export function apply(ctx: Context, options: Options) {
       );
   });
   ctx
-    .command("recalled", "list recalled messages")
+    .command("recalled", "list recalled messages", { authority: 2 })
     .option("last", "-l [count:number] last recalled messages")
     .option("unescape", "-u unescape message")
     .option(
@@ -51,10 +51,10 @@ export function apply(ctx: Context, options: Options) {
         // list available channels
         return session.sendQueued(
           "Available channels:\n" +
-            Object.entries(deletedMessageRecord)
-              .filter(([_, value]) => value.length() > 0)
-              .map(([key]) => key)
-              .join("\n")
+          Object.entries(deletedMessageRecord)
+            .filter(([_, value]) => value.length() > 0)
+            .map(([key]) => key)
+            .join("\n")
         );
       }
       const channel = options.channelId || session.channelId;
@@ -69,18 +69,15 @@ export function apply(ctx: Context, options: Options) {
         .slice(deletedMessages.length() - last, deletedMessages.length());
       const messages = keys.map((key) => deletedMessages.get(key));
       return session.sendQueued(
-        `Last ${last === 1 ? "" : last + " "}recalled message${
-          last === 1 ? "" : "s"
+        `Last ${last === 1 ? "" : last + " "}recalled message${last === 1 ? "" : "s"
         }:\n` +
-          messages
-            .map((msg) => {
-              return `${
-                msg?.timestamp ? new Date(msg.timestamp).toISOString() : ""
-              }, ${msg?.author?.username}: ${
-                options.unescape ? msg?.content : segment.escape(msg?.content)
+        messages
+          .map((msg) => {
+            return `${msg?.timestamp ? new Date(msg.timestamp).toISOString() : ""
+              }, ${msg?.author?.username}: ${options.unescape ? msg?.content : segment.escape(msg?.content)
               }`;
-            })
-            .join("\n")
+          })
+          .join("\n")
       );
     });
 }
