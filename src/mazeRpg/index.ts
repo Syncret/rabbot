@@ -40,7 +40,7 @@ function apply(ctx: Context, config?: Config) {
                 user.money = 0;
                 user.rpgitems = {};
             }
-            return `你叫${name},你${Player.describeAppearance(user.appearance)}你的冒险旅程现在开始了!`;
+            return `你叫${name}, 你${Player.describeAppearance(user.appearance)}你的冒险旅程现在开始了!`;
         });
 
     ctx.command("rpg/end <name:string>", "结束")
@@ -48,11 +48,11 @@ function apply(ctx: Context, config?: Config) {
         .action(async ({ session, options }, name: string | undefined) => {
             const user = session?.user;
             if (user?.rpgstatus == null || !user?.rpgstatus.name) {
-                return "你都没有开始过！";
+                return "你都没有开始过!";
             }
             const status = user.rpgstatus;
             if (!name) {
-                session?.sendQueued("真的要结束吗，输入名字结束");
+                session?.sendQueued("真的要结束吗, 输入名字结束");
                 name = await session?.prompt(30 * 1000);
             }
             if (status.name !== name) {
