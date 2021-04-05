@@ -57,7 +57,7 @@ function generateMaze<T extends string>(width: number, height: number, ringProb:
 
 function printMaze<T extends string | number>(maze: (T | undefined)[], width: number, wallChar = "*") {
     const maze2 = maze.map((cube, index) => {
-        const char = typeof cube === "number" ? cube > 0 ? "十" : cube === 0 ? "口" : "口" : cube;
+        const char = typeof cube === "number" ? cube > 0 ? "  " : cube === 0 ? "口" : "口" : cube;
         return (index + 1) % width === 0 ? char + "\n" : char;
     }).join("");
     console.log(maze2);
@@ -65,7 +65,7 @@ function printMaze<T extends string | number>(maze: (T | undefined)[], width: nu
 
 function test() {
     const [width, height] = [16, 16];
-    const maze = generateMaze(width, height, 0, { "泉": 10, "房": 50, "陷": 10 })
+    const maze = generateMaze(width, height, 0.1, { "梯": 5, "泉": 10, "  ": 150, "陷": 10 })
     printMaze(maze, width + 1);
 }
 

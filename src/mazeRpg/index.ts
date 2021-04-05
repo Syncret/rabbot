@@ -55,7 +55,7 @@ function apply(ctx: Context, config?: Config) {
             }
             const status = user.rpgstatus;
             if (!name) {
-                session?.sendQueued("真的要结束吗, 输入名字结束");
+                session?.sendQueued("真的要结束吗, 道具和等级都会清空哦。输入你的名字确诊结束");
                 name = await session?.prompt(30 * 1000);
             }
             if (status.name !== name) {
