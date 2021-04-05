@@ -17,7 +17,7 @@ function apply(ctx: Context, config?: Config) {
     ctx.plugin(Item.itemPlugin);
 
     ctx.command("rpg/start <name:string>", "开始")
-        .option("clean", "-c 从头开始，不继承道具等")
+        .option("keep", "-k 保留道具和金钱等")
         .userFields(rpgFields)
         .action(async ({ session, options }, name) => {
             const user = session?.user!;
@@ -39,7 +39,7 @@ function apply(ctx: Context, config?: Config) {
             if (user.rpgitems == null) {
                 user.rpgitems = {};
             }
-            if (options?.clean) {
+            if (!options?.keep) {
                 user.money = 0;
                 user.rpgitems = {};
             }
