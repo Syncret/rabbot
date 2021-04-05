@@ -22,7 +22,7 @@ function apply(ctx: Context, config?: Config) {
         .action(async ({ session, options }, name) => {
             const user = session?.user!;
             if (user?.rpgphase != null && user.rpgphase !== Phase.end) {
-                return `需要先结束上一个角色的状态`;
+                return `之前的冒险还没结束呢!`;
             }
             if (!name) {
                 session?.sendQueued("输出新角色的名字");
@@ -36,6 +36,9 @@ function apply(ctx: Context, config?: Config) {
             user.rpgphase = Phase.idle;
             user.appearance = Player.generateAppearance();
             user.rpgstatus = Player.createNewPlayer(name);
+            if (user.rpgitems == null) {
+                user.rpgitems = {};
+            }
             if (options?.clean) {
                 user.money = 0;
                 user.rpgitems = {};

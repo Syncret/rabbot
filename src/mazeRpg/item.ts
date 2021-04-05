@@ -187,7 +187,10 @@ export namespace Item {
     }
 
     export function viewBag(session: Session<"rpgitems" | "money">, detail?: boolean): string {
-        const items = session.user?.rpgitems || [];
+        if (session.user!.rpgitems == null) {
+            session.user!.rpgitems = {};
+        }
+        const items = session.user!.rpgitems;
         const money = session.user?.money || 0;
         let msg = `你有${money}金币, `;
         const itemsArray = Object.entries(items || {});
