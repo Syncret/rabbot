@@ -190,10 +190,11 @@ export namespace Item {
         const items = session.user?.rpgitems || [];
         const money = session.user?.money || 0;
         let msg = `你有${money}金币, `;
-        if (items == null || !items.length) {
+        const itemsArray = Object.entries(items || {});
+        if (!itemsArray.length) {
             msg += "其他什么都没了呢。";
         } else {
-            msg += Object.entries(items).map(([name, count]) => {
+            msg += itemsArray.map(([name, count]) => {
                 let imsg = `${name}*${Math.ceil(count)}`
                 if (detail) {
                     const item = data[name];
