@@ -17,6 +17,7 @@ import * as Schedule from "koishi-plugin-schedule";
 import * as RSS from "koishi-plugin-rss";
 import { config } from "./rabbot.config";
 import { DailyCheckin } from "./src/dailyCheckin";
+import { MazeRpg } from "./src/mazeRpg";
 
 const { admin, selfId, secret, token, sqlUser, sqlPassword, server } = config;
 
@@ -67,6 +68,7 @@ app.plugin(DailyCheckin);
 app.plugin(RSS, {
   refresh: 30 * Time.minute
 });
+app.plugin(MazeRpg);
 
 app.plugin(PostPlugins);
 
