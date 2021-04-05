@@ -25,7 +25,7 @@ function apply(ctx: Context, config?: Config) {
                 return `之前的冒险还没结束呢!`;
             }
             if (!name) {
-                session?.sendQueued("输出新角色的名字");
+                session?.sendQueued("输入新角色的名字");
                 const newname = await session?.prompt(30 * 1000);
                 if (newname) {
                     name = newname;
