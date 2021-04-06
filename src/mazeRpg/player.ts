@@ -1,8 +1,9 @@
 import { Context, Random } from "koishi";
 
 export namespace Player {
-    export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "玫瑰", "琥珀", "天青"];
-    export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发"];
+    export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙",
+    "玫瑰", "琥珀", "天青"];
+    export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发", "大波浪"];
     export type Appearance = {
         hairColor: string,
         hairType: string,
@@ -21,7 +22,7 @@ export namespace Player {
         status: number,
         weapon?: string,
         armor?: string,
-        accessary: string[],
+        accessary?: string,
     }
     export const State = {
         bagFull: 0x1,
@@ -63,7 +64,6 @@ export namespace Player {
             ap: 10,
             phase: 0,
             status: 0,
-            accessary: [],
         }
     };
 

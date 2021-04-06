@@ -3,7 +3,7 @@ import { RPGLuck } from "./luck";
 import { rpgFields } from "./database";
 import { Player } from "./player";
 import { Item } from "./item";
-import { Phase } from "./phase";
+import { Phase, State } from "./state";
 import { max } from "./util";
 
 export interface Config {
@@ -25,15 +25,10 @@ function apply(ctx: Context, config?: Config) {
                 return `之前的冒险还没结束呢!`;
             }
             if (!name) {
-                session?.sendQueued("输入新角色的名字");
-                const newname = await session?.prompt(30 * 1000);
-                if (newname) {
-                    name = newname;
-                } else {
-                    return "无效名字";
-                }
+                return "需要指定新角色的名字。";
             }
             user.rpgphase = Phase.idle;
+            user.rpgstate = State.active;
             user.appearance = Player.generateAppearance();
             user.rpgstatus = Player.createNewPlayer(name);
             if (user.rpgitems == null) {
@@ -55,7 +50,7 @@ function apply(ctx: Context, config?: Config) {
             }
             const status = user.rpgstatus;
             if (!name) {
-                session?.sendQueued("真的要结束吗, 道具和等级都会清空哦。输入你的名字确诊结束");
+                session?.sendQueued("真的要结束吗, 道具和等级都会清空哦。输入你的名字确认结束:");
                 name = await session?.prompt(30 * 1000);
             }
             if (status.name !== name) {
@@ -72,6 +67,12 @@ function apply(ctx: Context, config?: Config) {
             let msg = Item.viewBag(session!, options?.detail);
             msg += Item.checkBagFull(session!);
             return msg;
+        });
+    ctx.command("rpg/state", "检查状态")
+        .userFields(["rpgstate"])
+        .action(({ session, options }) => {
+            const state = session!.user!.rpgstate;
+            return state + "";
         });
 
     ctx.command("rpg/use <name:string>", "使用/装备道具")

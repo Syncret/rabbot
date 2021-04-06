@@ -1,6 +1,6 @@
 import { User, Database } from "koishi";
 import { } from 'koishi-plugin-mysql'
-import { Phase } from "./phase";
+import { Phase } from "./state";
 import { Player } from "./player";
 
 declare module 'koishi-core' {
@@ -9,7 +9,8 @@ declare module 'koishi-core' {
         rpgstatus?: Player.Status,
         money: number,
         rpgphase: Phase,
-        rpgitems: Record<string, number>
+        rpgitems: Record<string, number>;
+        rpgstate: number,
     }
 }
 
@@ -19,9 +20,10 @@ User.extend(() => ({
     money: 0,
     rpgphase: Phase.end,
     rpgitems: {},
+    rpgstate: 0,
 
 }));
-export const rpgFields = ["appearance", "money", "rpgitems", "rpgstatus", "rpgphase"] as const;
+export const rpgFields = ["appearance", "money", "rpgitems", "rpgstatus", "rpgphase", "rpgstate"] as const;
 
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     if (tables.user) {
@@ -30,5 +32,6 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         tables.user.rpgphase = "int";
         tables.user.rpgitems = new Domain.Json();
         tables.user.rpgstatus = new Domain.Json();
+        tables.user.rpgstate = "int";
     }
 })
