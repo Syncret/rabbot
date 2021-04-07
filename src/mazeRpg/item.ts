@@ -63,14 +63,20 @@ export namespace Item {
         ["长剑", Rarity.N, WpType.Short, 25],
         ["大剑", Rarity.R, WpType.Short, 40],
         ["巨剑", Rarity.SR, WpType.Short, 100],
+        ["圣剑", Rarity.SSR, WpType.Short, 140],
+        ["咖喱棒", Rarity.SSR, WpType.Short, 150, false],
         ["短棍", Rarity.N, WpType.Short, 15],
+        ["双截棍", Rarity.R, WpType.Short, 25],
         ["长枪", Rarity.R, WpType.Short, 30],
+        ["拳套", Rarity.N, WpType.Short, 25],
         ["弹弓", Rarity.N, WpType.Long, 5],
         ["长弓", Rarity.N, WpType.Long, 15],
         ["手枪", Rarity.N, WpType.Long, 20],
+        ["步枪", Rarity.R, WpType.Long, 30],
         ["突击枪", Rarity.R, WpType.Long, 40],
         ["狙击枪", Rarity.SR, WpType.Long, 60],
         ["法杖", Rarity.N, WpType.Magic, 20],
+        ["魔导书", Rarity.N, WpType.Magic, 30],
     ];
     export const weaponItems = weaponItemArgs.map((a) => createWeaponItem(...a));
 
@@ -96,11 +102,13 @@ export namespace Item {
         ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"],
         ["内衣", Rarity.R, 5],
         ["比基尼", Rarity.R],
+        ["连衣裙", Rarity.R],
         ["JK服", Rarity.R],
         ["LO裙", Rarity.R],
         ["巫女服", Rarity.R],
         ["盔甲", Rarity.R],
         ["触手服", Rarity.R],
+        ["死库水", Rarity.R],
         ["长袍", , AmType.Magic],
     ];
     export const armorItems = armorItemArgs.map((a) => createArmorItem(...a));

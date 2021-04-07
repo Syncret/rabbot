@@ -1,8 +1,8 @@
 import { Context, Random } from "koishi";
 
 export namespace Player {
-    export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙",
-    "玫瑰", "琥珀", "天青"];
+    export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰",
+        "玫瑰", "琥珀", "天青", "翡翠", "虹"];
     export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发", "大波浪"];
     export type Appearance = {
         hairColor: string,
@@ -46,8 +46,10 @@ export namespace Player {
         }
     }
 
-    export function describeAppearance(apperance: Appearance): string {
-        return `身高${apperance.height}, 有着${apperance.eyeColor}色的眼睛, 梳着${apperance.hairColor}色的${apperance.hairType}。`;
+    export function describeAppearance(apperance: Appearance, status?: Status): string {
+        let cloting = status && [status.armor && `穿着一件${status.armor}`, status.weapon && `拿着${status.armor}`].filter((s) => !!s).join(", ");
+        return `身高${apperance.height}, 有着${apperance.eyeColor}色的眼睛, 梳着${apperance.hairColor}色的${apperance.hairType}
+        ${cloting ? `, ${cloting}` : ""}。`;
     };
     export function describeStatus(status: Status): string {
         return `${status.name}: 等级${status.level}, 经验${status.exp}/${maxExp(status)}, `
@@ -77,12 +79,12 @@ export namespace Player {
                 return `${describeStatus(session.user.rpgstatus)}`;
             });
         ctx.command("rpg/appearance", "查看外观")
-            .userFields(["appearance"])
+            .userFields(["appearance", "rpgstatus"])
             .action(({ session }) => {
                 if (session?.user?.appearance == null) {
                     return "没有记录呢";
                 }
-                return `你${describeAppearance(session.user.appearance)}`;
+                return `你${describeAppearance(session.user.appearance, session.user.rpgstatus)}`;
             });
     }
 
