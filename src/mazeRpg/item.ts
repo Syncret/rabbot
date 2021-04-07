@@ -241,7 +241,7 @@ export namespace Item {
                         }
                     });
                     if (notFoundItems.length > 0) {
-                        msg += `找不到物品${notFoundItems.join()}`;
+                        msg += `找不到物品${notFoundItems.join(", ")}, `;
                     }
                     if (aItems.length > 0) {
                         msg += gain(session!, aItems);
