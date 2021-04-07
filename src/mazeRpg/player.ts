@@ -48,8 +48,7 @@ export namespace Player {
 
     export function describeAppearance(apperance: Appearance, status?: Status): string {
         let cloting = status && [status.armor && `穿着一件${status.armor}`, status.weapon && `拿着${status.armor}`].filter((s) => !!s).join(", ");
-        return `身高${apperance.height}, 有着${apperance.eyeColor}色的眼睛, 梳着${apperance.hairColor}色的${apperance.hairType}
-        ${cloting ? `, ${cloting}` : ""}。`;
+        return `身高${apperance.height}, 有着${apperance.eyeColor}色的眼睛, 梳着${apperance.hairColor}色的${apperance.hairType}${cloting ? `, ${cloting}` : ""}。`;
     };
     export function describeStatus(status: Status): string {
         return `${status.name}: 等级${status.level}, 经验${status.exp}/${maxExp(status)}, `
