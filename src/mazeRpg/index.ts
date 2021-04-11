@@ -4,7 +4,7 @@ import { rpgFields } from "./database";
 import { Player } from "./player";
 import { Item } from "./item";
 import { Phase, State } from "./state";
-import { max } from "./util";
+import { min } from "./util";
 
 export interface Config {
 
@@ -17,7 +17,6 @@ function apply(ctx: Context, config?: Config) {
     ctx.plugin(Item.itemPlugin);
 
     ctx.command("rpg/start <name:string>", "开始")
-        .option("keep", "-k 保留道具和金钱等")
         .userFields(rpgFields)
         .action(async ({ session, options }, name) => {
             const user = session?.user!;
@@ -31,18 +30,19 @@ function apply(ctx: Context, config?: Config) {
             user.rpgstate = State.active;
             user.appearance = Player.generateAppearance();
             user.rpgstatus = Player.createNewPlayer(name);
+            if (user.money == null) {
+                user.money = 0;
+            }
             if (user.rpgitems == null) {
                 user.rpgitems = {};
             }
-            if (!options?.keep) {
-                user.money = 0;
-                user.rpgitems = {};
-            }
+            user.rpgstate = State.active;
             return `你叫${name}, 你${Player.describeAppearance(user.appearance)}你的冒险旅程现在开始了!`;
         });
 
     ctx.command("rpg/end <name:string>", "结束")
-        .userFields(["rpgstatus", "rpgphase"])
+        .userFields(rpgFields)
+        .option("keep", "-k 保留道具和金钱等")
         .action(async ({ session, options }, name: string | undefined) => {
             const user = session?.user;
             if (user?.rpgstatus == null || !user?.rpgstatus.name) {
@@ -56,12 +56,30 @@ function apply(ctx: Context, config?: Config) {
             if (status.name !== name) {
                 return "名字对不上呢";
             }
-            user.rpgstatus = undefined;
             user.rpgphase = Phase.end;
+            if (!options?.keep) {
+                user.money = 0;
+                user.rpgitems = {};
+                user.rpgstate = 0x0;
+            }
             return `${name}结束了她的冒险生活...`;
         });
+
+    ctx.command("rpg/reset", "修复或重置角色状态")
+        .userFields(rpgFields)
+        .action(async ({ session }) => {
+            const user = session!.user!;
+            if (user.rpgstatus) {
+                user.rpgstate = 1;
+            }
+            if (user.rpgstatus?.name == null) {
+                user.rpgstate = 0;
+            }
+            return `修复完毕`;
+        });
     ctx.command("rpg/bag", "查看背包")
-        .userFields(["rpgitems", "money"])
+        .userFields(["rpgitems", "money", "rpgstate"])
+        .check(State.stateChecker())
         .option("detail", "-d 显示物品详细")
         .action(async ({ session, options }) => {
             let msg = Item.viewBag(session!, options?.detail);
@@ -70,20 +88,18 @@ function apply(ctx: Context, config?: Config) {
         });
     ctx.command("rpg/state", "检查状态")
         .userFields(["rpgstate"])
-        .action(({ session, options }) => {
+        .action(({ session }) => {
             const state = session!.user!.rpgstate;
             return state + "";
         });
 
     ctx.command("rpg/use <name:string>", "使用/装备道具")
-        .userFields(["rpgitems", "rpgstatus"])
-        .action(async ({ session, options }, name) => {
+        .userFields(["rpgitems", "rpgstatus", "rpgstate"])
+        .check(State.stateChecker())
+        .action(async ({ session }, name) => {
             const user = session!.user!;
             const userStatus = user.rpgstatus;
             const userItems = user.rpgitems;
-            if (userStatus?.name == null) {
-                return "角色未初始化";
-            }
             const itemCount = userItems && userItems[name];
             if (itemCount == null || itemCount <= 0) {
                 return "你没有此物品";
@@ -95,33 +111,41 @@ function apply(ctx: Context, config?: Config) {
                 case Item.ItemType.Weapon:
                     if (userStatus.weapon) {
                         backItem = userStatus.weapon;
-                        msg += `, 换下了${backItem}`;
+                        msg += `换下了${backItem}, `;
                     }
                     userStatus.weapon = item.name;
-                    msg = `你装备上了${item.name}${msg}。`
+                    msg = `你${msg}装备上了${item.name}。`
                     break;
                 case Item.ItemType.Armor:
                     if (userStatus.armor) {
                         backItem = userStatus.armor;
-                        msg += `, 脱下了${backItem}`;
+                        msg += `脱下了${backItem}, `;
                     }
                     userStatus.armor = item.name;
-                    msg = `穿上了${item.name}${msg}。`
+                    msg = `你${msg}穿上了${item.name}。`
+                    break;
+                case Item.ItemType.Accessory:
+                    if (userStatus.accessary) {
+                        backItem = userStatus.accessary;
+                        msg += `摘下了${backItem}, `;
+                    }
+                    userStatus.accessary = item.name;
+                    msg = `你${msg}戴上了${item.name}。`
                     break;
                 case Item.ItemType.Consumable:
                     const titem = item as Item.ConsumableItem;
                     switch (titem.subType) {
                         case Item.CsmType.HP:
-                            userStatus.hp = max(userStatus.hp + item.effect, Player.maxHp(userStatus));
+                            userStatus.hp = min(userStatus.hp + item.effect, Player.maxHp(userStatus));
                             msg += `你恢复了${item.effect}点生命`;
                             break;
                         case Item.CsmType.MP:
-                            userStatus.mp = max(userStatus.mp + item.effect, Player.maxMp(userStatus));
+                            userStatus.mp = min(userStatus.mp + item.effect, Player.maxMp(userStatus));
                             msg += `你恢复了${item.effect}点魔力`;
                             break;
                         case Item.CsmType.HPMP:
-                            userStatus.hp = max(userStatus.hp + item.effect, Player.maxHp(userStatus));
-                            userStatus.mp = max(userStatus.mp + item.effect, Player.maxMp(userStatus));
+                            userStatus.hp = min(userStatus.hp + item.effect, Player.maxHp(userStatus));
+                            userStatus.mp = min(userStatus.mp + item.effect, Player.maxMp(userStatus));
                             msg += `你恢复了${item.effect}点生命与魔力`;
                             break;
                     }
