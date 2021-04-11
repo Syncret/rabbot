@@ -71,6 +71,16 @@ function apply(ctx: Context, config?: Config) {
             const user = session!.user!;
             if (user.rpgstatus) {
                 user.rpgstate = 1;
+                if (user.rpgstatus.accessary !== null && typeof user.rpgstatus.accessary !== "string") {
+                    user.rpgstatus.accessary = undefined;
+                }
+            }
+            if (user.rpgitems) {
+                Object.entries(user.rpgitems).forEach(([key, value]) => {
+                    if (typeof key !== "string" || Item.data[key] == null) {
+                        delete user.rpgitems.key;
+                    }
+                });
             }
             if (user.rpgstatus?.name == null) {
                 user.rpgstate = 0;
@@ -126,7 +136,7 @@ function apply(ctx: Context, config?: Config) {
                     break;
                 case Item.ItemType.Accessory:
                     if (userStatus.accessary) {
-                        backItem = userStatus.accessary;
+                        backItem = typeof userStatus.accessary === "string" ? userStatus.accessary : "";
                         msg += `摘下了${backItem}, `;
                     }
                     userStatus.accessary = item.name;
