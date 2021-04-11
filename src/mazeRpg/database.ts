@@ -6,7 +6,7 @@ import { Player } from "./player";
 declare module 'koishi-core' {
     interface User {
         appearance: Player.Appearance,
-        rpgstatus?: Player.Status,
+        rpgstatus: Player.Status,
         money: number,
         rpgphase: Phase,
         rpgitems: Record<string, number>;

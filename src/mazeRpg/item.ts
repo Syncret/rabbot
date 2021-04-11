@@ -4,7 +4,7 @@ import { getEnumKeys } from "./util";
 export namespace Item {
     export enum Rarity { N, R, SR, SSR, Unq, Other }
     export type RarityKey = keyof typeof Rarity;
-    export enum ItemType { Weapon, Armor, Accessory, Consumable, Quest, }
+    export enum ItemType { Weapon, Armor, Accessory, Consumable, }
     export const maxBagSize = 30;
     export const extraBagSize = 10; // max weapon/armor count of single type
 
@@ -16,6 +16,10 @@ export namespace Item {
         lottery: boolean,
         price: number,
         rarity: Rarity
+    }
+    export interface ItemTypeMetadata<T extends ItemBase> {
+        name: string;
+        getItemEffectString: (item: T) => string;
     }
 
     type Data = Record<string, ItemBase> & ItemBase[] & Record<RarityKey, ItemBase[]>;
@@ -62,23 +66,39 @@ export namespace Item {
         ["短剑", Rarity.N, WpType.Short, 15],
         ["长剑", Rarity.N, WpType.Short, 25],
         ["大剑", Rarity.R, WpType.Short, 40],
-        ["巨剑", Rarity.SR, WpType.Short, 100],
-        ["圣剑", Rarity.SSR, WpType.Short, 140],
-        ["咖喱棒", Rarity.SSR, WpType.Short, 150, false],
+        ["巨剑", Rarity.SR, WpType.Short, 50],
+        ["圣剑", Rarity.SSR, WpType.Short, 60],
+        ["咖喱棒", Rarity.SSR, WpType.Short, 70, false],
         ["短棍", Rarity.N, WpType.Short, 15],
         ["双截棍", Rarity.R, WpType.Short, 25],
         ["长枪", Rarity.R, WpType.Short, 30],
         ["拳套", Rarity.N, WpType.Short, 25],
+        ["触手", Rarity.R, WpType.Short, 40],
         ["弹弓", Rarity.N, WpType.Long, 5],
         ["长弓", Rarity.N, WpType.Long, 15],
-        ["手枪", Rarity.N, WpType.Long, 20],
-        ["步枪", Rarity.R, WpType.Long, 30],
-        ["突击枪", Rarity.R, WpType.Long, 40],
-        ["狙击枪", Rarity.SR, WpType.Long, 60],
+        ["手枪", Rarity.N, WpType.Long, 10],
+        ["步枪", Rarity.R, WpType.Long, 20],
+        ["突击枪", Rarity.R, WpType.Long, 30],
+        ["狙击枪", Rarity.SR, WpType.Long, 40],
         ["法杖", Rarity.N, WpType.Magic, 20],
         ["魔导书", Rarity.N, WpType.Magic, 30],
     ];
     export const weaponItems = weaponItemArgs.map((a) => createWeaponItem(...a));
+    const WeaponTypeMetadata: ItemTypeMetadata<WeaponItem> = {
+        name: "武器",
+        getItemEffectString: (item: WeaponItem) => {
+            switch (item.subType) {
+                case WpType.Short:
+                    return `攻击+${item.effect}, 距离近`;
+                case WpType.Long:
+                    return `攻击+${item.effect}, 距离远`;
+                case WpType.Magic:
+                    return `魔攻+${item.effect}, 距离远`;
+                default:
+                    return `效果不明！`;
+            }
+        }
+    };
 
     // Armor
     export enum AmType { Normal, Magic, }
@@ -99,7 +119,7 @@ export namespace Item {
     }
     type ArmorArgs = Parameters<typeof createArmorItem>;
     export const armorItemArgs: ArmorArgs[] = [
-        ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"],
+        ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"], ["绷带"], ["肚兜"],
         ["内衣", Rarity.R, 5],
         ["比基尼", Rarity.R],
         ["护士服", Rarity.R],
@@ -113,6 +133,7 @@ export namespace Item {
         ["浴衣", Rarity.R],
         ["死库水", Rarity.R],
         ["和服", Rarity.R],
+        ["情趣衣", Rarity.R],
         ["花嫁衣", Rarity.R],
         ["触手服", Rarity.SR],
         ["战斗服", Rarity.SR],
@@ -120,6 +141,60 @@ export namespace Item {
         ["长袍", , AmType.Magic],
     ];
     export const armorItems = armorItemArgs.map((a) => createArmorItem(...a));
+    const ArmorTypeMetadata: ItemTypeMetadata<ArmorItem> = {
+        name: "衣服",
+        getItemEffectString: (item: ArmorItem) => {
+            switch (item.subType) {
+                case AmType.Normal:
+                    return `防御+${item.effect}`;
+                case AmType.Magic:
+                    return `魔防+${item.effect}, 距离远`;
+                default:
+                    return `效果不明！`;
+            }
+        }
+    };
+
+    export enum AcsType { DEF, ATK, }
+    export interface AccessoryItem extends ItemBase {
+        type: ItemType.Accessory,
+        subType: AcsType,
+    }
+    function createAccessoryItem(name: string, rarity: Rarity = Rarity.N, subType: AcsType = AcsType.DEF,
+        effect?: number, lottery: boolean = true, price?: number, description?: string) {
+        effect = effect == null ? rarity * 10 + 5 : effect;
+        price = price == null ? effect * 100 : price;
+        const item = {
+            type: ItemType.Accessory,
+            name, rarity, lottery, effect, price, description,
+            subType,
+        };
+        createItemBase(item);
+    }
+    type AccessoryArgs = Parameters<typeof createAccessoryItem>;
+    export const accessoryItemArgs: AccessoryArgs[] = [
+        ["猫耳"], ["兔耳"], ["蝴蝶结"], ["太阳帽"],
+        ["猫尾", Rarity.N, AcsType.ATK],
+        ["青蛙发夹", Rarity.N, AcsType.ATK],
+        ["星之耳钉", Rarity.R, AcsType.ATK],
+        ["月之耳坠", Rarity.R, AcsType.DEF],
+        ["日之耳环", Rarity.R, AcsType.ATK, 20],
+        ["六花的眼罩", Rarity.R, AcsType.ATK],
+    ];
+    export const accessoryItems = accessoryItemArgs.map((a) => createAccessoryItem(...a));
+    const AccessoryTypeMetadata: ItemTypeMetadata<AccessoryItem> = {
+        name: "饰品",
+        getItemEffectString: (item: AccessoryItem) => {
+            switch (item.subType) {
+                case AcsType.DEF:
+                    return `防御+${item.effect}`;
+                case AcsType.ATK:
+                    return `攻击+${item.effect}`;
+                default:
+                    return `效果不明！`;
+            }
+        }
+    };
 
     // Consumable
     export enum CsmType { HP, MP, HPMP, Other }
@@ -137,6 +212,7 @@ export namespace Item {
         };
         createItemBase(item);
     }
+
     type ConsumableArgs = Parameters<typeof createConsumableItem>;
     export const consumableItemArgs: ConsumableArgs[] = [
         ["HP药剂小", CsmType.HP, 20, Rarity.N],
@@ -150,6 +226,28 @@ export namespace Item {
         ["圣水", CsmType.HPMP, 100, Rarity.SR, 700],
     ];
     export const consumableItems = consumableItemArgs.map((a) => createConsumableItem(...a));
+    const ConsumableTypeMetadata: ItemTypeMetadata<ConsumableItem> = {
+        name: "消耗品",
+        getItemEffectString: (item: ConsumableItem) => {
+            switch (item.subType) {
+                case CsmType.HP:
+                    return `生命+${item.effect}`;
+                case CsmType.MP:
+                    return `魔力+${item.effect}`;
+                case CsmType.HPMP:
+                    return `生命与魔力+${item.effect}`;
+                default:
+                    return `效果不明！`;
+            }
+        }
+    };
+
+    export const ItemMetadata: Record<ItemType, ItemTypeMetadata<any>> = {
+        [ItemType.Weapon]: WeaponTypeMetadata,
+        [ItemType.Armor]: ArmorTypeMetadata,
+        [ItemType.Accessory]: AccessoryTypeMetadata,
+        [ItemType.Consumable]: ConsumableTypeMetadata,
+    }
 
 
     export function gain(session: Session<"rpgitems">, items: [ItemBase, number][]): string {
@@ -217,8 +315,9 @@ export namespace Item {
                 let imsg = `${name}*${Math.ceil(count)}`
                 if (detail) {
                     const item = data[name];
+                    const meta = ItemMetadata[item.type];
                     if (item) {
-                        imsg = `\n${imsg}: 效果${item.effect}, 价格${item.price}, 类型${ItemType[item.type]}${item.description ? ", " + item.description : ""}`;
+                        imsg = `\n${imsg}: ${meta.name}, ${meta.getItemEffectString(item)}, 价格${item.price}${item.description ? ", " + item.description : ""}`;
                     }
                 }
                 return imsg;
