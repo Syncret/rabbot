@@ -67,18 +67,18 @@ function apply(ctx: Context, config?: Config) {
 
     ctx.command("rpg/reset", "修复或重置角色状态")
         .userFields(rpgFields)
-        .action(async ({ session }) => {
-            const user = session!.user!;
+        .adminUser(({ target, session }) => {
+            const user = target;
             if (user.rpgstatus) {
                 user.rpgstate = 1;
-                if (user.rpgstatus.accessary !== null && typeof user.rpgstatus.accessary !== "string") {
-                    user.rpgstatus.accessary = undefined;
+                if (user.rpgstatus.accessary != null && typeof user.rpgstatus.accessary !== "string") {
+                    delete user.rpgstatus.accessary;
                 }
             }
             if (user.rpgitems) {
                 Object.entries(user.rpgitems).forEach(([key, value]) => {
                     if (typeof key !== "string" || Item.data[key] == null) {
-                        delete user.rpgitems.key;
+                        delete user.rpgitems[key];
                     }
                 });
             }
@@ -115,6 +115,10 @@ function apply(ctx: Context, config?: Config) {
                 return "你没有此物品";
             }
             const item = Item.data[name];
+            if (item == null) {
+                delete user.rpgitems[item];
+                return "找不到物品";
+            }
             let backItem: string = "";
             let msg = "";
             switch (item.type) {
