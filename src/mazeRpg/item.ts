@@ -249,7 +249,7 @@ export namespace Item {
         [ItemType.Armor]: ArmorTypeMetadata,
         [ItemType.Accessory]: AccessoryTypeMetadata,
         [ItemType.Consumable]: ConsumableTypeMetadata,
-    }
+    };
 
 
     export function gain(bag: Bag, items: [ItemBase, number][]): string {
@@ -329,7 +329,7 @@ export namespace Item {
             msg += "其他什么都没了呢。";
         } else {
             msg += itemsArray.map(([name, count]) => {
-                let imsg = `${name}*${Math.ceil(count)}`
+                let imsg = `${name}*${Math.ceil(count || 0)}`;
                 if (detail) {
                     const item = data[name];
                     if (item == null) {
@@ -421,7 +421,7 @@ export namespace Item {
                     if (validItems.length > 0) {
                         const money = sellItems(bag, validItems);
                         user.money = user.money + money;
-                        msg += `你卖掉了${validItems.map(([item, count])=>`${item.name}*${count}`).join(", ")}, 获得了${money}金币!`;
+                        msg += `你卖掉了${validItems.map(([item, count]) => `${item.name}*${count}`).join(", ")}, 获得了${money}金币!`;
                     }
                     return msg;
                 });
