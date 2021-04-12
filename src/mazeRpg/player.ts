@@ -23,7 +23,7 @@ export namespace Player {
         status: number,
         weapon?: string,
         armor?: string,
-        accessary?: string,
+        accessory?: string,
     }
     export function maxHp(status: Status): number {
         return status.level * 10 + 90;
@@ -52,18 +52,15 @@ export namespace Player {
         if (status?.weapon) {
             clothing += `手里拿着${status.weapon}, `;
         }
-        if (status?.accessary) {
-            clothing += `戴着${status.accessary}, `;
+        if (status?.accessory) {
+            clothing += `戴着${status.accessory}, `;
         }
         return `身高${apperance.height}, ${clothing}有着${apperance.eyeColor}色的眼睛, 梳着${apperance.hairColor}色的${apperance.hairType}。`;
     };
     export function describeStatus(status: Status): string {
-        if(status.accessary as any===[]){
-            delete status.accessary;
-        }
         return `${status.name}: 等级${status.level}, 经验${status.exp}/${maxExp(status)}, `
             + `生命${status.hp}/${maxHp(status)}, 魔力${status.mp}/${maxMp(status)}, `
-            + `体力${status.ap}/24, 武器${status.weapon || "无"}, 穿着${status.armor || "无"}, 饰品${status.accessary || "无"}。`
+            + `体力${status.ap}/24, 武器${status.weapon || "无"}, 穿着${status.armor || "无"}, 饰品${status.accessory || "无"}。`
     };
     export function createNewPlayer(name: string): Status {
         return {

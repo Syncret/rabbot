@@ -71,9 +71,6 @@ function apply(ctx: Context, config?: Config) {
             const user = target;
             if (user.rpgstatus) {
                 user.rpgstate = 1;
-                if (user.rpgstatus.accessary != null && typeof user.rpgstatus.accessary !== "string") {
-                    delete user.rpgstatus.accessary;
-                }
             }
             if (user.rpgitems) {
                 Object.entries(user.rpgitems).forEach(([key, value]) => {
@@ -139,11 +136,11 @@ function apply(ctx: Context, config?: Config) {
                     msg = `你${msg}穿上了${item.name}。`
                     break;
                 case Item.ItemType.Accessory:
-                    if (userStatus.accessary) {
-                        backItem = typeof userStatus.accessary === "string" ? userStatus.accessary : "";
+                    if (userStatus.accessory) {
+                        backItem = userStatus.accessory;
                         msg += `摘下了${backItem}, `;
                     }
-                    userStatus.accessary = item.name;
+                    userStatus.accessory = item.name;
                     msg = `你${msg}戴上了${item.name}。`
                     break;
                 case Item.ItemType.Consumable:
