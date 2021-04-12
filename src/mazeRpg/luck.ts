@@ -7,7 +7,7 @@ export const probabilities: Record<Item.RarityKey, number> = {
     SR: 50,
     SSR: 10,
     Unq: 0,
-    Other: 200,
+    Other: 0,
 }
 
 function apply(ctx: Context) {
