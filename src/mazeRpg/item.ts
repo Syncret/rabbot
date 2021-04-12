@@ -1,5 +1,6 @@
 import { Context, isInteger, Random, Session } from "koishi";
-import { getEnumKeys } from "./util";
+import { State } from "./state";
+import { getEnumKeys, min } from "./util";
 
 export namespace Item {
     export enum Rarity { N, R, SR, SSR, Unq, Other }
@@ -7,6 +8,7 @@ export namespace Item {
     export enum ItemType { Weapon, Armor, Accessory, Consumable, }
     export const maxBagSize = 20;
     export const extraBagSize = 5; // max weapon/armor count of single type
+    type Bag = Record<string, number | undefined>;
 
     export interface ItemBase {
         type: ItemType,
@@ -250,22 +252,19 @@ export namespace Item {
     }
 
 
-    export function gain(session: Session<"rpgitems">, items: [ItemBase, number][]): string {
+    export function gain(bag: Bag, items: [ItemBase, number][]): string {
         let msg = "";
         let itemMsg: string[] = [];
-        if (session.user!.rpgitems == null) {
-            session.user!.rpgitems = {};
-        }
         items.forEach((itemE) => {
             const item = itemE[0];
             let count = itemE[1];
             if (count !== 0) {
-                session.user!.rpgitems[item.name] = (session.user!.rpgitems[item.name] as number || 0) + count;
+                bag[item.name] = (bag[item.name] || 0) + count;
                 itemMsg.push(`${item.name}*${count}`);
             }
         });
         msg += `你获得了${itemMsg.join(", ")}!`;
-        msg += checkBagFull(session);
+        msg += checkBagFull(bag);
         return msg;
     }
 
@@ -280,14 +279,28 @@ export namespace Item {
         return msg;
     }
 
-    export function checkBagFull(session: Session<"rpgitems">): string {
-        const items = Array.from(Object.keys(session.user!.rpgitems));
-        let itemCount = items.length;
+    export function sellItems(bag: Bag, toSellItems: [ItemBase, number][]): number {
+        let money = 0;
+        toSellItems.forEach((toSellItem) => {
+            const [item, itemCount] = toSellItem;
+            if (itemCount > 0) {
+                const curItemCount = bag[item.name] || 0;
+                const toSellCount = min(curItemCount, itemCount);
+                money += Math.floor(item.price * toSellCount / 10);
+                bag[item.name] = curItemCount - toSellCount > 0 ? curItemCount - toSellCount : undefined;
+            }
+        });
+        return money;
+    }
+
+    export function checkBagFull(items: Bag): string {
+        const itemsArray = Array.from(Object.keys(items || {}));
+        let itemCount = itemsArray.length;
         const itemMsg = [];
         let msg = "";
         while (itemCount > maxBagSize + extraBagSize) {
-            const dItem = Random.pick(items);
-            delete session.user?.rpgitems[dItem];
+            const dItem = Random.pick(itemsArray);
+            delete items[dItem];
             itemMsg.push(`${dItem}`);
             itemCount--;
         }
@@ -315,6 +328,10 @@ export namespace Item {
                 let imsg = `${name}*${Math.ceil(count)}`
                 if (detail) {
                     const item = data[name];
+                    if (item == null) {
+                        delete items[name];
+                        return "";
+                    }
                     const meta = ItemMetadata[item.type];
                     if (item) {
                         imsg = `\n${imsg}: ${meta.name}, ${meta.getItemEffectString(item)}, 价格${item.price}${item.description ? ", " + item.description : ""}`;
@@ -329,29 +346,40 @@ export namespace Item {
 
     export const itemPlugin = {
         apply: (ctx: Context) => {
+            const string2ItemWithCount = (text: string, bag?: Bag) => {
+                let notFoundItems: string[] = [];
+                const validItems: [ItemBase, number][] = [];
+                text.split(/,|，/).forEach((i) => {
+                    const ia = i.trim().split("*");
+                    if (bag && bag[ia[0]] == null) {
+                        notFoundItems.push(ia[0]);
+                        return;
+                    };
+                    const item = data[ia[0]];
+                    if (item) {
+                        validItems.push([item, Number(ia[1]) || 1]);
+                    } else {
+                        notFoundItems.push(ia[0]);
+                    }
+                });
+                return {
+                    notFoundItems,
+                    validItems
+                };
+            }
             ctx.command("rpg.addItems <items:text>", "增加道具", { authority: 4, hidden: true })
                 .userFields(["rpgitems"])
-                .action(({ session }, items) => {
+                .adminUser(({ target }, items) => {
                     if (items == null || items.length === 0) {
                         return "请输入物品名";
                     }
-                    const aItems: [ItemBase, number][] = [];
                     let msg = "";
-                    let notFoundItems: string[] = [];
-                    items.split(",").forEach((i) => {
-                        const ia = i.trim().split("*");
-                        const item = data[ia[0]];
-                        if (item) {
-                            aItems.push([item, Number(ia[1]) || 1]);
-                        } else {
-                            notFoundItems.push(ia[0]);
-                        }
-                    });
+                    const { notFoundItems, validItems } = string2ItemWithCount(items);
                     if (notFoundItems.length > 0) {
                         msg += `找不到物品${notFoundItems.join(", ")}, `;
                     }
-                    if (aItems.length > 0) {
-                        msg += gain(session!, aItems);
+                    if (validItems.length > 0) {
+                        msg += gain(target.rpgitems, validItems);
                     }
                     return msg;
                 });
@@ -363,13 +391,35 @@ export namespace Item {
                     target.money = money;
                 });
             ctx.command("rpg/discard <items:text>", "扔掉道具")
-                .userFields(["rpgitems"])
+                .userFields(["rpgitems", "rpgstate"])
+                .check(State.stateChecker())
                 .action(({ session }, items) => {
                     if (items == null || items.length === 0) {
                         return "请输入物品名";
                     }
-                    const dItems = items.split(",").map((i) => i.trim());
+                    const dItems = items.split(/,|，/).map((i) => i.trim());
                     return discardItems(session!, dItems);
+                });
+            ctx.command("rpg/sell <items:text>", "卖掉道具")
+                .userFields(["rpgitems", "money", "rpgstate"])
+                .check(State.stateChecker())
+                .action(({ session }, items) => {
+                    if (items == null || items.length === 0) {
+                        return "请输入物品名";
+                    }
+                    const user = session?.user!;
+                    const bag = user.rpgitems;
+                    let msg = "";
+                    const { notFoundItems, validItems } = string2ItemWithCount(items, bag);
+                    if (notFoundItems.length > 0) {
+                        msg += `找不到物品${notFoundItems.join(", ")}, `;
+                    }
+                    if (validItems.length > 0) {
+                        const money = sellItems(bag, validItems);
+                        user.money = user.money + money;
+                        msg += `你获得了${money}金币!`;
+                    }
+                    return msg;
                 });
         }
     }

@@ -14,11 +14,15 @@ function apply(ctx: Context) {
     ctx.command('rpg/luck ', '每日抽卡', { maxUsage: 1 })
         .userFields(["rpgitems", "money"])
         .adminUser(({ session, target }) => {
+            if (session?.user?.rpgitems == null) {
+                session!.user!.rpgitems = {};
+            }
+            const bag = session!.user!.rpgitems;
             const canItems = Item.data[Random.weightedPick(probabilities)];
             if (canItems.length > 0) {
                 const item = Random.pick(canItems);
                 if (item !== null && item.lottery) {
-                    return Item.gain(session!, [[item, 1]]);
+                    return Item.gain(bag, [[item, 1]]);
                 }
             }
             const luckMoney = Random.int(10, 1000);

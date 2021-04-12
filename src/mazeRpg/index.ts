@@ -90,7 +90,7 @@ function apply(ctx: Context, config?: Config) {
         .option("detail", "-d 显示物品详细")
         .action(async ({ session, options }) => {
             let msg = Item.viewBag(session!, options?.detail);
-            msg += Item.checkBagFull(session!);
+            msg += Item.checkBagFull(session!.user!.rpgitems);
             return msg;
         });
     ctx.command("rpg/state", "检查状态")
