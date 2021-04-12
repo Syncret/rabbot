@@ -148,7 +148,7 @@ export namespace Item {
                 case AmType.Normal:
                     return `防御+${item.effect}`;
                 case AmType.Magic:
-                    return `魔防+${item.effect}, 距离远`;
+                    return `魔防+${item.effect}`;
                 default:
                     return `效果不明！`;
             }
