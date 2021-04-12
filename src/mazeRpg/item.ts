@@ -287,7 +287,11 @@ export namespace Item {
                 const curItemCount = bag[item.name] || 0;
                 const toSellCount = min(curItemCount, itemCount);
                 money += Math.floor(item.price * toSellCount / 10);
-                bag[item.name] = curItemCount - toSellCount > 0 ? curItemCount - toSellCount : undefined;
+                if (curItemCount - toSellCount > 0) {
+                    bag[item.name] = curItemCount - toSellCount;
+                } else {
+                    delete bag[item.name];
+                }
             }
         });
         return money;
@@ -417,7 +421,7 @@ export namespace Item {
                     if (validItems.length > 0) {
                         const money = sellItems(bag, validItems);
                         user.money = user.money + money;
-                        msg += `你获得了${money}金币!`;
+                        msg += `你卖掉了${validItems.map(([item, count])=>`${item.name}*${count}`).join(", ")}, 获得了${money}金币!`;
                     }
                     return msg;
                 });
