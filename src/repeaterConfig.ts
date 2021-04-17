@@ -1,34 +1,37 @@
 import { Random, segment, Session } from "koishi";
 import { Config } from "koishi-plugin-common";
-import { pickRandomly } from "./util";
 
-export const repeaterConfig: Config = {
-  onRepeat: (
-    state: {
-      times: number;
-      repeated: boolean;
-      content: string;
-      users: Record<string, number>;
+export function repeaterConfig(enableBanGroups: string[] = []): Config {
+  return {
+    onRepeat: (
+      state: {
+        times: number;
+        repeated: boolean;
+        content: string;
+        users: Record<string, number>;
+      },
+      session: Session
+    ) => {
+      if (state.content.startsWith("/")) {
+        return;
+      }
+      if (enableBanGroups.includes(session.groupId!)) {
+        if (state.users[session.userId!] > 1) {
+          return segment.at(session.userId!) + "兔兔出警，不许重复复读！";
+        }
+        if (state.times > 2 && Random.bool(state.times / 20)) {
+          ban(session, session.userId!, state.times);
+          return (
+            `复读机失控了！兔兔只来得及逮捕最后一个复读机！` +
+            `那个人就是...${segment.at(session.userId!)}! `
+          );
+        }
+      }
+      if (state.times > 2 && !state.repeated && Random.bool(0.4)) {
+        return state.content;
+      }
     },
-    session: Session
-  ) => {
-    if (state.content.startsWith("/")) {
-      return;
-    }
-    if (state.users[session.userId!] > 1) {
-      return segment.at(session.userId!) + "兔兔出警，不许重复复读！";
-    }
-    if (state.times > 2 && !state.repeated && Random.bool(0.4)) {
-      return state.content;
-    }
-    if (state.times >= 2 && Random.bool(state.times / 20)) {
-      ban(session, session.userId!, state.times);
-      return (
-        `复读机失控了！兔兔只来得及逮捕最后一个复读机！` +
-        `那个人就是...${segment.at(session.userId!)}! `
-      );
-    }
-  },
+  };
 };
 
 const rolePermissionMap = {

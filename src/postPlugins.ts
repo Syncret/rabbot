@@ -1,8 +1,6 @@
 import { Context } from "koishi";
 
-export const PostPlugins = {
-  name: "PostPlugins",
-  apply: (ctx: Context) => {
-    ctx.command("shot", { authority: 2 });
-  },
+export const name = "PostPlugins";
+export function apply(ctx: Context) {
+  ctx.command("shot", { authority: 2 });
 };

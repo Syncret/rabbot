@@ -10,7 +10,7 @@ export interface Config {
 
 }
 
-function apply(ctx: Context, config?: Config) {
+export function apply(ctx: Context, config?: Config) {
     ctx.command("rpg", "Maze RPG");
     ctx.plugin(RPGLuck);
     ctx.plugin(Player);
@@ -109,7 +109,7 @@ function apply(ctx: Context, config?: Config) {
             const userItems = user.rpgitems;
             const itemCount = userItems && userItems[name];
             if (itemCount == null || itemCount <= 0) {
-                return "你没有此物品";
+                return "你没有此物品。";
             }
             const item = Item.data[name];
             if (item == null) {
@@ -176,7 +176,4 @@ function apply(ctx: Context, config?: Config) {
         });
 }
 
-export const MazeRpg = {
-    name: "MazeRpg",
-    apply
-}
+export const name = "MazeRpg";

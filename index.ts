@@ -3,7 +3,7 @@ import "koishi-adapter-onebot";
 import * as PluginCommon from "koishi-plugin-common";
 import { repeaterConfig } from "./src/repeaterConfig";
 import * as MySql from "koishi-plugin-mysql";
-import { PostPlugins } from "./src/postPlugins";
+import * as PostPlugins from "./src/postPlugins";
 import * as puppeteer from "koishi-plugin-puppeteer";
 import * as regexReplier from "./src/regexReplier";
 import * as saveLoad from "./src/saveLoad";
@@ -15,9 +15,10 @@ import * as Teach from "koishi-plugin-teach";
 import * as ImageSearch from "koishi-plugin-image-search";
 import * as Schedule from "koishi-plugin-schedule";
 import * as RSS from "koishi-plugin-rss";
+import * as MazeRpg from "./src/mazeRpg";
+import * as WebUI from "koishi-plugin-webui";
 import { config } from "./rabbot.config";
 import { DailyCheckin } from "./src/dailyCheckin";
-import { MazeRpg } from "./src/mazeRpg";
 
 const { admin, selfId, secret, token, sqlUser, sqlPassword, server } = config;
 
@@ -38,7 +39,7 @@ const app = new App({
 });
 
 app.plugin(PluginCommon, {
-  ...repeaterConfig,
+  ...repeaterConfig([]),
 });
 app.plugin(MySql, {
   host: "127.0.0.1",
@@ -55,19 +56,20 @@ app.plugin(puppeteer, {
     },
   },
 });
+app.plugin(RSS, {
+  refresh: 30 * Time.minute
+});
+app.plugin(Teach);
+app.plugin(ImageSearch);
+app.plugin(Schedule);
+
 app.plugin(regexReplier);
 app.plugin(saveLoad, { admins: [admin] });
 app.plugin(checkImage);
 app.plugin(translator);
 app.plugin(recalledMessage);
 app.plugin(voice, { admins: [admin], on: true });
-app.plugin(Teach);
-app.plugin(ImageSearch);
-app.plugin(Schedule);
 app.plugin(DailyCheckin);
-app.plugin(RSS, {
-  refresh: 30 * Time.minute
-});
 app.plugin(MazeRpg);
 
 app.plugin(PostPlugins);

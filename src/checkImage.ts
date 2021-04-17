@@ -1,14 +1,13 @@
-import { Context } from "koishi-core";
-import { CQCodeType, getCQImageUrlFromMsg, parseCQ } from "./CQUtil";
+import { Context, segment } from "koishi-core";
+import { getCQImageUrlFromMsg } from "./CQUtil";
 import {
   PornTagStringMap,
   PornTags,
   PornTagType,
   tencentAIApis,
 } from "./TencentAiApis";
-import { compareIgnoreCase } from "./util";
 
-export interface Options {}
+export interface Options { }
 
 function getResponseMessageAsync(
   imageUrl: string | undefined,
@@ -70,10 +69,21 @@ function getResponseMessageAsync(
 }
 
 export function apply(ctx: Context, options: Options) {
-  ctx.middleware((session, next) => {
+  const keyword = "兔兔鉴黄";
+  ctx.middleware(async (session, next) => {
     const msg = session.content;
-    if (msg && msg.startsWith("兔兔鉴黄")) {
-      const imageUrl = getCQImageUrlFromMsg(msg);
+    if (msg && (msg.startsWith(keyword) || msg.endsWith(keyword))) {
+      const segs = segment.parse(msg);
+      let imageUrl = "";
+      for (let seg of segs) {
+        if (seg.type === "quote") {
+          const quoteMsg = await session.bot.getMessage(session.channelId!, seg.data.id);
+          seg = segment.from(quoteMsg.content!);
+        }
+        if (seg.type === 'image') {
+          imageUrl = seg.data.url;
+        }
+      }
       if (imageUrl) {
         return getResponseMessageAsync(imageUrl, {}).then((msg) => {
           if (msg) {
