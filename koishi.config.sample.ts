@@ -52,6 +52,7 @@ const config: AppConfig = {
     "image-search": {},
     "schedule": {},
     "webui": {},
+    "shell": {},
 
     "./src/regexReplier": {},
     "./src/saveLoad": { admins: [admin] },
