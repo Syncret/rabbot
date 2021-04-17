@@ -67,10 +67,17 @@ function apply(ctx: Context, config?: Config) {
 
     ctx.command("rpg/reset", "修复或重置角色状态")
         .userFields(rpgFields)
-        .action(async ({ session }) => {
-            const user = session!.user!;
+        .adminUser(({ target, session }) => {
+            const user = target;
             if (user.rpgstatus) {
                 user.rpgstate = 1;
+            }
+            if (user.rpgitems) {
+                Object.entries(user.rpgitems).forEach(([key, value]) => {
+                    if (typeof key !== "string" || Item.data[key] == null) {
+                        delete user.rpgitems[key];
+                    }
+                });
             }
             if (user.rpgstatus?.name == null) {
                 user.rpgstate = 0;
@@ -105,6 +112,10 @@ function apply(ctx: Context, config?: Config) {
                 return "你没有此物品";
             }
             const item = Item.data[name];
+            if (item == null) {
+                delete user.rpgitems[item];
+                return "找不到物品";
+            }
             let backItem: string = "";
             let msg = "";
             switch (item.type) {
@@ -125,11 +136,11 @@ function apply(ctx: Context, config?: Config) {
                     msg = `你${msg}穿上了${item.name}。`
                     break;
                 case Item.ItemType.Accessory:
-                    if (userStatus.accessary) {
-                        backItem = userStatus.accessary;
+                    if (userStatus.accessory) {
+                        backItem = userStatus.accessory;
                         msg += `摘下了${backItem}, `;
                     }
-                    userStatus.accessary = item.name;
+                    userStatus.accessory = item.name;
                     msg = `你${msg}戴上了${item.name}。`
                     break;
                 case Item.ItemType.Consumable:

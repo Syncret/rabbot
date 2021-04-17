@@ -5,8 +5,8 @@ export namespace Item {
     export enum Rarity { N, R, SR, SSR, Unq, Other }
     export type RarityKey = keyof typeof Rarity;
     export enum ItemType { Weapon, Armor, Accessory, Consumable, }
-    export const maxBagSize = 30;
-    export const extraBagSize = 10; // max weapon/armor count of single type
+    export const maxBagSize = 20;
+    export const extraBagSize = 5; // max weapon/armor count of single type
 
     export interface ItemBase {
         type: ItemType,
@@ -148,7 +148,7 @@ export namespace Item {
                 case AmType.Normal:
                     return `防御+${item.effect}`;
                 case AmType.Magic:
-                    return `魔防+${item.effect}, 距离远`;
+                    return `魔防+${item.effect}`;
                 default:
                     return `效果不明！`;
             }
