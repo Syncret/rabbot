@@ -61,7 +61,7 @@ const config: AppConfig = {
     "./src/requestRedirector": { admin: admin },
     "./src/recalledMessage": {},
     "./src/voice": { admins: [admin], on: true },
-    "./src/mazeRPG": {},
+    "./src/mazeRpg": {},
 
     "./src/postPlugins": {},
     // dice: {},
