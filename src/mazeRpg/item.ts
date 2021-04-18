@@ -6,8 +6,8 @@ export namespace Item {
     export enum Rarity { N, R, SR, SSR, Unq, Other }
     export type RarityKey = keyof typeof Rarity;
     export enum ItemType { Weapon, Armor, Accessory, Consumable, }
-    export const maxBagSize = 20;
-    export const extraBagSize = 5; // max weapon/armor count of single type
+    export const maxBagSize = 10;
+    export const extraBagSize = 3; // max weapon/armor count of single type
     type Bag = Record<string, number | undefined>;
 
     export interface ItemBase {
@@ -122,7 +122,7 @@ export namespace Item {
     type ArmorArgs = Parameters<typeof createArmorItem>;
     export const armorItemArgs: ArmorArgs[] = [
         ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"], ["绷带"], ["肚兜"],
-        ["内衣", Rarity.R, 5],
+        ["内衣", Rarity.R, AmType.Normal, 5],
         ["比基尼", Rarity.R],
         ["护士服", Rarity.R],
         ["连衣裙", Rarity.R],
