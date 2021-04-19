@@ -270,12 +270,22 @@ export namespace Item {
 
     export function discardItems(session: Session<"rpgitems">, items: string[]): string {
         let msg = "";
-        let itemMsg: string[] = [];
+        let itemThrow: string[] = [];
+        let itemNotFound: string[] = [];
         items.forEach((item) => {
-            delete session.user?.rpgitems[item];
-            itemMsg.push(item);
+            if (session.user?.rpgitems[item] != null) {
+                delete session.user?.rpgitems[item];
+                itemThrow.push(item);
+            } else {
+                itemNotFound.push(item);
+            }
         });
-        msg = `你扔掉了${itemMsg.join(", ")}。`;
+        if (itemNotFound.length > 0) {
+            msg += `找不到物品${itemNotFound.join(", ")}。`
+        }
+        if (itemThrow.length > 0) {
+            msg += `你扔掉了${itemThrow.join(", ")}。`;
+        }
         return msg;
     }
 
