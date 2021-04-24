@@ -2,7 +2,7 @@ import { Context, Random } from "koishi";
 import { State } from "./state";
 
 export namespace Player {
-    export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "虹",
+    export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "金", "虹",
         "玫瑰", "琥珀", "天青", "翡翠", "琉璃"];
     export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发", "大波浪"];
     export type Appearance = {

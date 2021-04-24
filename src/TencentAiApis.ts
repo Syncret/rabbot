@@ -126,10 +126,8 @@ class TencentAIApis {
     const payload = this._createRequestPayload({ image_url: imageUrl });
 
     const responseData = await this._sendRequest<TecentAIResponseVisionPornData>(
-      // "https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
-      // payload,
-      "https://ai.qq.com/cgi-bin/appdemo_imageporn?g_tk=837557226",
-      { image_url: imageUrl }
+      "https://api.ai.qq.com/fcgi-bin/vision/vision_porn",
+      payload,
     );
     const tagList = responseData.tag_list || [];
     const result: Partial<Record<PornTagType, number>> = {};
@@ -139,58 +137,6 @@ class TencentAIApis {
     return result as Record<PornTagType, number>;
   }
 
-  public async nlpTextDetect(text: string) {
-    this.authorize();
-    const payload = this._createRequestPayload({ text, force: "0" });
-    const responseData = await this._sendRequest<TecentAIResponseNlpTextDetectData>(
-      "https://api.ai.qq.com/fcgi-bin/nlp/nlp_textdetect",
-      payload
-    );
-    return responseData.lang;
-  }
-
-  public async nlpTextTranslate(
-    text: string,
-    source: LanType,
-    target: LanType
-  ) {
-    this.authorize();
-    const payload = this._createRequestPayload({ text, source, target });
-    const responseData = await this._sendRequest<TecentAIResponseNlpTextTranslateData>(
-      "https://api.ai.qq.com/fcgi-bin/nlp/nlp_texttranslate",
-      payload
-    );
-    return responseData.target_text;
-  }
-
-  public async nlpImageTranslate(
-    imageUrl: string,
-    scene: "word" | "doc",
-    source: LanType,
-    target: LanType
-  ) {
-    this.authorize();
-    const imageRes = await getUrlContentInBase64(imageUrl, {
-      maxContentLength: 1000 * 1000,
-    });
-    if (!imageRes.type.startsWith("image")) {
-      throw Error("Not an image, content-type: " + imageRes.type);
-    }
-    const payload = this._createRequestPayload({
-      image: imageRes.data,
-      session_id: getRandomString(),
-      scene,
-      source,
-      target,
-    });
-
-    const responseData = await this._sendRequest<TecentAIResponseNlpImageTranslateData>(
-      "https://api.ai.qq.com/fcgi-bin/nlp/nlp_imagetranslate",
-      payload
-    );
-    const records = responseData.image_records;
-    return records;
-  }
 
   public async aaiTts(
     text: string,
