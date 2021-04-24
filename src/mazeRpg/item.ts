@@ -64,7 +64,7 @@ export namespace Item {
         ["小刀"],
         ["刀", Rarity.N, WpType.Short, 20],
         ["武士刀", Rarity.R, WpType.Short, 40],
-        ["太刀", Rarity.SR, WpType.Short, 60],
+        ["太刀", Rarity.SR, WpType.Short, 50],
         ["短剑", Rarity.N, WpType.Short, 15],
         ["长剑", Rarity.N, WpType.Short, 25],
         ["大剑", Rarity.R, WpType.Short, 40],
@@ -121,9 +121,12 @@ export namespace Item {
     }
     type ArmorArgs = Parameters<typeof createArmorItem>;
     export const armorItemArgs: ArmorArgs[] = [
-        ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"], ["绷带"], ["肚兜"],
+        ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"], ["绷带"],
+        ["肚兜", Rarity.N, AmType.Normal, 10, false], // deprecate
         ["内衣", Rarity.R, AmType.Normal, 5],
         ["比基尼", Rarity.R],
+        ["水手服", Rarity.R],
+        ["布偶装", Rarity.R],
         ["护士服", Rarity.R],
         ["连衣裙", Rarity.R],
         ["女仆裙", Rarity.R],
@@ -270,12 +273,22 @@ export namespace Item {
 
     export function discardItems(session: Session<"rpgitems">, items: string[]): string {
         let msg = "";
-        let itemMsg: string[] = [];
+        let itemThrow: string[] = [];
+        let itemNotFound: string[] = [];
         items.forEach((item) => {
-            delete session.user?.rpgitems[item];
-            itemMsg.push(item);
+            if (session.user?.rpgitems[item] != null) {
+                delete session.user?.rpgitems[item];
+                itemThrow.push(item);
+            } else {
+                itemNotFound.push(item);
+            }
         });
-        msg = `你扔掉了${itemMsg.join(", ")}。`;
+        if (itemNotFound.length > 0) {
+            msg += `找不到物品${itemNotFound.join(", ")}。`
+        }
+        if (itemThrow.length > 0) {
+            msg += `你扔掉了${itemThrow.join(", ")}。`;
+        }
         return msg;
     }
 

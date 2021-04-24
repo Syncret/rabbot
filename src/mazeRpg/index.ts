@@ -26,6 +26,9 @@ export function apply(ctx: Context, config?: Config) {
             if (!name) {
                 return "需要指定新角色的名字。";
             }
+            if(name.length>10){
+                return "太长啦，名字不能超过10个字符。"
+            }
             user.rpgphase = Phase.idle;
             user.rpgstate = State.active;
             user.appearance = Player.generateAppearance();
