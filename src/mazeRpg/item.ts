@@ -63,8 +63,8 @@ export namespace Item {
     const weaponItemArgs: WeaponArgs[] = [
         ["小刀"],
         ["刀", Rarity.N, WpType.Short, 20],
-        ["武士刀", Rarity.R, WpType.Short, 40],
-        ["太刀", Rarity.SR, WpType.Short, 60],
+        ["武士刀", Rarity.R, WpType.Short, 30],
+        ["太刀", Rarity.SR, WpType.Short, 40],
         ["短剑", Rarity.N, WpType.Short, 15],
         ["长剑", Rarity.N, WpType.Short, 25],
         ["大剑", Rarity.R, WpType.Short, 40],
@@ -177,6 +177,7 @@ export namespace Item {
     type AccessoryArgs = Parameters<typeof createAccessoryItem>;
     export const accessoryItemArgs: AccessoryArgs[] = [
         ["猫耳"], ["兔耳"], ["蝴蝶结"], ["太阳帽"],
+        ["眼镜"], ["泳镜"], ["太阳镜"],
         ["猫尾", Rarity.N, AcsType.ATK],
         ["青蛙发夹", Rarity.N, AcsType.ATK],
         ["星之耳钉", Rarity.R, AcsType.ATK],
