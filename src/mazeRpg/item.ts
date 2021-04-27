@@ -133,6 +133,7 @@ export namespace Item {
         ["JK服", Rarity.R],
         ["LO裙", Rarity.R],
         ["巫女服", Rarity.R],
+        ["偶像服", Rarity.R],
         ["盔甲", Rarity.R],
         ["兔女郎服", Rarity.R],
         ["浴衣", Rarity.R],
