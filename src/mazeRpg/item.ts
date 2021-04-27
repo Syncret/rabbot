@@ -121,9 +121,11 @@ export namespace Item {
     }
     type ArmorArgs = Parameters<typeof createArmorItem>;
     export const armorItemArgs: ArmorArgs[] = [
-        ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"], ["绷带"], ["肚兜"],
+        ["体操服"], ["泳衣"], ["衬衣"], ["运动衫"], ["绷带"],
+        ["肚兜", Rarity.N, AmType.Normal, 10, false], // deprecate
         ["内衣", Rarity.R, AmType.Normal, 5],
         ["比基尼", Rarity.R],
+        ["水手服", Rarity.R],
         ["布偶装", Rarity.R],
         ["护士服", Rarity.R],
         ["连衣裙", Rarity.R],
