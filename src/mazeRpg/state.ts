@@ -14,7 +14,7 @@ export namespace State {
         }
         const mismatch = state ^ target;
         if (hasState(mismatch, active)) {
-            return "角色未初始化，请使用start指令创建新人物。";
+            return "角色未初始化，请使用start <角色名>指令创建新人物。";
         }
         if (hasState(mismatch, movable)) {
             return "无法移动!";
