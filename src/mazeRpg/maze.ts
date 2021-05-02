@@ -1,72 +1,75 @@
-import { Random } from "koishi-utils";
+import { Context, Random } from "koishi";
+import { State } from "./state";
+import { generateMaze } from "./maze.util";
 
-function generateMaze<T extends string>(width: number, height: number, ringProb: number = 0, roomProb?: Record<T, number>) {
-    if (width < 2 || height < 2) {
-        throw Error("Height and width must be greater than 2");
-    }
-    if (width % 2 === 0) width++;
-    if (height % 2 === 0) height++;
-    // initialize the maze
-    // -1: determined wall, 0: undetermined wall, 1: unconnected land, 2: connected land
-    let maze: number[] = [];
-    const initWall = (i: number, size: number) => (i === 0 || (i % 2 === 0 && i === size - 1)) ? -1 : 0;
-    for (let i = 0; i < height; i++) {
-        const curLine: number[] = new Array(width);
-        if (i % 2 === 0) {
-            curLine.fill(initWall(i, height));
-            maze.push(...curLine);
-        } else {
-            for (let j = 0; j < width; j++) {
-                curLine[j] = j % 2 === 0 ? initWall(j, width) : 1;
+const defaultWidth = 8;
+const defaultHeight = 8;
+
+function apply(ctx: Context) {
+    const { database } = ctx;
+    ctx.command('rpg/createMaze <name:string>', '生成迷宫', { hidden: true, authority: 3 })
+        .alias("生成迷宫")
+        .action(async ({ session }) => {
+            const mazes = await database.get("maze", { channelId: [session?.channelId!], level: [0] }, ["id", "width", "height"]);
+            if (mazes.length === 0) { // no existing maze for this channel
+                session?.sendQueued("生成迷宫中...");
+                const maze = await database.create('maze', {
+                    channelId: session?.channelId,
+                    level: 0,
+                    width: defaultWidth,
+                    height: defaultHeight,
+                });
+                const mazeId = maze.id;
+                const mazeCells = generateMaze(maze.width, maze.height);
+                mazeCells.map((value, index) => {
+                    database.create('mazeCell', {
+                        mazeId,
+                        cell: index,
+                        door: value,
+                        type: 0
+                    });
+                })
+            } else {
+                return "已经有迷宫啦。"
             }
-            maze.push(...curLine);
-        }
-    }
-    const start = width + 1;
-    const blues = new Set<number>();
-    const markNewCube = (red: number) => {
-        maze[red] = 2;
-        [red - 1, red + 1, red - width, red + width]
-            .forEach((c) => maze[c] === 0 && blues.add(c));
-    }
-    markNewCube(start);
-    let redCount = 1;
-    const maxReds = Math.floor(width / 2) * Math.floor(height / 2);
-    while (blues.size > 0) {
-        const blue = Random.pick(Array.from(blues));
-        blues.delete(blue);
-        let redCan = blue % width % 2 === 0 ? [blue - 1, blue + 1] : [blue - width, blue + width];
-        redCan = redCan.filter((r) => maze[r] === 1);
-        if (redCan.length === 0) {
-            maze[blue] = Math.random() > ringProb ? -1 : 1;
-        } else {
-            maze[blue] = 1;
-            markNewCube(redCan[0]);
-            redCount++;
-            if (redCount >= maxReds) {
-                break;
+            return "";
+        });
+    ctx.command('rpg/startMaze ', 'start maze', { hidden: true })
+        .userFields(["rpgstate", "mazeCellId"])
+        .check(State.stateChecker())
+        .action(async ({ session }) => {
+            const user = session?.user!;
+            if (user.mazeCellId) {
+                return "已经在一个迷宫中啦";
             }
-        }
-    }
-    if (roomProb) {
-        const maze2 = maze.map((c) => c === 2 ? Random.weightedPick(roomProb) : c);
-        return maze2
-    }
-    return maze;
+            const mazes = await database.get("maze", { channelId: [session?.channelId!], level: [0] }, ["id", "width", "height"]);
+            if (mazes.length === 0) { // no existing maze for this channel
+                session?.sendQueued("未发现已有迷宫，生成迷宫中...");
+                const maze = await database.create('maze', {
+                    channelId: session?.channelId,
+                    level: 0,
+                    width: defaultWidth,
+                    height: defaultHeight,
+                });
+                const mazeId = maze.id;
+                const mazeCells = generateMaze(maze.width, maze.height);
+                mazeCells.map((value, index) => {
+                    database.create('mazeCell', {
+                        mazeId,
+                        cell: index,
+                        door: value,
+                        type: 0
+                    });
+                })
+            } else {
+
+            }
+
+            return ``;
+        });
 }
 
-function printMaze<T extends string | number>(maze: (T | undefined)[], width: number, wallChar = "*") {
-    const maze2 = maze.map((cube, index) => {
-        const char = typeof cube === "number" ? cube > 0 ? "  " : cube === 0 ? "口" : "口" : cube;
-        return (index + 1) % width === 0 ? char + "\n" : char;
-    }).join("");
-    console.log(maze2);
+export const RPGMaze = {
+    name: "RPGMaze",
+    apply
 }
-
-function test() {
-    const [width, height] = [16, 16];
-    const maze = generateMaze(width, height, 0.1, { "梯": 5, "泉": 10, "  ": 150, "陷": 10 })
-    printMaze(maze, width + 1);
-}
-
-test();
