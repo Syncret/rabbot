@@ -11,6 +11,7 @@ declare module 'koishi-core' {
         rpgphase: Phase,
         rpgitems: Record<string, number>;
         rpgstate: number,
+        rpgname: string,
         mazeId: number,
         mazeCellId: number
     }
@@ -32,7 +33,8 @@ export interface MazeCell {
     mazeId: number,
     cell: number,
     door: number,
-    type: number,
+    items: Record<string, number>,
+    room: string,
 };
 
 User.extend(() => ({
@@ -44,7 +46,7 @@ User.extend(() => ({
     rpgstate: 0,
     mazeCellId: 0,
 }));
-export const rpgFields = ["appearance", "money", "rpgitems", "rpgstatus", "rpgphase", "rpgstate"] as const;
+export const rpgFields = ["appearance", "money", "rpgitems", "rpgstatus", "rpgphase", "rpgstate", "mazeCellId"] as const;
 
 Tables.extend('maze');
 
@@ -56,6 +58,7 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         tables.user.rpgitems = new Domain.Json();
         tables.user.rpgstatus = new Domain.Json();
         tables.user.rpgstate = "int";
+        tables.user.rpgname = "varchar(20)";
         tables.user.mazeCellId = "int";
     }
 });
@@ -77,6 +80,7 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         mazeId: `INT(10) NOT NULL`,
         cell: `SMALLINT UNSIGNED`,
         door: `SMALLINT UNSIGNED`,
-        type: `INT`
+        items: new Domain.Json(),
+        room: `VARCHAR(20)`
     }
 });

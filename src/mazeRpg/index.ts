@@ -5,6 +5,7 @@ import { Player } from "./player";
 import { Item } from "./item";
 import { Phase, State } from "./state";
 import { min } from "./util";
+import { RPGMaze } from "./maze";
 
 export interface Config {
 
@@ -15,6 +16,7 @@ export function apply(ctx: Context, config?: Config) {
     ctx.plugin(RPGLuck);
     ctx.plugin(Player);
     ctx.plugin(Item.itemPlugin);
+    ctx.plugin(RPGMaze);
 
     ctx.command("rpg/start <name:string>", "开始")
         .userFields(rpgFields)
@@ -26,7 +28,7 @@ export function apply(ctx: Context, config?: Config) {
             if (!name) {
                 return "需要指定新角色的名字。";
             }
-            if(name.length>10){
+            if (name.length > 10) {
                 return "太长啦，名字不能超过10个字符。"
             }
             user.rpgphase = Phase.idle;
@@ -60,6 +62,7 @@ export function apply(ctx: Context, config?: Config) {
                 return "名字对不上呢";
             }
             user.rpgphase = Phase.end;
+            user.mazeCellId = 0;
             if (!options?.keep) {
                 user.money = 0;
                 user.rpgitems = {};
@@ -86,6 +89,11 @@ export function apply(ctx: Context, config?: Config) {
                 user.rpgstate = 0;
             }
             return `修复完毕`;
+        });
+    ctx.command("rpg/updateDatabase", "更新数据库结构", { authority: 3, hidden: true })
+        .action(async ({ session, options }) => {
+            const users = ctx.database.mysql.query("select id, rpgname, rpgstatus from user where rpgstate > 0;");
+            return `更新完毕`;
         });
     ctx.command("rpg/bag", "查看背包")
         .userFields(["rpgitems", "money", "rpgstate"])

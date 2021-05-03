@@ -103,7 +103,7 @@ function getCellDoorCode(door: IDoor) {
     down && (code |= DoorCode.down);
     return code;
 }
-function parseCellDoorCode(code: number): IDoor {
+export function parseCellDoorCode(code: number): IDoor {
     return {
         left: !!(code & DoorCode.left),
         right: !!(code & DoorCode.right),
