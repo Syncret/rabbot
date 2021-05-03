@@ -107,9 +107,17 @@ export function pickRandomly<T>(candidates: T[]): T {
 
 export function assert(
   truthy: boolean,
-  errorMessage: string = "Asset failed!"
+  errorMessage: string = "Asset failed!",
+  noThrow = false,
 ) {
-  if (!truthy) throw Error(errorMessage);
+  if (truthy) {
+    return "";
+  }
+  if (noThrow) {
+    return errorMessage;
+  } else {
+    throw Error(errorMessage);
+  }
 }
 
 export class FixedSizeRecord<T> {
