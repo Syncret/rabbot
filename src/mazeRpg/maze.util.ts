@@ -63,7 +63,6 @@ export function generateMaze(width: number, height: number, ringProb: number = 0
     printMaze(rawMaze, width * 2 + 1);
     const maze: number[] = [];
     const rawWidth = 2 * width + 1;
-    const rawHeight = 2 * height + 1;
     for (let i = 0; i < width * height; i++) {
         const y = 2 * (Math.floor(i / width)) + 1;
         const x = 2 * (i % width) + 1;
@@ -78,11 +77,11 @@ export function generateMaze(width: number, height: number, ringProb: number = 0
             down: rawMaze[down] > 0
         });
     }
-    const maze2 = maze.map((cube, index) => {
-        const char = cube.toString().padStart(3," ");
-        return (index + 1) % width === 0 ? char + "\n" : char;
-    }).join("");
-    console.log(maze2);
+    // const mazeString = maze.map((cube, index) => {
+    //     const char = cube.toString().padStart(3," ");
+    //     return (index + 1) % width === 0 ? char + "\n" : char;
+    // }).join("");
+    // console.log(mazeString);
     return maze;
 }
 
@@ -92,9 +91,10 @@ const DoorCode = {
     down: 0x4,
     left: 0x8,
 }
-type IDoor = Record<keyof typeof DoorCode, boolean>;
+export type MazeDirection = keyof typeof DoorCode;
+type RoomDoors = Record<MazeDirection, boolean>;
 
-function getCellDoorCode(door: IDoor) {
+function getCellDoorCode(door: RoomDoors) {
     const { left, right, up, down } = door;
     let code = 0;
     left && (code |= DoorCode.left);
@@ -103,12 +103,12 @@ function getCellDoorCode(door: IDoor) {
     down && (code |= DoorCode.down);
     return code;
 }
-export function parseCellDoorCode(code: number): IDoor {
+export function parseCellDoorCode(code: number): RoomDoors {
     return {
-        left: !!(code & DoorCode.left),
-        right: !!(code & DoorCode.right),
         up: !!(code & DoorCode.up),
+        right: !!(code & DoorCode.right),
         down: !!(code & DoorCode.down),
+        left: !!(code & DoorCode.left),
     }
 }
 
@@ -133,7 +133,7 @@ function test() {
     // const code = getCellDoorCode({ left: true, right: true, up: false, down: false });
     // console.log(code);
     // console.log(parseCellDoorCode(code));
-    const maze=generateMaze(width, height);
+    const maze = generateMaze(width, height);
 }
 
-test();
+// test();

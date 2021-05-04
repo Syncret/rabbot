@@ -3,7 +3,7 @@ import { RPGLuck } from "./luck";
 import { rpgFields } from "./database";
 import { Player } from "./player";
 import { Item } from "./item";
-import { Phase, State } from "./state";
+import { State } from "./state";
 import { min } from "./util";
 import { RPGMaze } from "./maze";
 
@@ -20,21 +20,19 @@ export function apply(ctx: Context, config?: Config) {
 
     ctx.command("rpg/start <name:string>", "开始")
         .userFields(rpgFields)
+        .check(State.stateChecker())
         .action(async ({ session, options }, name) => {
             const user = session?.user!;
-            if (user?.rpgphase != null && user.rpgphase !== Phase.end) {
-                return `之前的冒险还没结束呢!`;
-            }
             if (!name) {
                 return "需要指定新角色的名字。";
             }
             if (name.length > 10) {
                 return "太长啦，名字不能超过10个字符。"
             }
-            user.rpgphase = Phase.idle;
             user.rpgstate = State.active;
+            user.rpgname = name;
             user.appearance = Player.generateAppearance();
-            user.rpgstatus = Player.createNewPlayer(name);
+            user.rpgstatus = Player.createNewPlayer();
             if (user.money == null) {
                 user.money = 0;
             }
@@ -48,26 +46,24 @@ export function apply(ctx: Context, config?: Config) {
     ctx.command("rpg/end <name:string>", "结束")
         .userFields(rpgFields)
         .option("keep", "-k 保留道具和金钱等")
+        .check(State.stateChecker())
         .action(async ({ session, options }, name: string | undefined) => {
-            const user = session?.user;
-            if (user?.rpgstatus == null || !user?.rpgstatus.name) {
-                return "你都没有开始过!";
-            }
+            const user = session?.user!;
             const status = user.rpgstatus;
             if (!name) {
                 session?.sendQueued("真的要结束吗, 道具和等级都会清空哦。输入你的名字确认结束:");
                 name = await session?.prompt(30 * 1000);
             }
-            if (status.name !== name) {
+            if (user.rpgname !== name) {
                 return "名字对不上呢";
             }
-            user.rpgphase = Phase.end;
-            user.mazeCellId = 0;
+            user.mazecellid = 0;
             if (!options?.keep) {
                 user.money = 0;
                 user.rpgitems = {};
                 user.rpgstate = 0x0;
             }
+            user.rpgname = "";
             return `${name}结束了她的冒险生活...`;
         });
 
@@ -85,14 +81,18 @@ export function apply(ctx: Context, config?: Config) {
                     }
                 });
             }
-            if (user.rpgstatus?.name == null) {
-                user.rpgstate = 0;
-            }
             return `修复完毕`;
         });
-    ctx.command("rpg/updateDatabase", "更新数据库结构", { authority: 3, hidden: true })
+    ctx.command("rpg/updatedatabase", "更新数据库结构", { authority: 3, hidden: true })
         .action(async ({ session, options }) => {
-            const users = ctx.database.mysql.query("select id, rpgname, rpgstatus from user where rpgstate > 0;");
+            const mysql = ctx.database.mysql;
+            await ctx.database.mysql.query("alter table koishi.user drop column rpgphase;");
+            const users: Array<{ id: string, rpgname: string, rpgstatus: Player.Status }> = await ctx.database.mysql.query("select id, rpgname, rpgstatus from user where rpgstate > 0;");
+            const query = users.map((user) => {
+                if (user.rpgname || user.rpgstatus == null) { return ""; }
+                return `update user set rpgname = ${mysql.escape((user.rpgstatus as any).name)} where id = ${user.id};`
+            });
+            await ctx.database.mysql.query(query);
             return `更新完毕`;
         });
     ctx.command("rpg/bag", "查看背包")

@@ -13,7 +13,6 @@ export namespace Player {
     };
 
     export type Status = {
-        name: string,
         level: number,
         exp: number,
         hp: number,
@@ -58,13 +57,12 @@ export namespace Player {
         return `身高${apperance.height}, ${clothing}有着${apperance.eyeColor}色的眼睛, 梳着${apperance.hairColor}色的${apperance.hairType}。`;
     };
     export function describeStatus(status: Status): string {
-        return `${status.name}: 等级${status.level}, 经验${status.exp}/${maxExp(status)}, `
+        return `等级${status.level}, 经验${status.exp}/${maxExp(status)}, `
             + `生命${status.hp}/${maxHp(status)}, 魔力${status.mp}/${maxMp(status)}, `
             + `体力${status.ap}/24, 武器${status.weapon || "无"}, 穿着${status.armor || "无"}, 饰品${status.accessory || "无"}。`
     };
-    export function createNewPlayer(name: string): Status {
+    export function createNewPlayer(): Status {
         return {
-            name,
             level: 1,
             exp: 0,
             hp: 100,
@@ -77,17 +75,18 @@ export namespace Player {
 
     export function apply(ctx: Context) {
         ctx.command("rpg/status", "查看状态")
-            .userFields(["rpgstatus", "rpgstate"])
+            .userFields(["rpgstatus", "rpgname", "rpgstate"])
             .check(State.stateChecker())
             .action(({ session }) => {
-                return `${describeStatus(session!.user!.rpgstatus)}`;
+                const user = session!.user!;
+                return `${user.rpgname}: ${describeStatus(user.rpgstatus)}`;
             });
         ctx.command("rpg/appearance", "查看外观")
-            .userFields(["appearance", "rpgstate", "rpgstatus"])
+            .userFields(["appearance", "rpgname", "rpgstate", "rpgstatus"])
             .check(State.stateChecker())
             .action(({ session }) => {
-                const status=session!.user!.rpgstatus;
-                return `${status.name}${describeAppearance(session!.user!.appearance, status)}`;
+                const user = session!.user!;
+                return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}`;
             });
     }
 

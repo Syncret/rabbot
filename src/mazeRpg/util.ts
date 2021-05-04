@@ -15,3 +15,11 @@ export function max(a: number, b: number): number {
 export function min(a: number, b: number): number {
     return a < b ? a : b;
 }
+export function createMutualMap<T, V>(values: [T, V][]): Map<T | V, V | T> {
+    const result = new Map<T | V, V | T>();
+    for (const [key, value] of values) {
+        result.set(key, value);
+        result.set(value, key);
+    }
+    return result;
+}
