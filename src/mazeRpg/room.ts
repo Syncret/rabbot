@@ -1,15 +1,15 @@
 import { parseCellDoorCode } from "./maze.util";
+import { createMutualMap } from "./util";
 
 export namespace Room {
 
     type RoomType = "normal" | "trap" | "rest" | "shop" | "stair";
-    enum roomDirection {
-        up = "北",
-        right = "东",
-        down = "南",
-        left = "西",
-    }
-    export const RoomDirection: Record<string, string> = roomDirection;
+    export const RoomDirectionMap: Map<string, string> = createMutualMap([
+        ["up", "北"],
+        ["right", "东"],
+        ["down", "南"],
+        ["left", "西"]
+    ]);
 
     type BaseRoom = {
         name: string,
@@ -25,7 +25,7 @@ export namespace Room {
     export const RoomProbMap: Record<string, number> = {};
     export function getDoorDescription(doorCode: number): string {
         const door = parseCellDoorCode(doorCode);
-        const gates = Object.entries(door).filter(([_, isOpen]) => isOpen).map(([direction]) => Room.RoomDirection[direction]);
+        const gates = Object.entries(door).filter(([_, isOpen]) => isOpen).map(([direction]) => Room.RoomDirectionMap.get(direction));
         return `房间的${gates.join(", ")}边${gates.length > 1 ? "各" : ""}有一扇门。`;
     }
 
@@ -80,7 +80,7 @@ export namespace Room {
         type: "stair",
         displayName: "阶梯",
         probabilty: 0,
-        description: "房间里有一扇巨大的门，背后似乎通向迷宫的下一层。",
+        description: "房间里有一个传送阵，似乎就是通向迷宫下一层的路呢。",
         items: { [RoomRemainingItemsKey]: 5 }
     };
 

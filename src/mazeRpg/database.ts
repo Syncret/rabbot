@@ -1,6 +1,5 @@
 import { User, Database, Tables } from "koishi";
 import { } from 'koishi-plugin-mysql'
-import { Phase } from "./state";
 import { Player } from "./player";
 
 declare module 'koishi-core' {
@@ -8,16 +7,15 @@ declare module 'koishi-core' {
         appearance: Player.Appearance,
         rpgstatus: Player.Status,
         money: number,
-        rpgphase: Phase,
         rpgitems: Record<string, number>;
         rpgstate: number,
         rpgname: string,
         mazeId: number,
-        mazeCellId: number
+        mazecellid: number
     }
     interface Tables {
         maze: Maze,
-        mazeCell: MazeCell
+        mazecell: MazeCell
     }
 };
 export interface Maze {
@@ -41,31 +39,30 @@ User.extend(() => ({
     appearance: undefined,
     rpgstatus: undefined,
     money: 0,
-    rpgphase: Phase.end,
     rpgitems: {},
     rpgstate: 0,
-    mazeCellId: 0,
+    mazecellid: 0,
 }));
-export const rpgFields = ["appearance", "money", "rpgitems", "rpgstatus", "rpgphase", "rpgstate", "mazeCellId"] as const;
+export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid"] as const;
 
 Tables.extend('maze');
+Tables.extend('mazecell');
 
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     if (tables.user) {
         tables.user.appearance = new Domain.Json();
         tables.user.money = "int";
-        tables.user.rpgphase = "int";
         tables.user.rpgitems = new Domain.Json();
         tables.user.rpgstatus = new Domain.Json();
         tables.user.rpgstate = "int";
         tables.user.rpgname = "varchar(20)";
-        tables.user.mazeCellId = "int";
+        tables.user.mazecellid = "int";
     }
 });
 
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     tables.maze = {
-        id: `INT(10) UNSIGNED PRIMARY KEY AUTO_INCREMENT`,
+        id: `INT(10) UNSIGNED NOT NULL AUTO_INCREMENT`,
         name: `VARCHAR(50) NOT NULL`,
         channelId: `VARCHAR(50) NOT NULL`,
         width: `SMALLINT`,
@@ -75,8 +72,8 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
 });
 
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
-    tables.mazeCell = {
-        id: `INT(10) UNSIGNED PRIMARY KEY AUTO_INCREMENT`,
+    tables.mazecell = {
+        id: `INT(10) UNSIGNED NOT NULL AUTO_INCREMENT`,
         mazeId: `INT(10) NOT NULL`,
         cell: `SMALLINT UNSIGNED`,
         door: `SMALLINT UNSIGNED`,
