@@ -7,6 +7,7 @@ import { Room } from "./room";
 const defaultWidth = 8;
 const defaultHeight = 8;
 const defaultOpenGatePeople = 4;
+const maxMazeNameLength = 20;
 
 
 function apply(ctx: Context) {
@@ -77,6 +78,10 @@ function apply(ctx: Context) {
                     name = session.channelId + "的迷宫";
                 }
                 name += "的迷宫";
+            } else {
+                if (name.length > maxMazeNameLength) {
+                    return `迷宫名字过长，不能超过${maxMazeNameLength}字符。`
+                }
             }
             if (mazes.length > 0) {
                 return "已经有迷宫啦。"
@@ -102,7 +107,32 @@ function apply(ctx: Context) {
             return `${name}初始化完毕。可以开始冒险啦！`;
         });
 
-    ctx.command('rpg/entermaze ', '进入迷宫', { hidden: true })
+    ctx.command('rpg/maze', 'get/set maze information', { hidden: true, authority: 3 })
+        .option("list", "-l list all mazes")
+        .option("rename", "-r <rename:string>")
+        .action(async ({ session, options }) => {
+            const query = options?.list ? { level: [0] } : { channelId: [session?.channelId!] };
+            const mazes = await database.get("maze", query, ["id", "name", "width", "height", "channelId", "level"]);
+            if (mazes.length === 0) {
+                return "无迷宫记录。"
+            }
+            let msg = mazes.map((maze) => `${maze.id}: ${maze.name}, 群${maze.channelId}, ${maze.width}X${maze.height}, 层${maze.level}`).join("\n");
+            if (options?.list) {
+                return msg;
+            }
+            if (options?.rename) {
+                const name = options.rename;
+                if (name.length > maxMazeNameLength) {
+                    return `迷宫名字过长，不能超过${maxMazeNameLength}字符。`
+                }
+                const updateMaze = mazes.map((m) => ({ id: m.id, name: name }));
+                await database.update("maze", updateMaze);
+                return `更新迷宫名为${name}`;
+            }
+            return msg;
+        });
+
+    ctx.command('rpg/entermaze', '进入迷宫', { hidden: true })
         .alias("进入迷宫")
         .userFields(["rpgstate", "rpgname", "mazecellid"])
         .check(State.stateChecker({ [State.inMaze]: false }))
@@ -110,7 +140,7 @@ function apply(ctx: Context) {
             const user = session?.user!;
             const mazes = await database.get("maze", { channelId: [session?.channelId!], level: [0] }, ["id", "width", "height", "name"]);
             if (mazes.length === 0) { // no existing maze for this channel
-                return "本群还没有迷宫，请使用createMaze指令生成迷宫。";
+                return "本群还没有迷宫，请使用createMaze指令生成迷宫或指定其他迷宫。";
             }
             let msg: string[] = [];
             const maze = mazes[0];
