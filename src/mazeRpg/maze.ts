@@ -132,7 +132,7 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/entermaze', '进入迷宫', { hidden: true })
+    ctx.command('rpg/entermaze', '进入迷宫')
         .alias("进入迷宫")
         .userFields(["rpgstate", "rpgname", "mazecellid"])
         .check(State.stateChecker({ [State.inMaze]: false }))
@@ -155,8 +155,9 @@ function apply(ctx: Context) {
 
     ctx.command('rpg/move <direction:string>', '向指定方向(东南西北)移动')
         .alias("移动")
-        .userFields(["rpgstate", "rpgname", "mazecellid"])
+        .userFields(["rpgstate", "rpgname", "mazecellid", "timers", "rpgap"])
         .check(State.stateChecker(State.inMaze))
+        .check(State.apChecker())
         .action(async ({ session }, direction) => {
             const user = session?.user!;
             const cells = await database.get("mazecell", [user.mazecellid], ["id", "door", "room", "mazeId", "cell"]);
@@ -165,11 +166,12 @@ function apply(ctx: Context) {
             let innerDirection = direction as MazeDirection;
             if (!doors[innerDirection]) {
                 innerDirection = Room.RoomDirectionMap.get(direction) as MazeDirection;
+                const doorMsg = Room.getDoorDescription(cell.door);
                 if (!innerDirection) {
-                    return "方向无效。"
+                    return "方向无效。" + doorMsg;
                 }
                 if (!doors[innerDirection]) {
-                    return "这个方向没有门呢。"
+                    return "这个方向没有门呢。" + doorMsg;
                 }
             }
             let targetCellNo = cell.cell;
@@ -184,6 +186,7 @@ function apply(ctx: Context) {
             }
             const targetCell = (await database.get("mazecell", { mazeId: [cell.mazeId], cell: [targetCellNo] }, ["id", "door", "room"]))[0];
             user.mazecellid = targetCell.id;
+            user.rpgap -= 1;
             let msg = `你来到了${direction}边的房间。`;
             msg += await getEnterCellMsg(targetCell, session?.userId!);
             return msg;

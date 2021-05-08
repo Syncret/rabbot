@@ -10,6 +10,7 @@ declare module 'koishi-core' {
         rpgitems: Record<string, number>;
         rpgstate: number,
         rpgname: string,
+        rpgap: number,
         mazeId: number,
         mazecellid: number
     }
@@ -41,6 +42,7 @@ User.extend(() => ({
     money: 0,
     rpgitems: {},
     rpgstate: 0,
+    rpgap: 0,
     mazecellid: 0,
 }));
 export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid"] as const;
@@ -54,6 +56,7 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         tables.user.money = "int";
         tables.user.rpgitems = new Domain.Json();
         tables.user.rpgstatus = new Domain.Json();
+        tables.user.rpgap = "tinyint";
         tables.user.rpgstate = "int";
         tables.user.rpgname = "varchar(20)";
         tables.user.mazecellid = "int";
