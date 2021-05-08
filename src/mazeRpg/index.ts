@@ -86,12 +86,11 @@ export function apply(ctx: Context, config?: Config) {
     ctx.command("rpg/updatedatabase", "更新数据库结构", { authority: 3, hidden: true })
         .action(async ({ session, options }) => {
             const mysql = ctx.database.mysql;
-            await ctx.database.mysql.query("alter table koishi.user drop column rpgphase;");
             const users: Array<{ id: string, rpgname: string, rpgstatus: Player.Status }> = await ctx.database.mysql.query("select id, rpgname, rpgstatus from user where rpgstate > 0;");
             const query = users.map((user) => {
                 if (user.rpgname || user.rpgstatus == null) { return ""; }
                 return `update user set rpgname = ${mysql.escape((user.rpgstatus as any).name)} where id = ${user.id};`
-            });
+            }).filter((s) => !!s);
             await ctx.database.mysql.query(query);
             return `更新完毕`;
         });
