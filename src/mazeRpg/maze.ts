@@ -102,9 +102,8 @@ function apply(ctx: Context) {
             if (msg) {
                 return msg;
             }
-            session?.sendQueued("生成迷宫中...");
             await createMaze(name, width, height, session?.channelId!, 0);
-            return `${name}初始化完毕。可以开始冒险啦！`;
+            return `一个名为${name}的迷宫突然被人们发现，一时吸引了许多冒险者的目光。`;
         });
 
     ctx.command('rpg/maze', 'get/set maze information', { hidden: true, authority: 3 })
