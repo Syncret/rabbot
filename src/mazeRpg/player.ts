@@ -5,6 +5,7 @@ export namespace Player {
     export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "金", "虹",
         "玫瑰", "琥珀", "天青", "翡翠", "琉璃"];
     export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发", "大波浪"];
+
     export type Appearance = {
         hairColor: string,
         hairType: string,
@@ -17,7 +18,6 @@ export namespace Player {
         exp: number,
         hp: number,
         mp: number,
-        ap: number,
         phase: number,
         status: number,
         weapon?: string,
@@ -59,7 +59,7 @@ export namespace Player {
     export function describeStatus(status: Status): string {
         return `等级${status.level}, 经验${status.exp}/${maxExp(status)}, `
             + `生命${status.hp}/${maxHp(status)}, 魔力${status.mp}/${maxMp(status)}, `
-            + `体力${status.ap}/24, 武器${status.weapon || "无"}, 穿着${status.armor || "无"}, 饰品${status.accessory || "无"}。`
+            + `武器${status.weapon || "无"}, 穿着${status.armor || "无"}, 饰品${status.accessory || "无"}。`
     };
     export function createNewPlayer(): Status {
         return {
@@ -67,7 +67,6 @@ export namespace Player {
             exp: 0,
             hp: 100,
             mp: 100,
-            ap: 10,
             phase: 0,
             status: 0,
         }
@@ -75,11 +74,13 @@ export namespace Player {
 
     export function apply(ctx: Context) {
         ctx.command("rpg/status", "查看状态")
-            .userFields(["rpgstatus", "rpgname", "rpgstate"])
+            .userFields(["rpgstatus", "rpgname", "rpgstate", "timers", "rpgap"])
             .check(State.stateChecker())
+            .check(State.apChecker())
             .action(({ session }) => {
                 const user = session!.user!;
-                return `${user.rpgname}: ${describeStatus(user.rpgstatus)}`;
+                const apMsg = State.apChecker(true)({ session });
+                return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}`;
             });
         ctx.command("rpg/appearance", "查看外观")
             .userFields(["appearance", "rpgname", "rpgstate", "rpgstatus"])
