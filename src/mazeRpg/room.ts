@@ -55,7 +55,7 @@ export namespace Room {
         displayName: "泉水房间",
         probabilty: 10,
         effect: 10,
-        description: "房间里氤氲着热腾腾的雾气。中间有一个水池，似乎是一个温泉的样子！",
+        description: "房间里氤氲着热腾腾的雾气。中间有一个水池，是一个温泉！似乎可以在这里休息的样子。",
         items: { [RoomRemainingItemsKey]: 10 }
     };
     export const FallTrapRoom: BaseRoom = {

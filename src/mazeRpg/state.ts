@@ -45,15 +45,15 @@ export namespace State {
         }
     }
 
-    
+
     const timerAPKey = "rpgap";
-    const apRecoverInterval = Time.hour;
-    const initialAp = 5;
+    const apRecoverInterval = 4 * Time.hour;
+    const initialAp = 1;
     const maxAp = 24;
-    
-    export function apChecker(returnDetail = false) {
+
+    export function apChecker(defaultAp = 1, returnDetail = false) {
         return ({ session, options }: { session?: Session<"rpgap" | "timers"> | undefined, options?: { ap?: number } }) => {
-            const target = options?.ap || 1;
+            const target = options?.ap || defaultAp;
             const now = Date.now();
             const user = session?.user!;
             const timers = user.timers!;

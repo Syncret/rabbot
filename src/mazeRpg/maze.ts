@@ -57,12 +57,6 @@ function apply(ctx: Context) {
         msg.push(Room.getDoorDescription(cell.door));
         return msg.join("\n");
     };
-    const getCellById: <F extends Tables.Field<"mazecell">>(id: number, fields?: F[]) => Promise<Pick<Tables["mazecell"], F>> = async (id, fields) => {
-        return (await database.get("mazecell", [id], fields))[0];
-    }
-    const getMazeById: <F extends Tables.Field<"maze">>(id: number, fields?: F[]) => Promise<Pick<Tables["maze"], F>> = async (id, fields) => {
-        return (await database.get("maze", [id], fields))[0];
-    }
 
     ctx.command('rpg/createmaze <name:string>', '生成迷宫', { hidden: true, authority: 3 })
         .alias("生成迷宫")
@@ -75,9 +69,8 @@ function apply(ctx: Context) {
                 if (session.groupId) {
                     name = (await session.bot.getGroup(session.groupId)).groupName;
                 } else {
-                    name = session.channelId + "的迷宫";
+                    name = session.channelId!;
                 }
-                name += "的迷宫";
             } else {
                 if (name.length > maxMazeNameLength) {
                     return `迷宫名字过长，不能超过${maxMazeNameLength}字符。`
@@ -124,7 +117,7 @@ function apply(ctx: Context) {
                 if (name.length > maxMazeNameLength) {
                     return `迷宫名字过长，不能超过${maxMazeNameLength}字符。`
                 }
-                const updateMaze = mazes.map((m) => ({ id: m.id, name: name }));
+                const updateMaze = mazes.map((m) => ({ id: m.id, name: name, channelId: m.channelId }));
                 await database.update("maze", updateMaze);
                 return `更新迷宫名为${name}`;
             }
@@ -143,7 +136,7 @@ function apply(ctx: Context) {
             }
             let msg: string[] = [];
             const maze = mazes[0];
-            msg.push(`在${maze.name}中发现了一个迷宫。为了探查异变，${user.rpgname}决定去迷宫一探究竟。\n你来到迷宫所在，入口似乎是一个传送阵。你迈上传送阵，经历了一阵头晕目眩后，来到了一个房间。`);
+            msg.push(`相传人们在群里发现了一个叫做${maze.name}的迷宫。为了探查异变，${user.rpgname}决定去迷宫一探究竟。\n你来到迷宫所在，入口似乎是一个传送阵。你迈上传送阵，经历了一阵头晕目眩后，来到了一个房间。`);
             const startCell = Random.int(maze.width * maze.height);
             const cell = (await database.get("mazecell", { mazeId: [maze.id], cell: [startCell] }, ["id", "door", "room"]))[0];
             msg.push(await getEnterCellMsg(cell, session?.userId!));
@@ -197,7 +190,7 @@ function apply(ctx: Context) {
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }, target) => {
             const user = session?.user!;
-            const cell = await getCellById(user.mazecellid, ["id", "door", "room", "mazeId", "cell"]);
+            const cell = await database.getCellById(user.mazecellid, ["id", "door", "room", "mazeId", "cell"]);
             let msg = "";
             msg += `你环顾四周。`;
             msg += await getEnterCellMsg(cell, session?.userId!);
@@ -207,10 +200,10 @@ function apply(ctx: Context) {
     ctx.command('rpg/position', 'get current position', { hidden: true, authority: 3 })
         .userFields(["rpgstate", "mazecellid"])
         .check(State.stateChecker(State.inMaze))
-        .action(async ({ session }, target) => {
+        .action(async ({ session }) => {
             const user = session?.user!;
-            const cell = await getCellById(user.mazecellid, ["mazeId", "cell"]);
-            const maze = await getMazeById(cell.mazeId, ["width"]);
+            const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell"]);
+            const maze = await database.getMazeById(cell.mazeId, ["width"]);
             let msg = `你的位置是x:${cell.cell % maze.width}, y:${Math.floor(cell.cell / maze.width)}`;
             return msg;
         });
