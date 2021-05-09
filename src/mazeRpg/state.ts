@@ -1,4 +1,4 @@
-import { Session, Time } from "koishi";
+import { Session, Time, User } from "koishi";
 
 export namespace State {
     export const active = 0x1;
@@ -47,7 +47,7 @@ export namespace State {
 
 
     const timerAPKey = "rpgap";
-    const apRecoverInterval = 4 * Time.hour;
+    export const apRecoverInterval = 4 * Time.hour;
     const initialAp = 1;
     const maxAp = 24;
 
@@ -88,4 +88,8 @@ export namespace State {
         }
     }
 
+    export function consumeAP(user: User.Observed<"rpgap">, ap: number): string {
+        user.rpgap -= ap;
+        return `\n体力-${ap}=${user.rpgap}。`;
+    }
 }

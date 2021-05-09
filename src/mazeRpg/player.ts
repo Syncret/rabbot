@@ -14,6 +14,10 @@ export namespace Player {
         eyeColor: string,
         height: number,
     };
+    export type PlayRecords = {
+        visited: number[];
+        logs: string[];
+    }
 
     export type Status = {
         level: number,
@@ -81,7 +85,7 @@ export namespace Player {
             .check(State.stateChecker())
             .action(({ session }) => {
                 const user = session!.user!;
-                const apMsg = State.apChecker(1, true)({ session });
+                const apMsg = State.apChecker(0, true)({ session });
                 return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}`;
             });
         ctx.command("rpg/appearance", "查看外观")

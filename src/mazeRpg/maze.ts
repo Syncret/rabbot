@@ -1,4 +1,4 @@
-import { Context, Random, Tables } from "koishi";
+import { Context, Random, Tables, Time, User } from "koishi";
 import { State } from "./state";
 import { generateMaze, MazeDirection, parseCellDoorCode } from "./maze.util";
 import { assert } from "../util";
@@ -44,7 +44,7 @@ function apply(ctx: Context) {
     };
     const getOtherPlayersInCell = async (cellId: number, selfId?: string) => {
         const users = await database.get('user', { mazecellid: [cellId] }, ["id", "onebot", "rpgname", "rpgstatus", "rpgstate", "appearance"]);
-        return users.filter((u) => u.onebot != selfId);
+        return users.filter((u) => u.id != selfId);
     };
     const getEnterCellMsg = async (cell: { id: number, door: number, room: string }, selfId: string) => {
         const room = Room.RoomRegistry[cell.room];
@@ -56,6 +56,45 @@ function apply(ctx: Context) {
         }
         msg.push(Room.getDoorDescription(cell.door));
         return msg.join("\n");
+    };
+    const onEnterCell = async (mazeId: number, cellNo: number, user: User.Observed<"rpgrecords" | "mazecellid" | "id" | "rpgstatus" | "rpgap">) => {
+        const cell = (await database.get("mazecell", { mazeId: [mazeId], cell: [cellNo] }, ["id", "door", "room"]))[0];
+        user.mazecellid = cell.id;
+        let firstVisit = true;
+        if (user.rpgrecords == null) {
+            user.rpgrecords = { visited: [cellNo], logs: [] };
+        } else if (!user.rpgrecords.visited.includes(cellNo)) {
+            user.rpgrecords.visited.push(cellNo);
+        } else {
+            firstVisit = false;
+        }
+        let msg = "";
+        const room = Room.RoomRegistry[cell.room];
+        if (Room.isTrapRoom(room)) {
+            if (firstVisit) {
+                const maze = await database.getMazeById(mazeId, ["level"]);
+                const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
+                const escape = Math.random() > prob;
+                msg += `你触发了${room.displayName}！`;
+                if (escape) {
+                    msg += `但是你成功地躲了过去！`;
+                } else {
+                    const damage = Math.floor(room.effect * (Math.random() + 0.5));
+                    user.rpgstatus.hp -= damage;
+                    msg += `你受到了${damage}点伤害！剩余hp ${user.rpgstatus.hp}。`;
+                    if (user.rpgstatus.hp <= 0) {
+                        const penalty = Math.floor(Time.day / State.apRecoverInterval);
+                        msg += `你死掉了呢...体力已扣为-${penalty}点，可等体力恢复正值后行动。`;
+                        user.rpgap = -penalty;
+                        user.rpgstatus.hp = 1;
+                    }
+                }
+            } else {
+                msg += `凭着记忆，你躲开了房间中的陷阱。`;
+            }
+        }
+        msg += await getEnterCellMsg(cell, user.id);
+        return msg;
     };
 
     ctx.command('rpg/createmaze <name:string>', '生成迷宫', { hidden: true, authority: 3 })
@@ -126,7 +165,7 @@ function apply(ctx: Context) {
 
     ctx.command('rpg/entermaze', '进入迷宫')
         .alias("进入迷宫")
-        .userFields(["rpgstate", "rpgname", "mazecellid"])
+        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "rpgrecords", "rpgap", "rpgstatus"])
         .check(State.stateChecker({ [State.inMaze]: false }))
         .action(async ({ session }) => {
             const user = session?.user!;
@@ -136,18 +175,16 @@ function apply(ctx: Context) {
             }
             let msg: string[] = [];
             const maze = mazes[0];
-            msg.push(`相传人们在群里发现了一个叫做${maze.name}的迷宫。为了探查异变，${user.rpgname}决定去迷宫一探究竟。\n你来到迷宫所在，入口似乎是一个传送阵。你迈上传送阵，经历了一阵头晕目眩后，来到了一个房间。`);
+            msg.push(`相传人们在群里发现了一个叫做${maze.name}的迷宫。为了探查异变，${user.rpgname}决定去迷宫一探究竟。\n你来到迷宫所在，入口似乎是一个传送阵，迈上去后，经历了一阵头晕目眩，你来到了一个房间。`);
             const startCell = Random.int(maze.width * maze.height);
-            const cell = (await database.get("mazecell", { mazeId: [maze.id], cell: [startCell] }, ["id", "door", "room"]))[0];
-            msg.push(await getEnterCellMsg(cell, session?.userId!));
-            user.mazecellid = cell.id;
+            msg.push(await onEnterCell(maze.id, startCell, user));
             user.rpgstate |= State.inMaze;
             return msg.join("\n");
         });
 
     ctx.command('rpg/move <direction:string>', '向指定方向(东南西北)移动')
         .alias("移动")
-        .userFields(["rpgstate", "rpgname", "mazecellid", "timers", "rpgap"])
+        .userFields(["rpgstate", "rpgname", "mazecellid", "timers", "rpgap", "id", "rpgrecords", "rpgstatus"])
         .check(State.stateChecker(State.inMaze))
         .check(State.apChecker())
         .action(async ({ session }, direction) => {
@@ -176,11 +213,9 @@ function apply(ctx: Context) {
             } else {
                 return `是不认识的方向${innerDirection}...`;
             }
-            const targetCell = (await database.get("mazecell", { mazeId: [cell.mazeId], cell: [targetCellNo] }, ["id", "door", "room"]))[0];
-            user.mazecellid = targetCell.id;
-            user.rpgap -= 1;
             let msg = `你来到了${direction}边的房间。`;
-            msg += await getEnterCellMsg(targetCell, session?.userId!);
+            msg += await onEnterCell(cell.mazeId, targetCellNo, user);
+            msg += State.consumeAP(user, 1);
             return msg;
         });
 

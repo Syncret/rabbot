@@ -33,6 +33,7 @@ export function apply(ctx: Context, config?: Config) {
             user.rpgname = name;
             user.appearance = Player.generateAppearance();
             user.rpgstatus = Player.createNewPlayer();
+            user.rpgrecords = { visited: [], logs: [] };
             if (user.money == null) {
                 user.money = 0;
             }

@@ -12,7 +12,8 @@ declare module 'koishi-core' {
         rpgname: string,
         rpgap: number,
         mazeId: number,
-        mazecellid: number
+        mazecellid: number,
+        rpgrecords: Player.PlayRecords;
     }
     interface Tables {
         maze: Maze,
@@ -49,7 +50,7 @@ User.extend(() => ({
     rpgap: 0,
     mazecellid: 0,
 }));
-export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid"] as const;
+export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid", "rpgrecords"] as const;
 
 Tables.extend('maze');
 Tables.extend('mazecell');
@@ -74,6 +75,7 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         tables.user.rpgstate = "int";
         tables.user.rpgname = "varchar(20)";
         tables.user.mazecellid = "int";
+        tables.user.rpgrecords = new Domain.Json();
     }
 });
 
