@@ -43,7 +43,7 @@ function apply(ctx: Context) {
         return Promise.all(cellPromises);
     };
     const getOtherPlayersInCell = async (cellId: number, selfId?: string) => {
-        const users = await database.get('user', { mazecellid: [cellId] }, ["id", "onebot", "rpgname", "rpgstatus", "rpgstate", "appearance"]);
+        const users = await database.get('user', { mazecellid: [cellId] }, ["id", "rpgname", "rpgstatus", "rpgstate", "appearance"]);
         return users.filter((u) => u.id != selfId);
     };
     const getEnterCellMsg = async (cell: { id: number, door: number, room: string }, selfId: string) => {
@@ -221,14 +221,14 @@ function apply(ctx: Context) {
 
     ctx.command('rpg/observe <target:string>', '观察房间或指定对象')
         .alias("观察")
-        .userFields(["rpgstate", "rpgname", "mazecellid"])
+        .userFields(["rpgstate", "rpgname", "mazecellid", "id"])
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }, target) => {
             const user = session?.user!;
             const cell = await database.getCellById(user.mazecellid, ["id", "door", "room", "mazeId", "cell"]);
             let msg = "";
             msg += `你环顾四周。`;
-            msg += await getEnterCellMsg(cell, session?.userId!);
+            msg += await getEnterCellMsg(cell, user.id);
             return msg;
         });
 

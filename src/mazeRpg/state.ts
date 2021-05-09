@@ -57,28 +57,27 @@ export namespace State {
             const now = Date.now();
             const user = session?.user!;
             const timers = user.timers!;
-            const apTimer = timers[timerAPKey];
             if (user.rpgap == null) {
                 user.rpgap = initialAp;
             }
-            if (apTimer == null) {
+            if (timers[timerAPKey] == null) {
                 timers[timerAPKey] = now;
                 return;
             }
-            const recoverAp = Math.floor((now - apTimer) / apRecoverInterval);
+            const recoverAp = Math.floor((now - timers[timerAPKey]) / apRecoverInterval);
             if (recoverAp + user.rpgap >= maxAp) {
                 user.rpgap = maxAp;
                 timers[timerAPKey] = now;
             } else if (recoverAp > 0) {
                 user.rpgap += recoverAp;
-                timers[timerAPKey] = apTimer + recoverAp * apRecoverInterval;
+                timers[timerAPKey] = timers[timerAPKey] + recoverAp * apRecoverInterval;
             }
             if (user.rpgap < target || returnDetail) {
                 let msg = "";
                 if (user.rpgap < target) {
                     msg += `体力不够呢。`;
                 }
-                const nextTime = Math.ceil((apTimer + apRecoverInterval - now) / 60000);
+                const nextTime = Math.ceil((timers[timerAPKey] + apRecoverInterval - now) / 60000);
                 msg += `现在体力${user.rpgap}/${maxAp}。`;
                 if (user.rpgap < maxAp) {
                     msg += `下次恢复时间${nextTime}分钟后。`
