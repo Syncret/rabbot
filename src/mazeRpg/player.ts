@@ -79,7 +79,6 @@ export namespace Player {
         ctx.command("rpg/status", "查看状态")
             .userFields(["rpgstatus", "rpgname", "rpgstate", "timers", "rpgap"])
             .check(State.stateChecker())
-            .check(State.apChecker())
             .action(({ session }) => {
                 const user = session!.user!;
                 const apMsg = State.apChecker(1, true)({ session });

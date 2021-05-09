@@ -72,7 +72,7 @@ export namespace Room {
         type: "shop",
         displayName: "商店",
         probabilty: 10,
-        description: "房间里有一个穿着兜帽，看不清面庞的怪人，似乎在兜售一些小玩意。",
+        description: "房间里有一个穿着兜帽，看不清面庞的怪人，似乎在兜售一些小玩意。（请等待后续更新商店）",
         items: { [RoomRemainingItemsKey]: 10 }
     };
     export const StairRoom: BaseRoom = {
