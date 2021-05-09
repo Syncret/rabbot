@@ -1,5 +1,7 @@
 import { Context, Random } from "koishi";
+import { Room } from "./room";
 import { State } from "./state";
+import { min } from "./util";
 
 export namespace Player {
     export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "金", "虹",
@@ -12,6 +14,10 @@ export namespace Player {
         eyeColor: string,
         height: number,
     };
+    export type PlayRecords = {
+        visited: number[];
+        logs: string[];
+    }
 
     export type Status = {
         level: number,
@@ -73,13 +79,13 @@ export namespace Player {
     };
 
     export function apply(ctx: Context) {
+        const { database } = ctx;
         ctx.command("rpg/status", "查看状态")
             .userFields(["rpgstatus", "rpgname", "rpgstate", "timers", "rpgap"])
             .check(State.stateChecker())
-            .check(State.apChecker())
             .action(({ session }) => {
                 const user = session!.user!;
-                const apMsg = State.apChecker(true)({ session });
+                const apMsg = State.apChecker(0, true)({ session });
                 return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}`;
             });
         ctx.command("rpg/appearance", "查看外观")
@@ -88,6 +94,29 @@ export namespace Player {
             .action(({ session }) => {
                 const user = session!.user!;
                 return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}`;
+            });
+        ctx.command("rpg/rest", "休息")
+            .option("ap", "-a <ap:number> 指定消耗的体力")
+            .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
+            .check(State.stateChecker(State.inMaze))
+            .check(State.apChecker())
+            .action(async ({ session, options = {} }) => {
+                const user = session?.user!;
+                const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell", "room"]);
+                const room = Room.RoomRegistry[cell.room];
+                let msg = "";
+                let coefficient = 1;
+                if (room.type !== "rest") {
+                    msg += `附近的环境令你感到不安，你勉勉强强地休息了一阵。`;
+                } else {
+                    msg += `附近的环境令你感到放松，你舒服地休息了一阵！`;
+                    coefficient = room.effect || 10;
+                }
+                const ap = options.ap || 1;
+                msg += `你消耗了${ap}点体力，恢复了${ap * coefficient}点生命与魔力。`
+                user.rpgstatus.hp = min(user.rpgstatus.hp + ap * coefficient, maxHp(user.rpgstatus));
+                user.rpgstatus.mp = min(user.rpgstatus.mp + ap * coefficient, maxMp(user.rpgstatus));
+                return msg;
             });
     }
 

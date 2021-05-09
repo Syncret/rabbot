@@ -1,4 +1,4 @@
-import { Session, Time } from "koishi";
+import { Session, Time, User } from "koishi";
 
 export namespace State {
     export const active = 0x1;
@@ -45,40 +45,39 @@ export namespace State {
         }
     }
 
-    
+
     const timerAPKey = "rpgap";
-    const apRecoverInterval = Time.hour;
-    const initialAp = 5;
+    export const apRecoverInterval = 4 * Time.hour;
+    const initialAp = 1;
     const maxAp = 24;
-    
-    export function apChecker(returnDetail = false) {
+
+    export function apChecker(defaultAp = 1, returnDetail = false) {
         return ({ session, options }: { session?: Session<"rpgap" | "timers"> | undefined, options?: { ap?: number } }) => {
-            const target = options?.ap || 1;
+            const target = options?.ap || defaultAp;
             const now = Date.now();
             const user = session?.user!;
             const timers = user.timers!;
-            const apTimer = timers[timerAPKey];
             if (user.rpgap == null) {
                 user.rpgap = initialAp;
             }
-            if (apTimer == null) {
+            if (timers[timerAPKey] == null) {
                 timers[timerAPKey] = now;
                 return;
             }
-            const recoverAp = Math.floor((now - apTimer) / apRecoverInterval);
+            const recoverAp = Math.floor((now - timers[timerAPKey]) / apRecoverInterval);
             if (recoverAp + user.rpgap >= maxAp) {
                 user.rpgap = maxAp;
                 timers[timerAPKey] = now;
             } else if (recoverAp > 0) {
                 user.rpgap += recoverAp;
-                timers[timerAPKey] = apTimer + recoverAp * apRecoverInterval;
+                timers[timerAPKey] = timers[timerAPKey] + recoverAp * apRecoverInterval;
             }
             if (user.rpgap < target || returnDetail) {
                 let msg = "";
                 if (user.rpgap < target) {
                     msg += `体力不够呢。`;
                 }
-                const nextTime = Math.ceil((apTimer + apRecoverInterval - now) / 60000);
+                const nextTime = Math.ceil((timers[timerAPKey] + apRecoverInterval - now) / 60000);
                 msg += `现在体力${user.rpgap}/${maxAp}。`;
                 if (user.rpgap < maxAp) {
                     msg += `下次恢复时间${nextTime}分钟后。`
@@ -88,4 +87,8 @@ export namespace State {
         }
     }
 
+    export function consumeAP(user: User.Observed<"rpgap">, ap: number): string {
+        user.rpgap -= ap;
+        return `\n体力-${ap}=${user.rpgap}。`;
+    }
 }

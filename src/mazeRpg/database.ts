@@ -12,11 +12,16 @@ declare module 'koishi-core' {
         rpgname: string,
         rpgap: number,
         mazeId: number,
-        mazecellid: number
+        mazecellid: number,
+        rpgrecords: Player.PlayRecords;
     }
     interface Tables {
         maze: Maze,
         mazecell: MazeCell
+    }
+    interface Database {
+        getCellById<F extends Tables.Field<"mazecell">>(id: number, fields?: F[]): Promise<Pick<Tables["mazecell"], F>>,
+        getMazeById<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
     }
 };
 export interface Maze {
@@ -45,10 +50,20 @@ User.extend(() => ({
     rpgap: 0,
     mazecellid: 0,
 }));
-export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid"] as const;
+export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid", "rpgrecords"] as const;
 
 Tables.extend('maze');
 Tables.extend('mazecell');
+
+
+Database.extend("koishi-plugin-mysql", {
+    async getCellById(id, fields) {
+        return (await this.get("mazecell", [id], fields))[0];
+    },
+    async getMazeById(id, fields) {
+        return (await this.get("maze", [id], fields))[0];
+    },
+})
 
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     if (tables.user) {
@@ -60,6 +75,7 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         tables.user.rpgstate = "int";
         tables.user.rpgname = "varchar(20)";
         tables.user.mazecellid = "int";
+        tables.user.rpgrecords = new Domain.Json();
     }
 });
 

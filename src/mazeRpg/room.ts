@@ -20,6 +20,11 @@ export namespace Room {
         effect?: number,
         items: Record<string, number>
     }
+    type TrapRoom = BaseRoom & {
+        type: "trap",
+        effect: number;
+    };
+
     export const RoomRemainingItemsKey = "__ITEMGEN__"; // key for room remaining random items
     export const RoomRegistry: Record<string, BaseRoom> = {};
     export const RoomProbMap: Record<string, number> = {};
@@ -27,6 +32,9 @@ export namespace Room {
         const door = parseCellDoorCode(doorCode);
         const gates = Object.entries(door).filter(([_, isOpen]) => isOpen).map(([direction]) => Room.RoomDirectionMap.get(direction));
         return `房间的${gates.join(", ")}边${gates.length > 1 ? "各" : ""}有一扇门。`;
+    }
+    export function isTrapRoom(room: BaseRoom): room is TrapRoom {
+        return room.type === "trap";
     }
 
     function registerRoom(room: BaseRoom) {
@@ -55,15 +63,15 @@ export namespace Room {
         displayName: "泉水房间",
         probabilty: 10,
         effect: 10,
-        description: "房间里氤氲着热腾腾的雾气。中间有一个水池，似乎是一个温泉的样子！",
+        description: "房间里氤氲着热腾腾的雾气。中间有一个水池，是一个温泉！似乎可以在这里休息的样子。",
         items: { [RoomRemainingItemsKey]: 10 }
     };
-    export const FallTrapRoom: BaseRoom = {
+    export const FallTrapRoom: TrapRoom = {
         name: "fallTrap",
         type: "trap",
-        displayName: "落穴房间",
+        displayName: "落穴陷阱",
         probabilty: 20,
-        effect: 0.2,
+        effect: 20,
         description: "房间中间有一个掩盖起来的陷阱。",
         items: { [RoomRemainingItemsKey]: 10 }
     };
@@ -72,7 +80,7 @@ export namespace Room {
         type: "shop",
         displayName: "商店",
         probabilty: 10,
-        description: "房间里有一个穿着兜帽，看不清面庞的怪人，似乎在兜售一些小玩意。",
+        description: "房间里有一个穿着兜帽，看不清面庞的怪人，似乎在兜售一些小玩意。（请等待后续更新商店）",
         items: { [RoomRemainingItemsKey]: 10 }
     };
     export const StairRoom: BaseRoom = {
