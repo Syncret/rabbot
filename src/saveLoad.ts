@@ -126,7 +126,7 @@ export function apply(ctx: Context, options: Options) {
       if (!content) {
         content = msg.replace("keyword", "");
       }
-      return saveMessage(content, {});
+      return session.send(saveMessage(content, {}));
     }
     return next();
   });
