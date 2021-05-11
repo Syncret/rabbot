@@ -127,7 +127,7 @@ export function apply(ctx: Context, options: Options) {
         }
       }
       if (!content) {
-        content = msg.replace("keyword", "");
+        content = msg.replace(keyword, "").trim();
       }
       return session.sendQueued(await saveMessage(session, content, {}));
     }
