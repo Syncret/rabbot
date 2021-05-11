@@ -1,4 +1,4 @@
-import { segment } from "koishi";
+import { segment, Session } from "koishi";
 import { Context } from "koishi-core";
 import { String2TimeInterval, timeUnitInMillis, timeUnit } from "./util";
 
@@ -9,33 +9,36 @@ interface cachedMessage {
 }
 const messageCache = new Map<string, cachedMessage>();
 
-function saveMessage(message: string, options: { keep?: boolean, time?: string }): string {
+async function saveMessage(session: Session, message: string, options: { keep?: boolean, time?: string }): Promise<string> {
   let responseMessage = "";
   if (!message) {
-    responseMessage = "Please enter a message";
-  } else {
-    const autoDelete = !options.keep;
-    let timeIndex = new Date().getTime();
-    const timeIndexString = timeIndex.toString();
-    let interval = timeUnitInMillis[timeUnit.day];
-    if (options.time) {
-      const testInterval = String2TimeInterval(options.time);
-      if (!isNaN(testInterval)) {
-        interval = testInterval;
-      }
-    }
-    const expireTime = timeIndex + interval;
-    while (messageCache.has(timeIndexString)) {
-      timeIndex++;
-    }
-    messageCache.set(timeIndexString, {
-      expireTime,
-      message,
-      autoDelete,
-    });
-    const expireTimeString = new Date(expireTime).toLocaleString();
-    responseMessage = `消息已保存，私聊兔兔${timeIndex}查看，有效期至${expireTimeString}`;
+    session?.sendQueued("找不到内容，请输入需保存的消息:");
+    message = await session?.prompt(30 * 1000);
+  } 
+  if (!message) {
+    return "找不到消息呢。"
   }
+  const autoDelete = !options.keep;
+  let timeIndex = new Date().getTime();
+  const timeIndexString = timeIndex.toString();
+  let interval = timeUnitInMillis[timeUnit.day];
+  if (options.time) {
+    const testInterval = String2TimeInterval(options.time);
+    if (!isNaN(testInterval)) {
+      interval = testInterval;
+    }
+  }
+  const expireTime = timeIndex + interval;
+  while (messageCache.has(timeIndexString)) {
+    timeIndex++;
+  }
+  messageCache.set(timeIndexString, {
+    expireTime,
+    message,
+    autoDelete,
+  });
+  const expireTimeString = new Date(expireTime).toLocaleString();
+  responseMessage = `消息已保存，私聊兔兔${timeIndex}查看，有效期至${expireTimeString}`;
   return responseMessage;
 }
 
@@ -60,7 +63,7 @@ export function apply(ctx: Context, options: Options) {
     .option("keep", "-k") // "keep the message instead of auto delete
     .option("list", "-l") // "list all cached message
     .option("clear", "-c") // "clear all the message
-    .action(({ session, options = {} }, message) => {
+    .action(async ({ session, options = {} }, message) => {
       if (!session) {
         return;
       }
@@ -87,7 +90,7 @@ export function apply(ctx: Context, options: Options) {
         }
       }
 
-      responseMessage = saveMessage(message, options);
+      responseMessage = await saveMessage(session, message, options);
       response
         .then(() => session.send(responseMessage))
         .catch((e) => session.send(e));
@@ -126,7 +129,7 @@ export function apply(ctx: Context, options: Options) {
       if (!content) {
         content = msg.replace("keyword", "");
       }
-      return session.send(saveMessage(content, {}));
+      return await saveMessage(session, content, {});
     }
     return next();
   });
