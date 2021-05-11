@@ -14,7 +14,7 @@ async function saveMessage(session: Session, message: string, options: { keep?: 
   if (!message) {
     session?.sendQueued("找不到内容，请输入需保存的消息:");
     message = await session?.prompt(30 * 1000);
-  } 
+  }
   if (!message) {
     return "找不到消息呢。"
   }
@@ -129,7 +129,7 @@ export function apply(ctx: Context, options: Options) {
       if (!content) {
         content = msg.replace("keyword", "");
       }
-      return await saveMessage(session, content, {});
+      return session.sendQueued(await saveMessage(session, content, {}));
     }
     return next();
   });
