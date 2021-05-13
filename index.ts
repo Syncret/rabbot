@@ -17,6 +17,7 @@ import * as Schedule from "koishi-plugin-schedule";
 import * as RSS from "koishi-plugin-rss";
 import * as MazeRpg from "./src/mazeRpg";
 import * as WebUI from "koishi-plugin-webui";
+import * as GensinHelper from "./src/gensinHelper";
 import { config } from "./rabbot.config";
 import { DailyCheckin } from "./src/dailyCheckin";
 
@@ -70,6 +71,7 @@ app.plugin(translator);
 app.plugin(recalledMessage);
 app.plugin(voice, { admins: [admin], on: true });
 app.plugin(DailyCheckin);
+app.plugin(GensinHelper);
 app.plugin(MazeRpg);
 
 app.plugin(PostPlugins);
