@@ -73,22 +73,7 @@ function apply(ctx: Context) {
         if (Room.isTrapRoom(room)) {
             if (firstVisit) {
                 const maze = await database.getMazeById(mazeId, ["level"]);
-                const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
-                const escape = Math.random() > prob;
-                msg += `你触发了${room.displayName}！`;
-                if (escape) {
-                    msg += `但是你成功地躲了过去！`;
-                } else {
-                    const damage = Math.floor(room.effect * (Math.random() + 0.5));
-                    user.rpgstatus.hp -= damage;
-                    msg += `你受到了${damage}点伤害！剩余hp ${user.rpgstatus.hp}。`;
-                    if (user.rpgstatus.hp <= 0) {
-                        const penalty = Math.floor(Time.day / State.apRecoverInterval);
-                        msg += `你死掉了呢...体力已扣为-${penalty}点，可等体力恢复正值后行动。`;
-                        user.rpgap = -penalty;
-                        user.rpgstatus.hp = 1;
-                    }
-                }
+                msg += await room.onEnter(user, maze.level);
             } else {
                 msg += `凭着记忆，你躲开了房间中的陷阱。`;
             }
