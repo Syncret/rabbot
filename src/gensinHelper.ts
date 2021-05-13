@@ -19,13 +19,14 @@ export function apply(ctx: Context) {
     .option("time", "-t <time:number> 家具制作时间（单位小时，默认16)")
     .channelFields(["rabbot"])
     .action(({ session, options = {} }) => {
+      const channel = session?.channel!;
       const time = options.time || 16;
       if (!(time > 0 && time < 40)) {
         return "无效时间";
       }
       const furTimer = safeGetRabbotField(session?.channel!, "gensinFurn");
-      console.log(session?.username!+"testname");
       furTimer[session?.username!] = Date.now() + time * Time.hour;
+      channel.rabbot = channel.rabbot;
       let msg = [`已记录请求，制作时间${time}小时。目前请求如下:`];
       msg.concat(getFurnRecords(furTimer));
       msg.push(`在等待家具制作的同时帮帮其他的群友吧~`)
