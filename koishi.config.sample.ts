@@ -2,6 +2,7 @@ import { AppConfig, Time } from "koishi";
 import "koishi-adapter-onebot";
 import { repeaterConfig } from "./src/repeaterConfig";
 import { config as rabbotConfig } from "./rabbot.config";
+import { } from "./src/database";
 
 const { admin, selfId, secret, token, sqlUser, sqlPassword, server } = rabbotConfig;
 
@@ -62,6 +63,7 @@ const config: AppConfig = {
     "./src/recalledMessage": {},
     "./src/voice": { admins: [admin], on: true },
     "./src/mazeRpg": {},
+    "./src/gensinHelper": {},
 
     "./src/postPlugins": {},
     // dice: {},

@@ -1,7 +1,5 @@
 import { Context, Time } from "koishi-core";
-import "database";
 import { safeGetRabbotField } from "./database";
-
 
 export const name = "GensinHelper";
 export function apply(ctx: Context) {
