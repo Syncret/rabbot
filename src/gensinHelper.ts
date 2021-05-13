@@ -24,6 +24,7 @@ export function apply(ctx: Context) {
         return "无效时间";
       }
       const furTimer = safeGetRabbotField(session?.channel!, "gensinFurn");
+      console.log(session?.username!+"testname");
       furTimer[session?.username!] = Date.now() + time * Time.hour;
       let msg = [`已记录请求，制作时间${time}小时。目前请求如下:`];
       msg.concat(getFurnRecords(furTimer));
@@ -43,8 +44,12 @@ export function apply(ctx: Context) {
           return "找不到对应群友的记录呢。"
         }
       }
-      let msg = [`目前请求如下:`];
-      msg.concat(getFurnRecords(furTimer));
+      let msg = getFurnRecords(furTimer);
+      if (msg.length > 0) {
+        msg.unshift(`目前请求如下:`);
+      } else {
+        return `目前没有请求呢。`
+      }
       return msg.join("\n");
     });
 }
