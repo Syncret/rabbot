@@ -24,12 +24,13 @@ export function apply(ctx: Context) {
       if (!(time > 0 && time < 40)) {
         return "无效时间";
       }
-      const furTimer = safeGetRabbotField(session?.channel!, "gensinFurn");
+      const furTimer = safeGetRabbotField(channel, "gensinFurn");
       furTimer[session?.username!] = Date.now() + time * Time.hour;
-      channel.rabbot = channel.rabbot;
-      let msg = [`已记录请求，制作时间${time}小时。目前请求如下:`];
-      msg.concat(getFurnRecords(furTimer));
-      msg.push(`在等待家具制作的同时帮帮其他的群友吧~`)
+      let msg = [`已记录请求，制作时间${time}小时。`];
+      let msg2 = getFurnRecords(furTimer);
+      if (msg2.length > 0) {
+        msg.push(...msg2, `在等待家具制作的同时帮帮其他的群友吧~`);
+      }
       return msg.join("\n");
     });
   ctx
