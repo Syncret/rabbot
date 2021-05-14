@@ -353,11 +353,11 @@ export namespace Item {
                     }
                     const meta = ItemMetadata[item.type];
                     if (item) {
-                        imsg = `${imsg}:${meta.name},${meta.getItemEffectString(item)}${item.description ? "," + item.description : ""}; `;
+                        imsg = `${imsg}:${meta.name},${meta.getItemEffectString(item)}${item.description ? "," + item.description : ""};`;
                     }
                 }
                 return imsg;
-            }).join(", ");
+            }).join(" ");
             msg += "。";
         }
         return msg;
