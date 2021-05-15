@@ -89,19 +89,20 @@ export namespace Player {
                 return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}`;
             });
         ctx.command("rpg/appearance", "查看外观")
-            .userFields(["appearance", "rpgname", "rpgstate", "rpgstatus"])
+            .userFields(["appearance", "rpgname", "rpgstate", "rpgstatus", "timers"])
             .check(State.stateChecker())
             .action(({ session }) => {
                 const user = session!.user!;
                 return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}`;
             });
-        ctx.command("rpg/rest", "休息")
+        ctx.command("rpg/rest <ap:number>", "休息")
             .option("ap", "-a <ap:number> 指定消耗的体力")
             .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
             .check(State.stateChecker(State.inMaze))
             .check(State.apChecker())
-            .action(async ({ session, options = {} }) => {
+            .action(async ({ session, options = {} }, ap) => {
                 const user = session?.user!;
+                ap = ap || options.ap || 1;
                 const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell", "room"]);
                 const room = Room.RoomRegistry[cell.room];
                 let msg = "";
@@ -112,8 +113,8 @@ export namespace Player {
                     msg += `附近的环境令你感到放松，你舒服地休息了一阵！`;
                     coefficient = room.effect || 10;
                 }
-                const ap = options.ap || 1;
-                msg += `你消耗了${ap}点体力，恢复了${ap * coefficient}点生命与魔力。`
+                msg += `你恢复了${ap * coefficient}点生命与魔力。`
+                msg += State.consumeAP(user, ap);
                 user.rpgstatus.hp = min(user.rpgstatus.hp + ap * coefficient, maxHp(user.rpgstatus));
                 user.rpgstatus.mp = min(user.rpgstatus.mp + ap * coefficient, maxMp(user.rpgstatus));
                 return msg;

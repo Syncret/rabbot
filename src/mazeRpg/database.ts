@@ -50,7 +50,7 @@ User.extend(() => ({
     rpgap: 0,
     mazecellid: 0,
 }));
-export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid", "rpgrecords"] as const;
+export const rpgFields = ["appearance", "money", "rpgname", "rpgitems", "rpgstatus", "rpgstate", "mazecellid", "rpgrecords", "timers"] as const;
 
 Tables.extend('maze');
 Tables.extend('mazecell');

@@ -410,7 +410,7 @@ export namespace Item {
                     target.money = money;
                 });
             ctx.command("rpg/discard <items:text>", "扔掉道具")
-                .userFields(["rpgitems", "rpgstate"])
+                .userFields(["rpgitems", "rpgstate", "timers"])
                 .check(State.stateChecker())
                 .action(({ session }, items) => {
                     if (items == null || items.length === 0) {
@@ -420,7 +420,7 @@ export namespace Item {
                     return discardItems(session!, dItems);
                 });
             ctx.command("rpg/sell <items:text>", "卖掉道具")
-                .userFields(["rpgitems", "money", "rpgstate"])
+                .userFields(["rpgitems", "money", "rpgstate", "timers"])
                 .check(State.stateChecker())
                 .action(({ session }, items) => {
                     if (items == null || items.length === 0) {
