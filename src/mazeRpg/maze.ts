@@ -150,8 +150,8 @@ function apply(ctx: Context) {
 
     ctx.command('rpg/entermaze', '进入迷宫')
         .alias("进入迷宫")
-        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "rpgrecords", "rpgap", "rpgstatus"])
-        .check(State.stateChecker({ [State.inMaze]: false }))
+        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "rpgrecords", "rpgap", "rpgstatus", "timers"])
+        .check(State.stateChecker(0, State.inMaze))
         .action(async ({ session }) => {
             const user = session?.user!;
             const mazes = await database.get("maze", { channelId: [session?.channelId!], level: [0] }, ["id", "width", "height", "name"]);
@@ -206,7 +206,7 @@ function apply(ctx: Context) {
 
     ctx.command('rpg/observe <target:string>', '观察房间或指定对象')
         .alias("观察")
-        .userFields(["rpgstate", "rpgname", "mazecellid", "id"])
+        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "timers"])
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }, target) => {
             const user = session?.user!;
@@ -218,7 +218,7 @@ function apply(ctx: Context) {
         });
 
     ctx.command('rpg/position', 'get current position', { hidden: true, authority: 3 })
-        .userFields(["rpgstate", "mazecellid"])
+        .userFields(["rpgstate", "mazecellid", "timers"])
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }) => {
             const user = session?.user!;

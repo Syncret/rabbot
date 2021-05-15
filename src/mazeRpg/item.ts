@@ -91,11 +91,11 @@ export namespace Item {
         getItemEffectString: (item: WeaponItem) => {
             switch (item.subType) {
                 case WpType.Short:
-                    return `攻击+${item.effect}, 距离近`;
+                    return `攻击+${item.effect}`;
                 case WpType.Long:
-                    return `攻击+${item.effect}, 距离远`;
+                    return `攻击+${item.effect}`;
                 case WpType.Magic:
-                    return `魔攻+${item.effect}, 距离远`;
+                    return `魔攻+${item.effect}`;
                 default:
                     return `效果不明！`;
             }
@@ -238,11 +238,11 @@ export namespace Item {
         getItemEffectString: (item: ConsumableItem) => {
             switch (item.subType) {
                 case CsmType.HP:
-                    return `生命+${item.effect}`;
+                    return `HP+${item.effect}`;
                 case CsmType.MP:
-                    return `魔力+${item.effect}`;
+                    return `MP+${item.effect}`;
                 case CsmType.HPMP:
-                    return `生命与魔力+${item.effect}`;
+                    return `HP,MP+${item.effect}`;
                 default:
                     return `效果不明！`;
             }
@@ -353,11 +353,11 @@ export namespace Item {
                     }
                     const meta = ItemMetadata[item.type];
                     if (item) {
-                        imsg = `\n${imsg}: ${meta.name}, ${meta.getItemEffectString(item)}, 价格${item.price}${item.description ? ", " + item.description : ""}`;
+                        imsg = `${imsg}:${meta.name},${meta.getItemEffectString(item)}${item.description ? "," + item.description : ""};`;
                     }
                 }
                 return imsg;
-            }).join(", ");
+            }).join(" ");
             msg += "。";
         }
         return msg;
@@ -410,7 +410,7 @@ export namespace Item {
                     target.money = money;
                 });
             ctx.command("rpg/discard <items:text>", "扔掉道具")
-                .userFields(["rpgitems", "rpgstate"])
+                .userFields(["rpgitems", "rpgstate", "timers"])
                 .check(State.stateChecker())
                 .action(({ session }, items) => {
                     if (items == null || items.length === 0) {
@@ -420,7 +420,7 @@ export namespace Item {
                     return discardItems(session!, dItems);
                 });
             ctx.command("rpg/sell <items:text>", "卖掉道具")
-                .userFields(["rpgitems", "money", "rpgstate"])
+                .userFields(["rpgitems", "money", "rpgstate", "timers"])
                 .check(State.stateChecker())
                 .action(({ session }, items) => {
                     if (items == null || items.length === 0) {

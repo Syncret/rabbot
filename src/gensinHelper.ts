@@ -5,12 +5,12 @@ export const name = "GensinHelper";
 export function apply(ctx: Context) {
   const getFurnRecords = (timer: Record<string, number>) => {
     return Object.entries(timer).map(([key, value]) => {
-      const leftTime = (value - Date.now());
+      const leftTime = value - Date.now();
       if (leftTime <= 0) {
         delete timer[key];
         return "";
       } else {
-        return `${key}: 剩余时间${(leftTime / Time.hour).toFixed(2)}小时;`;
+        return `${key}: 剩余${(leftTime / Time.hour).toFixed(2)}小时;`;
       }
     }).filter((s) => !!s);
   }
@@ -40,8 +40,10 @@ export function apply(ctx: Context) {
       const furTimer = safeGetRabbotField(session?.channel!, "gensinFurn");
       if (name) {
         if (furTimer[name]) {
+          const leftTime = furTimer[name] - 4 * Time.hour - Date.now();
+          const pmsg = leftTime <= 0 ? "完成啦" : `还剩${(leftTime / Time.hour).toFixed(2)}小时`;
           delete furTimer[name];
-          return "感谢你的加速呢！";
+          return `感谢你的加速呢！${name}的家具${pmsg}。`;
         } else {
           return "找不到对应群友的记录呢。"
         }

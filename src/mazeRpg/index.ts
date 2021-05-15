@@ -96,7 +96,7 @@ export function apply(ctx: Context, config?: Config) {
             return `更新完毕`;
         });
     ctx.command("rpg/bag", "查看背包")
-        .userFields(["rpgitems", "money", "rpgstate"])
+        .userFields(["rpgitems", "money", "rpgstate", "timers"])
         .check(State.stateChecker())
         .option("detail", "-d 显示物品详细")
         .action(async ({ session, options }) => {
@@ -112,7 +112,7 @@ export function apply(ctx: Context, config?: Config) {
         });
 
     ctx.command("rpg/use <name:string>", "使用/装备道具")
-        .userFields(["rpgitems", "rpgstatus", "rpgstate"])
+        .userFields(["rpgitems", "rpgstatus", "rpgstate", "timers"])
         .check(State.stateChecker())
         .action(async ({ session }, name) => {
             const user = session!.user!;

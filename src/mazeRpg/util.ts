@@ -1,4 +1,4 @@
-import { Random } from "koishi-utils";
+import { Random, Time } from "koishi-utils";
 
 export function getEnumKeys<T extends string>(enumObject: Record<T, any>): T[] {
     return Object.values(enumObject).filter((e) => typeof e === "string") as T[];
@@ -22,4 +22,8 @@ export function createMutualMap<T, V>(values: [T, V][]): Map<T | V, V | T> {
         result.set(value, key);
     }
     return result;
+}
+
+export function getRemainingTime(time: number, unit = Time.hour): string {
+    return ((time - Date.now()) / unit).toFixed(2);
 }
