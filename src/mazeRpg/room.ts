@@ -127,6 +127,10 @@ export namespace Room {
             return msg;
         }
     };
+    // TODO: tentacleTrapRoom
+    // TODO: amnesiaTrapRoom?
+    // TODO: teleportTrapRoom
+
     export const ShopRoom: BaseRoom = {
         name: "shop",
         type: "shop",

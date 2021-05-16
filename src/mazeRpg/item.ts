@@ -353,11 +353,11 @@ export namespace Item {
                     }
                     const meta = ItemMetadata[item.type];
                     if (item) {
-                        imsg = `${imsg}:${meta.name},${meta.getItemEffectString(item)}${item.description ? "," + item.description : ""};`;
+                        imsg = `${imsg}:${meta.name} ${meta.getItemEffectString(item)}${item.description ? " " + item.description : ""}`;
                     }
                 }
                 return imsg;
-            }).join(" ");
+            }).join(",");
             msg += "。";
         }
         return msg;
@@ -409,7 +409,7 @@ export namespace Item {
                     if (!isInteger(money) || money <= 0) return "参数错误。"
                     target.money = money;
                 });
-            ctx.command("rpg/discard <items:text>", "扔掉道具")
+            ctx.command("rpg/item/discard <items:text>", "扔掉道具")
                 .userFields(["rpgitems", "rpgstate", "timers"])
                 .check(State.stateChecker())
                 .action(({ session }, items) => {
@@ -419,7 +419,7 @@ export namespace Item {
                     const dItems = items.split(/,|，/).map((i) => i.trim());
                     return discardItems(session!, dItems);
                 });
-            ctx.command("rpg/sell <items:text>", "卖掉道具")
+            ctx.command("rpg/item/sell <items:text>", "卖掉道具")
                 .userFields(["rpgitems", "money", "rpgstate", "timers"])
                 .check(State.stateChecker())
                 .action(({ session }, items) => {
