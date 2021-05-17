@@ -1,4 +1,4 @@
-import { Time, User } from "koishi";
+import { Random, Time, User } from "koishi";
 import { parseCellDoorCode } from "./maze.util";
 import { State } from "./state";
 import { createMutualMap } from "./util";
@@ -25,7 +25,7 @@ export namespace Room {
     type TrapRoom = BaseRoom & {
         type: "trap",
         effect: number;
-        onEnter: (user: User.Observed<"rpgap" | "rpgstatus">, level:number) => Promise<string>;
+        onEnter: (user: User.Observed<"rpgap" | "rpgstatus" | "rpgstate" | "timers">, level: number) => Promise<string>;
     };
 
     export const RoomRemainingItemsKey = "__ITEMGEN__"; // key for room remaining random items
@@ -103,7 +103,7 @@ export namespace Room {
         type: "trap",
         displayName: "催眠陷阱",
         probabilty: 20,
-        effect: 20,
+        effect: 4,
         description: "房间里似乎有一个会触发催眠陷阱的机关。",
         items: { [RoomRemainingItemsKey]: 10 },
         onEnter: async (user, level) => {
@@ -113,20 +113,19 @@ export namespace Room {
             if (escape) {
                 msg += `你发现了房间中的有一个陷阱机关，你小心地躲开了它。`;
             } else {
-                msg += `你触发了催眠陷阱！房间里突然弥漫出催眠气体，你无处可躲，在强撑了一阵后最终沉沉地昏睡了过去。`;
-                const damage = Math.floor(FallTrapRoom.effect * (Math.random() + 0.5));
-                user.rpgstatus.hp -= damage;
-                msg += `你受到了${damage}点伤害！剩余hp ${user.rpgstatus.hp}。`;
-                if (user.rpgstatus.hp <= 0) {
-                    const penalty = Math.floor(Time.day / State.apRecoverInterval);
-                    msg += `你死掉了呢...体力已扣为-${penalty}点，可等体力恢复正值后行动。`;
-                    user.rpgap = -penalty;
-                    user.rpgstatus.hp = 1;
-                }
+                msg += `你触发了催眠陷阱！房间里突然喷出催眠气体，你无处可躲，在强撑了一阵后最终沉沉地昏睡了过去。`;
+                let effect = SleepTrapRoom.effect + level - user.rpgstatus.level;
+                State.setDebuffTime(user, Date.now() + effect * Time.hour);
+                user.rpgstate |= State.sleep;
+                msg += `看来要${effect}小时后才能醒来呢。`;
             }
             return msg;
         }
     };
+    // TODO: tentacleTrapRoom
+    // TODO: amnesiaTrapRoom?
+    // TODO: teleportTrapRoom
+
     export const ShopRoom: BaseRoom = {
         name: "shop",
         type: "shop",

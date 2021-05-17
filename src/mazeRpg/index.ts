@@ -95,7 +95,7 @@ export function apply(ctx: Context, config?: Config) {
             await ctx.database.mysql.query(query);
             return `更新完毕`;
         });
-    ctx.command("rpg/bag", "查看背包")
+    ctx.command("rpg/item/bag", "查看背包")
         .userFields(["rpgitems", "money", "rpgstate", "timers"])
         .check(State.stateChecker())
         .option("detail", "-d 显示物品详细")
