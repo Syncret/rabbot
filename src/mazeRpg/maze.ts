@@ -57,7 +57,7 @@ function apply(ctx: Context) {
         msg.push(Room.getDoorDescription(cell.door));
         return msg.join("\n");
     };
-    const onEnterCell = async (mazeId: number, cellNo: number, user: User.Observed<"rpgrecords" | "mazecellid" | "id" | "rpgstatus" | "rpgap">) => {
+    const onEnterCell = async (mazeId: number, cellNo: number, user: User.Observed<"rpgrecords" | "mazecellid" | "id" | "rpgstatus" | "rpgap" | "rpgstate" | "timers">) => {
         const cell = (await database.get("mazecell", { mazeId: [mazeId], cell: [cellNo] }, ["id", "door", "room"]))[0];
         user.mazecellid = cell.id;
         let firstVisit = true;

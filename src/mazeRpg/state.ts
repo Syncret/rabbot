@@ -11,6 +11,7 @@ export namespace State {
 
     const timerAPKey = "rpgap";
     const timerDebuffKey = "rpgdebuff";
+    export const baseStateFields = ["rpgap", "rpgstate", "timers"] as const;
 
     const StateDismatchString: Record<number, [string, string]> = {
         [active]: ["角色未初始化，请使用start <角色名>指令创建新人物。", "已有角色存在。"],
@@ -100,5 +101,8 @@ export namespace State {
     export function consumeAP(user: User.Observed<"rpgap">, ap: number): string {
         user.rpgap -= ap;
         return `体力-${ap}=${user.rpgap}。`;
+    }
+    export function setDebuffTime(user: User.Observed<"timers">, time: number) {
+        user.timers[timerDebuffKey] = time;
     }
 }
