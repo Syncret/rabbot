@@ -82,7 +82,7 @@ function apply(ctx: Context) {
         return msg;
     };
 
-    ctx.command('rpg/createmaze <name:string>', '生成迷宫', { hidden: true, authority: 3 })
+    ctx.command('rpg/maze/createmaze <name:string>', '生成迷宫', { hidden: true, authority: 3 })
         .alias("生成迷宫")
         .option("size", `-s <size:string>  指定迷宫尺寸（长x宽，默认8x8)`)
         .option("gate", `-g <gate:number>  指定开启下一层需要的人数`)
@@ -123,7 +123,7 @@ function apply(ctx: Context) {
             return `一个名为${name}的迷宫突然被人们发现，一时吸引了许多冒险者的目光。`;
         });
 
-    ctx.command('rpg/maze', 'get/set maze information', { hidden: true, authority: 3 })
+    ctx.command('rpg/maze/mazeinfo', 'get/set maze information', { hidden: true, authority: 3 })
         .option("list", "-l list all mazes")
         .option("rename", "-r <rename:string>")
         .action(async ({ session, options }) => {
@@ -148,7 +148,7 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/entermaze', '进入迷宫')
+    ctx.command('rpg/maze/entermaze', '进入迷宫')
         .alias("进入迷宫")
         .userFields(["rpgstate", "rpgname", "mazecellid", "id", "rpgrecords", "rpgap", "rpgstatus", "timers"])
         .check(State.stateChecker(0, State.inMaze))
@@ -167,7 +167,7 @@ function apply(ctx: Context) {
             return msg.join("\n");
         });
 
-    ctx.command('rpg/move <direction:string>', '向指定方向(东南西北)移动')
+    ctx.command('rpg/maze/move <direction:string>', '向指定方向(东南西北)移动')
         .alias("移动")
         .userFields(["rpgstate", "rpgname", "mazecellid", "timers", "rpgap", "id", "rpgrecords", "rpgstatus"])
         .check(State.stateChecker(State.inMaze))
@@ -204,7 +204,7 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/observe <target:string>', '观察房间或指定对象')
+    ctx.command('rpg/maze/observe <target:string>', '观察房间或指定对象')
         .alias("观察")
         .userFields(["rpgstate", "rpgname", "mazecellid", "id", "timers"])
         .check(State.stateChecker(State.inMaze))
@@ -217,7 +217,7 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/position', 'get current position', { hidden: true, authority: 3 })
+    ctx.command('rpg/maze/position', 'get current position', { hidden: true, authority: 3 })
         .userFields(["rpgstate", "mazecellid", "timers"])
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }) => {

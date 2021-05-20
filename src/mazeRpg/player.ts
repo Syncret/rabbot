@@ -1,7 +1,7 @@
 import { Context, Random } from "koishi";
 import { Room } from "./room";
 import { State } from "./state";
-import { min } from "./util";
+import { getDiceMsg, min } from "./util";
 
 export namespace Player {
     export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "金", "虹",
@@ -24,11 +24,11 @@ export namespace Player {
         exp: number,
         hp: number,
         mp: number,
-        phase: number,
         status: number,
         weapon?: string,
         armor?: string,
         accessory?: string,
+        rpgdice?: number,
     }
     export function maxHp(status: Status): number {
         return status.level * 10 + 90;
@@ -73,14 +73,13 @@ export namespace Player {
             exp: 0,
             hp: 100,
             mp: 100,
-            phase: 0,
             status: 0,
         }
     };
 
     export function apply(ctx: Context) {
         const { database } = ctx;
-        ctx.command("rpg/status", "查看状态")
+        ctx.command("rpg/player/status", "查看状态")
             .userFields(["rpgstatus", "rpgname", "rpgstate", "timers", "rpgap"])
             .check(State.stateChecker())
             .action(({ session }) => {
@@ -88,14 +87,14 @@ export namespace Player {
                 const apMsg = State.apChecker(0, true)({ session });
                 return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}`;
             });
-        ctx.command("rpg/appearance", "查看外观")
+        ctx.command("rpg/player/appearance", "查看外观")
             .userFields(["appearance", "rpgname", "rpgstate", "rpgstatus", "timers"])
             .check(State.stateChecker())
             .action(({ session }) => {
                 const user = session!.user!;
                 return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}`;
             });
-        ctx.command("rpg/rest <ap:number>", "休息")
+        ctx.command("rpg/player/rest <ap:number>", "休息")
             .option("ap", "-a <ap:number> 指定消耗的体力")
             .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
             .check(State.stateChecker(State.inMaze))
@@ -103,6 +102,10 @@ export namespace Player {
             .action(async ({ session, options = {} }, ap) => {
                 const user = session?.user!;
                 ap = ap || options.ap || 1;
+                const apmsg = State.apChecker(ap)({ session, options });
+                if (apmsg) {
+                    return apmsg;
+                }
                 const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell", "room"]);
                 const room = Room.RoomRegistry[cell.room];
                 let msg = "";
@@ -117,6 +120,29 @@ export namespace Player {
                 msg += State.consumeAP(user, ap);
                 user.rpgstatus.hp = min(user.rpgstatus.hp + ap * coefficient, maxHp(user.rpgstatus));
                 user.rpgstatus.mp = min(user.rpgstatus.mp + ap * coefficient, maxMp(user.rpgstatus));
+                return msg;
+            });
+        ctx.command("rpg/player/escape <ap:number>", "挣脱陷阱")
+            .option("ap", "-a <ap:number> 指定消耗的体力")
+            .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
+            .check(State.stateChecker(State.tentacle))
+            .check(State.apChecker())
+            .action(async ({ session, options = {} }, ap) => {
+                const user = session?.user!;
+                ap = ap || options.ap || 1;
+                const apmsg = State.apChecker(ap)({ session, options });
+                if (apmsg) {
+                    return apmsg;
+                }
+                const dice = Random.int(ap);
+                let msg = getDiceMsg(dice, ap, user.rpgstatus.rpgdice!);
+                if (dice >= user.rpgstatus.rpgdice!) {
+                    msg += `成功了！你从触手中挣脱了出来！`;
+                    user.rpgstate ^= State.tentacle;
+                } else {
+                    msg += `你费尽了力气, 然而还是被触手紧紧地缠绕着。`
+                }
+                msg += State.consumeAP(user, ap);
                 return msg;
             });
     }
