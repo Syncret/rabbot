@@ -27,3 +27,7 @@ export function createMutualMap<T, V>(values: [T, V][]): Map<T | V, V | T> {
 export function getRemainingTime(time: number, unit = Time.hour): string {
     return ((time - Date.now()) / unit).toFixed(2);
 }
+export function getDiceMsg(dice: number, range: number, target: number): string {
+    const operator = dice > target ? ">" : (dice === target ? "=" : "<");
+    return `1d${range}=${dice}${operator}${target}.`;
+}

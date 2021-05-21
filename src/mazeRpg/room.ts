@@ -1,7 +1,7 @@
 import { Random, Time, User } from "koishi";
 import { parseCellDoorCode } from "./maze.util";
 import { State } from "./state";
-import { createMutualMap } from "./util";
+import { createMutualMap, max } from "./util";
 
 export namespace Room {
 
@@ -114,15 +114,40 @@ export namespace Room {
                 msg += `你发现了房间中的有一个陷阱机关，你小心地躲开了它。`;
             } else {
                 msg += `你触发了催眠陷阱！房间里突然喷出催眠气体，你无处可躲，在强撑了一阵后最终沉沉地昏睡了过去。`;
-                let effect = SleepTrapRoom.effect + level - user.rpgstatus.level;
+                let effect = SleepTrapRoom.effect + max(0, level - user.rpgstatus.level);
                 State.setDebuffTime(user, Date.now() + effect * Time.hour);
                 user.rpgstate |= State.sleep;
-                msg += `看来要${effect}小时后才能醒来呢。`;
+                msg += `看来要${effect}小时后才能醒来。`;
             }
             return msg;
         }
     };
-    // TODO: tentacleTrapRoom
+    export const TentacleTrapRoom: TrapRoom = {
+        name: "tentacleTrap",
+        type: "trap",
+        displayName: "触手陷阱",
+        probabilty: 20,
+        effect: 2,
+        description: "房间里有好多触手。",
+        items: { [RoomRemainingItemsKey]: 5, "触手": 3, "触手服": 3 },
+        onEnter: async (user, level) => {
+            let msg = "";
+            const equipTentacle = user.rpgstatus.weapon === "触手" || user.rpgstatus.armor === "触手服";
+            const prob = 0.5 + (level - user.rpgstatus.level) / 10;
+            const escape = equipTentacle ? false : Math.random() > prob;
+            if (escape) {
+                msg += `你发现了房间中的好多触手，你小心地躲开了它们。`;
+            } else {
+                msg += equipTentacle ? `房间中有许多触手，你一进房间，身上的触手就和它们纠缠在了一起，你一时动弹不得。` : `房间中有许多触手，你一不小心，被触手紧紧地束缚住了！`;
+                let effect = SleepTrapRoom.effect + max(0, level - user.rpgstatus.level);
+                effect = equipTentacle ? effect * 2 : effect;
+                user.rpgstatus.rpgdice = effect;
+                user.rpgstate |= State.tentacle;
+                msg += `可以使用挣脱(escape)指令掷骰${effect}点挣脱。`;
+            }
+            return msg;
+        }
+    };
     // TODO: amnesiaTrapRoom?
     // TODO: teleportTrapRoom
 
