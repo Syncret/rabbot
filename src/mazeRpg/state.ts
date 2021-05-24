@@ -62,9 +62,9 @@ export namespace State {
     const initialAp = 1;
     const maxAp = 24;
 
-    export function apChecker(defaultAp = 1, returnDetail = false) {
-        return ({ session, options }: { session?: Session<"rpgap" | "timers"> | undefined, options?: { ap?: number } }) => {
-            const target = options?.ap || defaultAp;
+    export function apChecker(apInArgs = false, returnDetail = false) {
+        return ({ session, options }: { session?: Session<"rpgap" | "timers"> | undefined, options?: { ap?: number } }, ap?: any) => {
+            const target: number = (apInArgs ? ap as number : 1) || (options?.ap == null ? 1 : options.ap);
             const now = Date.now();
             const user = session?.user!;
             const timers = user.timers!;

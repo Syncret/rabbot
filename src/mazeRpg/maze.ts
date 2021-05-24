@@ -3,6 +3,7 @@ import { State } from "./state";
 import { generateMaze, MazeDirection, parseCellDoorCode } from "./maze.util";
 import { assert } from "../util";
 import { Room } from "./room";
+import { Player } from "./player";
 
 const defaultWidth = 8;
 const defaultHeight = 8;
@@ -210,6 +211,16 @@ function apply(ctx: Context) {
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }, target) => {
             const user = session?.user!;
+            if (target) {
+                const players = await database.get("user", { rpgname: [target] }, ["appearance", "rpgstate", "rpgstatus"]);
+                if (players.length > 0) {
+                    const player = players[0];
+                    // TODO
+                    return target + Player.describeAppearance(player.appearance, player.rpgstatus);
+                } else {
+                    return "找不到目标角色呢。";
+                }
+            }
             const cell = await database.getCellById(user.mazecellid, ["id", "door", "room", "mazeId", "cell"]);
             let msg = "";
             msg += `你环顾四周。`;

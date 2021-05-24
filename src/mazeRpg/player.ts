@@ -67,6 +67,15 @@ export namespace Player {
             + `生命${status.hp}/${maxHp(status)}, 魔力${status.mp}/${maxMp(status)}, `
             + `武器${status.weapon || "无"}, 穿着${status.armor || "无"}, 饰品${status.accessory || "无"}。`
     };
+    export function describeState(state: number): string {
+        let msgs: string[] = [];
+        if (State.hasState(state, State.sleep)) {
+            msgs.push("沉沉地睡着");
+        } else if (State.hasState(state, State.tentacle)) {
+            msgs.push("被触手紧紧地束缚着");
+        }
+        return msgs.length > 0 ? `正${msgs.join(", ")}。` : "";
+    };
     export function createNewPlayer(): Status {
         return {
             level: 1,
@@ -84,7 +93,7 @@ export namespace Player {
             .check(State.stateChecker())
             .action(({ session }) => {
                 const user = session!.user!;
-                const apMsg = State.apChecker(0, true)({ session });
+                const apMsg = State.apChecker(false, true)({ session, options: { ap: 0 } });
                 return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}`;
             });
         ctx.command("rpg/player/appearance", "查看外观")
@@ -98,14 +107,9 @@ export namespace Player {
             .option("ap", "-a <ap:number> 指定消耗的体力")
             .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
             .check(State.stateChecker(State.inMaze))
-            .check(State.apChecker())
+            .check(State.apChecker(true))
             .action(async ({ session, options = {} }, ap) => {
                 const user = session?.user!;
-                ap = ap || options.ap || 1;
-                const apmsg = State.apChecker(ap)({ session, options });
-                if (apmsg) {
-                    return apmsg;
-                }
                 const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell", "room"]);
                 const room = Room.RoomRegistry[cell.room];
                 let msg = "";
@@ -126,14 +130,9 @@ export namespace Player {
             .option("ap", "-a <ap:number> 指定消耗的体力")
             .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
             .check(State.stateChecker(State.tentacle))
-            .check(State.apChecker())
+            .check(State.apChecker(true))
             .action(async ({ session, options = {} }, ap) => {
                 const user = session?.user!;
-                ap = ap || options.ap || 1;
-                const apmsg = State.apChecker(ap)({ session, options });
-                if (apmsg) {
-                    return apmsg;
-                }
                 const dice = Random.int(ap);
                 let msg = getDiceMsg(dice, ap, user.rpgstatus.rpgdice!);
                 if (dice >= user.rpgstatus.rpgdice!) {
