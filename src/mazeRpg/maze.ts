@@ -53,7 +53,7 @@ function apply(ctx: Context) {
         msg.push(room.description);
         let players = await getOtherPlayersInCell(cell.id, selfId);
         if (players.length > 0) {
-            msg.push(`你还在房间里看到了${players.map((p) => p.rpgname).join(', ')}。`);
+            msg.push(`你还在房间里看到了${players.map((p) => `${Player.describeState(p.rpgstate)}的${p.rpgname}`).join(', ')}。`);
         }
         msg.push(Room.getDoorDescription(cell.door));
         return msg.join("\n");
@@ -82,7 +82,7 @@ function apply(ctx: Context) {
         msg += await getEnterCellMsg(cell, user.id);
         return msg;
     };
-
+    ctx.command('rpg/maze', '迷宫相关指令');
     ctx.command('rpg/maze/createmaze <name:string>', '生成迷宫', { hidden: true, authority: 3 })
         .alias("生成迷宫")
         .option("size", `-s <size:string>  指定迷宫尺寸（长x宽，默认8x8)`)
@@ -212,13 +212,12 @@ function apply(ctx: Context) {
         .action(async ({ session }, target) => {
             const user = session?.user!;
             if (target) {
-                const players = await database.get("user", { rpgname: [target] }, ["appearance", "rpgstate", "rpgstatus"]);
+                const players = await database.get("user", { rpgname: [target], mazecellid: [user.mazecellid] }, ["appearance", "rpgstate", "rpgstatus"]);
                 if (players.length > 0) {
                     const player = players[0];
-                    // TODO
-                    return target + Player.describeAppearance(player.appearance, player.rpgstatus);
+                    return target + Player.describeAppearance(player.appearance, player.rpgstatus) + Player.describeState(player.rpgstate);
                 } else {
-                    return "找不到目标角色呢。";
+                    return "房间里没有这个角色呢。";
                 }
             }
             const cell = await database.getCellById(user.mazecellid, ["id", "door", "room", "mazeId", "cell"]);
@@ -226,6 +225,23 @@ function apply(ctx: Context) {
             msg += `你环顾四周。`;
             msg += await getEnterCellMsg(cell, user.id);
             return msg;
+        });
+
+    ctx.command('rpg/maze/help <target:string>', '帮助指定角色')
+        .alias("观察")
+        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "timers"])
+        .check(State.stateChecker(State.inMaze))
+        .action(async ({ session }, target) => {
+            const user = session?.user!;
+            if (!target) {
+                return "需要指定帮助的对象呢。";
+            }
+            const players = await database.get("user", { rpgname: [target], mazecellid: [user.mazecellid] }, ["appearance", "rpgstate", "rpgstatus"]);
+            if (players.length > 0) {
+                // TODO
+            } else {
+                return "房间里没有这个角色呢。";
+            }
         });
 
     ctx.command('rpg/maze/position', 'get current position', { hidden: true, authority: 3 })

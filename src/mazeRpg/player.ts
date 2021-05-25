@@ -70,9 +70,9 @@ export namespace Player {
     export function describeState(state: number): string {
         let msgs: string[] = [];
         if (State.hasState(state, State.sleep)) {
-            msgs.push("沉沉地睡着");
+            msgs.push("沉沉睡着");
         } else if (State.hasState(state, State.tentacle)) {
-            msgs.push("被触手紧紧地束缚着");
+            msgs.push("被触手紧紧束缚着");
         }
         return msgs.length > 0 ? `正${msgs.join(", ")}。` : "";
     };
@@ -88,6 +88,7 @@ export namespace Player {
 
     export function apply(ctx: Context) {
         const { database } = ctx;
+        ctx.command("rpg/player", "角色相关指令");
         ctx.command("rpg/player/status", "查看状态")
             .userFields(["rpgstatus", "rpgname", "rpgstate", "timers", "rpgap"])
             .check(State.stateChecker())
@@ -101,7 +102,7 @@ export namespace Player {
             .check(State.stateChecker())
             .action(({ session }) => {
                 const user = session!.user!;
-                return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}`;
+                return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}${describeState(user.rpgstate)}`;
             });
         ctx.command("rpg/player/rest <ap:number>", "休息")
             .option("ap", "-a <ap:number> 指定消耗的体力")
