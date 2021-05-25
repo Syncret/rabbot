@@ -47,6 +47,23 @@ function apply(ctx: Context) {
         const users = await database.get('user', { mazecellid: [cellId] }, ["id", "rpgname", "rpgstatus", "rpgstate", "appearance"]);
         return users.filter((u) => u.id != selfId);
     };
+    const getPlayerInCell = async (cellId: number, name: string) => {
+        const users = await database.get('user', { mazecellid: [cellId], rpgname: [name] }, ["id", "rpgname", "rpgstatus", "rpgstate", "appearance"]);
+        if (users.length === 0) {
+            return "找不到此角色呢。";
+        } else if (users.length === 1) {
+            return users[0];
+        } else {
+            const nameparts = name.split("#");
+            if (nameparts.length > 1) {
+                const index = Number(nameparts[1]);
+                if (index > 0) {
+                    return users[index] || `找不到第${index}位${nameparts[0]}。`;
+                }
+            }
+            return users[0];
+        }
+    }
     const getEnterCellMsg = async (cell: { id: number, door: number, room: string }, selfId: string) => {
         const room = Room.RoomRegistry[cell.room];
         let msg: string[] = [];

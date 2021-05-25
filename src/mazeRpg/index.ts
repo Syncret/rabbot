@@ -29,6 +29,9 @@ export function apply(ctx: Context, config?: Config) {
             if (name.length > 10) {
                 return "太长啦，名字不能超过10个字符。"
             }
+            if (/[#]/.test(name)) {
+                return "名字里不能有#等字符呢。"
+            }
             user.rpgstate = State.active;
             user.rpgname = name;
             user.appearance = Player.generateAppearance();
