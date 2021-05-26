@@ -47,8 +47,11 @@ function apply(ctx: Context) {
         const users = await database.get('user', { mazecellid: [cellId] }, ["id", "rpgname", "rpgstatus", "rpgstate", "appearance"]);
         return users.filter((u) => u.id != selfId);
     };
-    const getPlayerInCell = async (cellId: number, name: string) => {
-        const users = await database.get('user', { mazecellid: [cellId], rpgname: [name] }, ["id", "rpgname", "rpgstatus", "rpgstate", "appearance"]);
+    const getPlayerInCell = async <F extends Tables.Field<"user">>(cellId: number, name: string, fields: F[]) => {
+        if (!name) {
+            return "请指定目标角色。";
+        }
+        const users = await database.get('user', { mazecellid: [cellId], rpgname: [name] }, fields);
         if (users.length === 0) {
             return "找不到此角色呢。";
         } else if (users.length === 1) {
@@ -229,13 +232,11 @@ function apply(ctx: Context) {
         .action(async ({ session }, target) => {
             const user = session?.user!;
             if (target) {
-                const players = await database.get("user", { rpgname: [target], mazecellid: [user.mazecellid] }, ["appearance", "rpgstate", "rpgstatus"]);
-                if (players.length > 0) {
-                    const player = players[0];
-                    return target + Player.describeAppearance(player.appearance, player.rpgstatus) + Player.describeState(player.rpgstate);
-                } else {
-                    return "房间里没有这个角色呢。";
+                const player = await getPlayerInCell(user.mazecellid, target, ["appearance", "rpgstate", "rpgstatus"]);
+                if (typeof player === "string") {
+                    return player;
                 }
+                return target + Player.describeAppearance(player.appearance, player.rpgstatus) + Player.describeState(player.rpgstate);
             }
             const cell = await database.getCellById(user.mazecellid, ["id", "door", "room", "mazeId", "cell"]);
             let msg = "";
@@ -250,15 +251,16 @@ function apply(ctx: Context) {
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }, target) => {
             const user = session?.user!;
-            if (!target) {
-                return "需要指定帮助的对象呢。";
+            const player = await getPlayerInCell(user.mazecellid, target, ["rpgstate", "rpgstatus"]);
+            if (typeof player === "string") {
+                return player;
             }
-            const players = await database.get("user", { rpgname: [target], mazecellid: [user.mazecellid] }, ["appearance", "rpgstate", "rpgstatus"]);
-            if (players.length > 0) {
+            if(State.hasState(player.rpgstate, State.sleep)){
                 // TODO
-            } else {
-                return "房间里没有这个角色呢。";
             }
+
+            return "";
+
         });
 
     ctx.command('rpg/maze/position', 'get current position', { hidden: true, authority: 3 })
