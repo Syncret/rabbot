@@ -1,4 +1,4 @@
-import { Context, Random, Tables, Time, User } from "koishi";
+import { Context, Random, segment, Tables, Time, User } from "koishi";
 import { State } from "./state";
 import { generateMaze, MazeDirection, parseCellDoorCode } from "./maze.util";
 import { assert } from "../util";
@@ -28,7 +28,7 @@ function apply(ctx: Context) {
         const cellPromises = mazecells.map((value, index) => {
             let room: string;
             if (index === endCell) {
-                room = Room.StairRoom.name;
+                room = Room.stairRoom.name;
             } else {
                 room = Random.weightedPick(Room.RoomProbMap);
             }
@@ -247,16 +247,29 @@ function apply(ctx: Context) {
 
     ctx.command('rpg/maze/help <target:string>', '帮助指定角色')
         .alias("观察")
-        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "timers"])
+        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "timers", "rpgstatus"])
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session }, target) => {
             const user = session?.user!;
-            const player = await getPlayerInCell(user.mazecellid, target, ["rpgstate", "rpgstatus"]);
+            const player = await getPlayerInCell(user.mazecellid, target, ["id", "rpgstate", "rpgstatus", "rpgname", session?.platform!]);
             if (typeof player === "string") {
                 return player;
             }
-            if(State.hasState(player.rpgstate, State.sleep)){
-                // TODO
+            let msg = "";
+            if (State.hasState(player.rpgstate, State.sleep)) {
+                await database.update("user", [{ id: player.id, rpgstate: player.rpgstate ^= State.sleep }]);
+                msg += `你轻轻地叫醒了${player.rpgname}。`;
+                msg += segment.at(player[session?.platform!]) + `醒来啦。`;
+                return msg;
+            } else if (State.hasState(player.rpgstate, State.tentacle)) {
+                const dice = Math.random();
+                if (dice > 0.2) {
+                    msg += `你小心地把${player.rpgname}从触手中扯出来。`;
+                    msg += segment.at(player[session?.platform!]) + `从触手中挣脱出来啦。`;
+                    //TODO
+                } else {
+                    msg += `你尝试解救${player.rpgname}，但是不仅没有成功，你也被触手缠住了!`;
+                }
             }
 
             return "";

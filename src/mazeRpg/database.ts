@@ -21,7 +21,8 @@ declare module 'koishi-core' {
     }
     interface Database {
         getCellById<F extends Tables.Field<"mazecell">>(id: number, fields?: F[]): Promise<Pick<Tables["mazecell"], F>>,
-        getMazeById<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
+        getMazeById<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>,
+        getMazeByCellId<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
     }
 };
 export interface Maze {
@@ -62,6 +63,10 @@ Database.extend("koishi-plugin-mysql", {
     },
     async getMazeById(id, fields) {
         return (await this.get("maze", [id], fields))[0];
+    },
+    async getMazeByCellId(id, fields) {
+        const cell = await this.getCellById(id, ["mazeId"]);
+        return this.getMazeById(cell.mazeId, fields);
     },
 })
 

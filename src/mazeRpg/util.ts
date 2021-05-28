@@ -31,3 +31,7 @@ export function getDiceMsg(dice: number, range: number, target: number): string 
     const operator = dice > target ? ">" : (dice === target ? "=" : "<");
     return `1d${range}=${dice}${operator}${target}.`;
 }
+
+export function extend<T>(t: T) {
+    return <U>(u: U) => Object.assign(t, u);
+}

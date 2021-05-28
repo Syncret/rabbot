@@ -1,7 +1,7 @@
 import { Random, Time, User } from "koishi";
 import { parseCellDoorCode } from "./maze.util";
 import { State } from "./state";
-import { createMutualMap, max } from "./util";
+import { createMutualMap, extend, max } from "./util";
 
 export namespace Room {
 
@@ -51,7 +51,7 @@ export namespace Room {
         return room;
     }
 
-    export const BlankRoom: BaseRoom = {
+    export const blankRoom: BaseRoom = {
         name: "blank",
         type: "normal",
         displayName: "空房间",
@@ -60,7 +60,7 @@ export namespace Room {
         items: { [RoomRemainingItemsKey]: 10 }
 
     };
-    export const SpringRoom: BaseRoom = {
+    export const springRoom: BaseRoom = {
         name: "spring",
         type: "rest",
         displayName: "泉水房间",
@@ -69,7 +69,7 @@ export namespace Room {
         description: "房间里氤氲着热腾腾的雾气。中间有一个水池，是一个温泉！似乎可以在这里休息的样子。",
         items: { [RoomRemainingItemsKey]: 10 }
     };
-    export const FallTrapRoom: TrapRoom = {
+    export const fallTrapRoom: TrapRoom = {
         name: "fallTrap",
         type: "trap",
         displayName: "落穴陷阱",
@@ -85,7 +85,7 @@ export namespace Room {
             if (escape) {
                 msg += `但是你成功地躲了过去！`;
             } else {
-                const damage = Math.floor(FallTrapRoom.effect * (Math.random() + 0.5));
+                const damage = Math.floor(fallTrapRoom.effect * (Math.random() + 0.5));
                 user.rpgstatus.hp -= damage;
                 msg += `你受到了${damage}点伤害！剩余hp ${user.rpgstatus.hp}。`;
                 if (user.rpgstatus.hp <= 0) {
@@ -98,7 +98,7 @@ export namespace Room {
             return msg;
         }
     };
-    export const SleepTrapRoom: TrapRoom = {
+    export const sleepTrapRoom: TrapRoom = {
         name: "sleepTrap",
         type: "trap",
         displayName: "催眠陷阱",
@@ -114,7 +114,7 @@ export namespace Room {
                 msg += `你发现了房间中的有一个陷阱机关，你小心地躲开了它。`;
             } else {
                 msg += `你触发了催眠陷阱！房间里突然喷出催眠气体，你无处可躲，在强撑了一阵后最终沉沉地昏睡了过去。`;
-                let effect = SleepTrapRoom.effect + max(0, level - user.rpgstatus.level);
+                let effect = sleepTrapRoom.effect + max(0, level - user.rpgstatus.level);
                 State.setDebuffTime(user, Date.now() + effect * Time.hour);
                 user.rpgstate |= State.sleep;
                 msg += `看来要${effect}小时后才能醒来。`;
@@ -122,7 +122,7 @@ export namespace Room {
             return msg;
         }
     };
-    export const TentacleTrapRoom: TrapRoom = {
+    export const tentacleTrapRoom = extend<TrapRoom>({
         name: "tentacleTrap",
         type: "trap",
         displayName: "触手陷阱",
@@ -139,7 +139,7 @@ export namespace Room {
                 msg += `你发现了房间中的好多触手，你小心地躲开了它们。`;
             } else {
                 msg += equipTentacle ? `房间中有许多触手，你一进房间，身上的触手就和它们纠缠在了一起，你一时动弹不得。` : `房间中有许多触手，你一不小心，被触手紧紧地束缚住了！`;
-                let effect = SleepTrapRoom.effect + max(0, level - user.rpgstatus.level);
+                let effect = tentacleTrapRoom.effect + max(0, level - user.rpgstatus.level);
                 effect = equipTentacle ? effect * 2 : effect;
                 user.rpgstatus.rpgdice = effect;
                 user.rpgstate |= State.tentacle;
@@ -147,11 +147,11 @@ export namespace Room {
             }
             return msg;
         }
-    };
+    })({});
     // TODO: amnesiaTrapRoom?
     // TODO: teleportTrapRoom
 
-    export const ShopRoom: BaseRoom = {
+    export const shopRoom: BaseRoom = {
         name: "shop",
         type: "shop",
         displayName: "商店",
@@ -159,17 +159,16 @@ export namespace Room {
         description: "房间里有一个穿着兜帽，看不清面庞的怪人，似乎在兜售一些小玩意。（请等待后续更新商店）",
         items: { [RoomRemainingItemsKey]: 10 }
     };
-    export const StairRoom: BaseRoom = {
+    export const stairRoom: BaseRoom = {
         name: "stair",
         type: "stair",
         displayName: "阶梯",
         probabilty: 0,
         description: "房间里有一个传送阵，似乎就是通向迷宫下一层的路呢。",
-        items: { [RoomRemainingItemsKey]: 5 }
+        items: { [RoomRemainingItemsKey]: 5 },
     };
 
-    [BlankRoom, SpringRoom, FallTrapRoom, ShopRoom, StairRoom].forEach((room) => {
+    [blankRoom, springRoom, fallTrapRoom, shopRoom, stairRoom].forEach((room) => {
         registerRoom(room);
     })
-
 }
