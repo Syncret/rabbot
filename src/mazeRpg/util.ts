@@ -32,6 +32,6 @@ export function getDiceMsg(dice: number, range: number, target: number): string 
     return `1d${range}=${dice}${operator}${target}.`;
 }
 
-export function extend<T>(t: T) {
-    return <U>(u: U) => Object.assign(t, u);
+export function implementType<T>() {
+    return <U extends T>(u: U) => u;
 }

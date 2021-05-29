@@ -1,35 +1,13 @@
 import { Context, Random } from "koishi";
-import { Room } from "./room";
+import { Appearance, Status } from "./database";
 import { State } from "./state";
-import { getDiceMsg, min } from "./util";
+import { getDiceMsg } from "./util";
 
 export namespace Player {
     export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "金", "虹",
         "玫瑰", "琥珀", "天青", "翡翠", "琉璃"];
     export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发", "大波浪"];
 
-    export type Appearance = {
-        hairColor: string,
-        hairType: string,
-        eyeColor: string,
-        height: number,
-    };
-    export type PlayRecords = {
-        visited: number[];
-        logs: string[];
-    }
-
-    export type Status = {
-        level: number,
-        exp: number,
-        hp: number,
-        mp: number,
-        status: number,
-        weapon?: string,
-        armor?: string,
-        accessory?: string,
-        rpgdice?: number,
-    }
     export function maxHp(status: Status): number {
         return status.level * 10 + 90;
     }
@@ -67,15 +45,6 @@ export namespace Player {
             + `生命${status.hp}/${maxHp(status)}, 魔力${status.mp}/${maxMp(status)}, `
             + `武器${status.weapon || "无"}, 穿着${status.armor || "无"}, 饰品${status.accessory || "无"}。`
     };
-    export function describeState(state: number): string {
-        let msgs: string[] = [];
-        if (State.hasState(state, State.sleep)) {
-            msgs.push("沉沉睡着");
-        } else if (State.hasState(state, State.tentacle)) {
-            msgs.push("被触手紧紧束缚着");
-        }
-        return msgs.length > 0 ? `正${msgs.join(", ")}。` : "";
-    };
     export function createNewPlayer(): Status {
         return {
             level: 1,
@@ -102,30 +71,7 @@ export namespace Player {
             .check(State.stateChecker())
             .action(({ session }) => {
                 const user = session!.user!;
-                return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}${describeState(user.rpgstate)}`;
-            });
-        ctx.command("rpg/player/rest <ap:number>", "休息")
-            .option("ap", "-a <ap:number> 指定消耗的体力")
-            .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
-            .check(State.stateChecker(State.inMaze))
-            .check(State.apChecker(true))
-            .action(async ({ session, options = {} }, ap) => {
-                const user = session?.user!;
-                const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell", "room"]);
-                const room = Room.RoomRegistry[cell.room];
-                let msg = "";
-                let coefficient = 1;
-                if (room.type !== "rest") {
-                    msg += `附近的环境令你感到不安，你勉勉强强地休息了一阵。`;
-                } else {
-                    msg += `附近的环境令你感到放松，你舒服地休息了一阵！`;
-                    coefficient = room.effect || 10;
-                }
-                msg += `你恢复了${ap * coefficient}点生命与魔力。`
-                msg += State.consumeAP(user, ap);
-                user.rpgstatus.hp = min(user.rpgstatus.hp + ap * coefficient, maxHp(user.rpgstatus));
-                user.rpgstatus.mp = min(user.rpgstatus.mp + ap * coefficient, maxMp(user.rpgstatus));
-                return msg;
+                return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}${State.describeState(user.rpgstate)}`;
             });
         ctx.command("rpg/player/escape <ap:number>", "挣脱陷阱")
             .option("ap", "-a <ap:number> 指定消耗的体力")

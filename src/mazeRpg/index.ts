@@ -1,6 +1,6 @@
-import { Context, isInteger } from "koishi";
+import { Context } from "koishi";
 import { RPGLuck } from "./luck";
-import { rpgFields } from "./database";
+import { rpgFields, Status } from "./database";
 import { Player } from "./player";
 import { Item } from "./item";
 import { State } from "./state";
@@ -90,7 +90,7 @@ export function apply(ctx: Context, config?: Config) {
     ctx.command("rpg/updatedatabase", "更新数据库结构", { authority: 3, hidden: true })
         .action(async ({ session, options }) => {
             const mysql = ctx.database.mysql;
-            const users: Array<{ id: string, rpgname: string, rpgstatus: Player.Status }> = await ctx.database.mysql.query("select id, rpgname, rpgstatus from user where rpgstate > 0;");
+            const users: Array<{ id: string, rpgname: string, rpgstatus: Status }> = await ctx.database.mysql.query("select id, rpgname, rpgstatus from user where rpgstate > 0;");
             const query = users.map((user) => {
                 if (user.rpgname || user.rpgstatus == null) { return ""; }
                 return `update user set rpgname = ${mysql.escape((user.rpgstatus as any).name)} where id = ${user.id};`
