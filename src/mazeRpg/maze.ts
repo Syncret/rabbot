@@ -228,8 +228,8 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/maze/help <target:string>', '帮助指定角色')
-        .alias("帮助")
+    ctx.command('rpg/maze/helpuser <target:string>', '帮助指定角色')
+        .alias("帮助其他角色")
         .userFields(["rpgstate", "rpgname", "mazecellid", "id", "timers", "rpgstatus"])
         .check(State.stateChecker(State.inMaze, State.sleep | State.tentacle))
         .action(async ({ session }, target) => {
