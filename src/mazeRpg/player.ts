@@ -64,7 +64,7 @@ export namespace Player {
             .action(({ session }) => {
                 const user = session!.user!;
                 const apMsg = State.apChecker(false, true)({ session, options: { ap: 0 } });
-                return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}`;
+                return `${user.rpgname}: ${describeStatus(user.rpgstatus)}\n${apMsg}${State.describeState(user.rpgstate)}`;
             });
         ctx.command("rpg/player/appearance", "查看外观")
             .userFields(["appearance", "rpgname", "rpgstate", "rpgstatus", "timers"])
