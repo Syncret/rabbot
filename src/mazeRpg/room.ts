@@ -194,7 +194,7 @@ export namespace Room {
         type: "stair",
         displayName: "阶梯",
         probabilty: 0,
-        description: "房间里有一个传送阵，似乎就是通向迷宫下一层的路呢。",
+        description: "房间里有一个传送阵，似乎就是通向迷宫下一层的路呢。可以使用entermaze指令进入下一层。",
         items: { [RoomRemainingItemsKey]: 5 },
     };
 
@@ -214,13 +214,20 @@ export namespace Room {
         let players = await getOtherPlayersInCell(database, cell.id, selfId);
         if (players.length > 0) {
             const playersUnion: Record<string, string[]> = {};
+            let needHelp = false;
             players.forEach((p) => {
                 const stateMsg = State.describeState(p.rpgstate);
+                if (stateMsg && !needHelp) {
+                    needHelp = true;
+                }
                 playersUnion[stateMsg] ||= [];
                 playersUnion[stateMsg].push(p.rpgname);
             });
-            const playersMsg = Object.entries(playersUnion).map(([stateMsg, names]) => `${stateMsg}的${names.join("、")}`).join(", ");
+            const playersMsg = Object.entries(playersUnion).map(([stateMsg, names]) => `${stateMsg}${names.join("、")}`).join(", ");
             msg.push(`你还在房间里看到了${playersMsg}。`);
+            if(needHelp){
+                return `可以使用aid指令帮助受难的朋友呢。`
+            }
         }
         msg.push(Room.getDoorDescription(cell.door));
         return msg.join("\n");

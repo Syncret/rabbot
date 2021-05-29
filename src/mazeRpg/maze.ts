@@ -149,6 +149,9 @@ function apply(ctx: Context) {
                 const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id"]);
                 const nextmazes = await database.get("maze", { channelId: [session?.channelId!], level: [maze.level + 1] }, ["id", "width", "height", "name"]);
                 if (nextmazes.length === 0) {
+                    if(maze.level===1){
+                        return "现在只开放第二层迷宫呢。敬请等待更新。";
+                    }
                     const newmaze = await createMaze(maze.name, maze.width, maze.height, session?.channelId!, maze.level + 1);
                     targetMaze = newmaze;
                 } else {
@@ -228,8 +231,8 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/maze/helpuser <target:string>', '帮助指定角色')
-        .alias("帮助其他角色")
+    ctx.command('rpg/maze/aid <target:string>', '帮助指定角色')
+        .alias("帮助角色")
         .userFields(["rpgstate", "rpgname", "mazecellid", "id", "timers", "rpgstatus"])
         .check(State.stateChecker(State.inMaze, State.sleep | State.tentacle))
         .action(async ({ session }, target) => {

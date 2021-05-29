@@ -97,14 +97,19 @@ export namespace State {
             }
         }
     }
-    export function describeState(state: number): string {
+    export function describeState(state: number, short = false): string {
         let msgs: string[] = [];
         if (State.hasState(state, State.sleep)) {
             msgs.push("沉沉睡着");
         } else if (State.hasState(state, State.tentacle)) {
             msgs.push("被触手紧紧束缚着");
         }
-        return msgs.length > 0 ? `正${msgs.join(", ")}。` : "";
+        if (msgs.length > 0) {
+            const msg = msgs.join("并");
+            return short ? msg + "的" : `正${msg}。`
+        } else {
+            return "";
+        }
     };
 
     export function consumeAP(user: User.Observed<"rpgap">, ap: number): string {
