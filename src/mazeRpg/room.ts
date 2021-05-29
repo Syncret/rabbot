@@ -30,7 +30,8 @@ export namespace Room {
         onEnter: (
             user: UserInCell,
             level: Pick<Maze, "level" | "width" | "height" | "id">,
-            database: Database) => Promise<string>;
+            database: Database) =>
+            Promise<{ msg: string, interupt: boolean }>;
     };
 
     export const RoomRemainingItemsKey = "__ITEMGEN__"; // key for room remaining random items
@@ -69,7 +70,7 @@ export namespace Room {
         name: "spring",
         type: "rest",
         displayName: "泉水房间",
-        probabilty: 20,
+        probabilty: 5,
         effect: 10,
         description: "房间里氤氲着热腾腾的雾气。中间有一个水池，是一个温泉！似乎可以在这里休息的样子。",
         items: { [RoomRemainingItemsKey]: 10 }
@@ -84,6 +85,7 @@ export namespace Room {
         items: { [RoomRemainingItemsKey]: 10 },
         onEnter: async (user, maze) => {
             let msg = "";
+            let interupt = false;
             const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
             const escape = Math.random() > prob;
             msg += `你触发了落穴陷阱！`;
@@ -98,9 +100,10 @@ export namespace Room {
                     msg += `你死掉了呢...体力已扣为-${penalty}点，可等体力恢复正值后行动。`;
                     user.rpgap = -penalty;
                     user.rpgstatus.hp = 1;
+                    interupt = true;
                 }
             }
-            return msg;
+            return { msg, interupt };
         }
     };
     export const sleepTrapRoom: TrapRoom = {
@@ -113,6 +116,7 @@ export namespace Room {
         items: { [RoomRemainingItemsKey]: 10 },
         onEnter: async (user, maze) => {
             let msg = "";
+            let interupt = false;
             const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
             const escape = Math.random() > prob;
             if (escape) {
@@ -123,8 +127,9 @@ export namespace Room {
                 State.setDebuffTime(user, Date.now() + effect * Time.hour);
                 user.rpgstate |= State.sleep;
                 msg += `看来要${effect}小时后才能醒来。`;
+                interupt = true;
             }
-            return msg;
+            return { msg, interupt };
         }
     };
     export const tentacleTrapRoom = implementType<TrapRoom>()({
@@ -137,6 +142,7 @@ export namespace Room {
         items: { [RoomRemainingItemsKey]: 5, "触手": 3, "触手服": 3 },
         onEnter: async (user, maze) => {
             let msg = "";
+            let interupt = false;
             const equipTentacle = user.rpgstatus.weapon === "触手" || user.rpgstatus.armor === "触手服";
             const prob = 0.5 + (maze.level - user.rpgstatus.level) / 10;
             const escape = equipTentacle ? false : Math.random() > prob;
@@ -145,8 +151,9 @@ export namespace Room {
             } else {
                 msg += equipTentacle ? `房间中有许多触手，你一进房间，身上的触手就和它们纠缠在了一起，你一时动弹不得。` : `房间中有许多触手，你一不小心，被触手紧紧地束缚住了！`;
                 msg += await tentacleTrapRoom.onTrap(user, maze.level);
+                interupt = true;
             }
-            return msg;
+            return { msg, interupt };
         },
         onTrap: async (user: User.Observed<"rpgstatus" | "rpgstate">, level: number) => {
             let effect = tentacleTrapRoom.effect + max(0, level - user.rpgstatus.level);
@@ -167,6 +174,7 @@ export namespace Room {
         items: { [RoomRemainingItemsKey]: 10 },
         onEnter: async (user, maze, database) => {
             let msg = "";
+            let interupt = false;
             const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
             const escape = Math.random() > prob;
             if (escape) {
@@ -174,9 +182,10 @@ export namespace Room {
             } else {
                 msg += `你触发了传送陷阱！地上突然出现一个传送法阵，一阵强光之后，你被传送到了另一个房间。`;
                 const targetCell = Random.int(maze.width * maze.height);
-                msg += onEnterCell(database, maze.id, targetCell, user)
+                interupt = true;
+                msg += await onEnterCell(database, maze.id, targetCell, user)
             }
-            return msg;
+            return { msg, interupt };
         }
     };
     // TODO: teleportTrapRoom
@@ -225,7 +234,7 @@ export namespace Room {
             });
             const playersMsg = Object.entries(playersUnion).map(([stateMsg, names]) => `${stateMsg}${names.join("、")}`).join(", ");
             msg.push(`你还在房间里看到了${playersMsg}。`);
-            if(needHelp){
+            if (needHelp) {
                 return `可以使用aid指令帮助受难的朋友呢。`
             }
         }
@@ -247,15 +256,20 @@ export namespace Room {
         }
         let msg = "";
         const room = Room.RoomRegistry[cell.room];
+        let interupt = false;
         if (Room.isTrapRoom(room)) {
             if (firstVisit) {
                 const maze = await database.getMazeById(mazeId, ["level", "width", "height", "id"]);
-                msg += await room.onEnter(user, maze, database);
+                const enterResult = await room.onEnter(user, maze, database);
+                msg += enterResult.msg;
+                interupt = enterResult.interupt;
             } else {
                 msg += `凭着记忆，你躲开了房间中的陷阱。`;
             }
         }
-        msg += await getEnterCellMsg(database, cell, user.id);
+        if (!interupt) {
+            msg += await getEnterCellMsg(database, cell, user.id);
+        }
         return msg;
     };
 }
