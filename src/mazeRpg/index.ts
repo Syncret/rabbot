@@ -92,7 +92,9 @@ export function apply(ctx: Context, config?: Config) {
             const mysql = ctx.database.mysql;
             const users: Array<{ id: string, rpgrecords: any, rpgstatus: Status }> = await ctx.database.mysql.query("select id, rpgrecords from user where mazecellid > 63;");
             const query = users.map((user) => {
-                user.rpgrecords.visited = [];
+                if (user.rpgrecords) {
+                    user.rpgrecords.visited = [];
+                }
                 return `update user set rpgrecords = '${JSON.stringify(user.rpgrecords)}' where id = ${user.id};`
             }).filter((s) => !!s);
             await ctx.database.mysql.query(query);
