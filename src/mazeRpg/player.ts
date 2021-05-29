@@ -73,14 +73,18 @@ export namespace Player {
                 const user = session!.user!;
                 return `${user.rpgname}${describeAppearance(user.appearance, user.rpgstatus)}${State.describeState(user.rpgstate)}`;
             });
-        ctx.command("rpg/player/escape <ap:number>", "挣脱陷阱")
+        ctx.command("rpg/player/escape <ap:number>", "消耗一定体力掷1-体力的骰子来挣脱陷阱")
             .option("ap", "-a <ap:number> 指定消耗的体力")
             .userFields(["rpgstate", "rpgstatus", "rpgap", "timers", "mazecellid"])
             .check(State.stateChecker(State.tentacle))
             .check(State.apChecker(true))
             .action(async ({ session, options = {} }, ap) => {
                 const user = session?.user!;
-                const dice = Random.int(ap);
+                const dice = Random.int(ap) + 1;
+                ap = ap || options.ap || 0;
+                if (!ap) {
+                    return "请指定消耗的体力来确定掷骰大小。"
+                }
                 let msg = getDiceMsg(dice, ap, user.rpgstatus.rpgdice!);
                 if (dice >= user.rpgstatus.rpgdice!) {
                     msg += `成功了！你从触手中挣脱了出来！`;
