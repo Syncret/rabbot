@@ -29,5 +29,9 @@ export function getRemainingTime(time: number, unit = Time.hour): string {
 }
 export function getDiceMsg(dice: number, range: number, target: number): string {
     const operator = dice > target ? ">" : (dice === target ? "=" : "<");
-    return `1d${range}=${dice}${operator}${target}.`;
+    return `1d${range}=${dice}${operator}${target}。`;
+}
+
+export function implementType<T>() {
+    return <U extends T>(u: U) => u;
 }

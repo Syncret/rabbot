@@ -16,8 +16,8 @@ export namespace State {
     const StateDismatchString: Record<number, [string, string]> = {
         [active]: ["角色未初始化，请使用start <角色名>指令创建新人物。", "已有角色存在。"],
         [inMaze]: ["角色不在迷宫中，请使用进入迷宫指令进入迷宫。", "已在迷宫中。"],
-        [sleep]: ["你正昏睡着呢。", "你现在是清醒的呢。"],
-        [tentacle]: ["你被触手紧紧地束缚着完全动不了呢。", "附近没有触手啦。"]
+        [sleep]: ["你现在是清醒的呢。", "你现在正沉沉地昏睡着。"],
+        [tentacle]: ["附近没有触手啦。", "你被触手紧紧地束缚着完全动不了呢。"]
     };
     const TrapTimerString: Record<number, [string, string]> = {
         [sleep]: ["你从昏睡中醒来啦！", `估计还要睡{0}小时。`],
@@ -47,6 +47,7 @@ export namespace State {
                             const remTime = getRemainingTime(trapTimer);
                             if (checkState === sleep && trapTimer) {
                                 msg += template.format(TrapTimerString[checkState][1], [remTime]);
+                                return msg;
                             }
                         }
                     }
@@ -62,9 +63,9 @@ export namespace State {
     const initialAp = 1;
     const maxAp = 24;
 
-    export function apChecker(defaultAp = 1, returnDetail = false) {
-        return ({ session, options }: { session?: Session<"rpgap" | "timers"> | undefined, options?: { ap?: number } }) => {
-            const target = options?.ap || defaultAp;
+    export function apChecker(apInArgs = false, returnDetail = false) {
+        return ({ session, options }: { session?: Session<"rpgap" | "timers"> | undefined, options?: { ap?: number } }, ap?: any) => {
+            const target: number = (apInArgs ? ap as number : 1) || (options?.ap == null ? 1 : options.ap);
             const now = Date.now();
             const user = session?.user!;
             const timers = user.timers!;
@@ -97,6 +98,20 @@ export namespace State {
             }
         }
     }
+    export function describeState(state: number, short = false): string {
+        let msgs: string[] = [];
+        if (State.hasState(state, State.sleep)) {
+            msgs.push("沉沉睡着");
+        } else if (State.hasState(state, State.tentacle)) {
+            msgs.push("被触手紧紧束缚着");
+        }
+        if (msgs.length > 0) {
+            const msg = msgs.join("并");
+            return short ? msg + "的" : `正${msg}。`
+        } else {
+            return "";
+        }
+    };
 
     export function consumeAP(user: User.Observed<"rpgap">, ap: number): string {
         user.rpgap -= ap;

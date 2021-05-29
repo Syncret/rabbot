@@ -1,11 +1,10 @@
 import { User, Database, Tables } from "koishi";
 import { } from 'koishi-plugin-mysql'
-import { Player } from "./player";
 
 declare module 'koishi-core' {
     interface User {
-        appearance: Player.Appearance,
-        rpgstatus: Player.Status,
+        appearance: Appearance,
+        rpgstatus: Status,
         money: number,
         rpgitems: Record<string, number>;
         rpgstate: number,
@@ -13,7 +12,7 @@ declare module 'koishi-core' {
         rpgap: number,
         mazeId: number,
         mazecellid: number,
-        rpgrecords: Player.PlayRecords;
+        rpgrecords: PlayRecords;
     }
     interface Tables {
         maze: Maze,
@@ -21,7 +20,8 @@ declare module 'koishi-core' {
     }
     interface Database {
         getCellById<F extends Tables.Field<"mazecell">>(id: number, fields?: F[]): Promise<Pick<Tables["mazecell"], F>>,
-        getMazeById<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
+        getMazeById<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>,
+        getMazeByCellId<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
     }
 };
 export interface Maze {
@@ -63,6 +63,10 @@ Database.extend("koishi-plugin-mysql", {
     async getMazeById(id, fields) {
         return (await this.get("maze", [id], fields))[0];
     },
+    async getMazeByCellId(id, fields) {
+        const cell = await this.getCellById(id, ["mazeId"]);
+        return this.getMazeById(cell.mazeId, fields);
+    },
 })
 
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
@@ -100,3 +104,26 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         room: `VARCHAR(20)`
     }
 });
+
+export type Appearance = {
+    hairColor: string,
+    hairType: string,
+    eyeColor: string,
+    height: number,
+};
+
+export type Status = {
+    level: number,
+    exp: number,
+    hp: number,
+    mp: number,
+    status: number,
+    weapon?: string,
+    armor?: string,
+    accessory?: string,
+    rpgdice?: number,
+}
+export type PlayRecords = {
+    visited: number[];
+    logs: string[];
+}
