@@ -47,6 +47,7 @@ export namespace State {
                             const remTime = getRemainingTime(trapTimer);
                             if (checkState === sleep && trapTimer) {
                                 msg += template.format(TrapTimerString[checkState][1], [remTime]);
+                                return msg;
                             }
                         }
                     }
