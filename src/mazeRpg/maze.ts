@@ -134,7 +134,7 @@ function apply(ctx: Context) {
 
     ctx.command('rpg/maze/entermaze', '进入(下一层)迷宫')
         .alias("进入迷宫")
-        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "rpgrecords", "rpgap", "rpgstatus", "timers"])
+        .userFields(["rpgstate", "rpgname", "mazecellid", "id", "rpgrecords", "rpgap", "rpgstatus", "timers", "rpgrecords"])
         .check(State.stateChecker(State.active, State.sleep | State.tentacle))
         .action(async ({ session }) => {
             const user = session?.user!;
@@ -170,6 +170,7 @@ function apply(ctx: Context) {
             const startCell = Random.int(targetMaze.width * targetMaze.height);
             msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));
             user.rpgstate |= State.inMaze;
+            user.rpgrecords.visited = [];
 
             return msgs.join("\n");
         });

@@ -235,7 +235,7 @@ export namespace Room {
             const playersMsg = Object.entries(playersUnion).map(([stateMsg, names]) => `${stateMsg}${names.join("、")}`).join(", ");
             msg.push(`你还在房间里看到了${playersMsg}。`);
             if (needHelp) {
-                return `可以使用aid指令帮助受难的朋友呢。`
+                return `可以使用aid指令帮助受难的朋友呢。`;
             }
         }
         msg.push(Room.getDoorDescription(cell.door));
