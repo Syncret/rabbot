@@ -108,7 +108,7 @@ export namespace Room {
         type: "trap",
         displayName: "催眠陷阱",
         probabilty: 20,
-        effect: 4,
+        effect: 7,
         description: "房间里似乎有一个会触发催眠陷阱的机关。",
         items: { [RoomRemainingItemsKey]: 10 },
         onEnter: async (user, maze) => {

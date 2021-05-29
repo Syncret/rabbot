@@ -149,7 +149,7 @@ function apply(ctx: Context) {
                 const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id"]);
                 const nextmazes = await database.get("maze", { channelId: [session?.channelId!], level: [maze.level + 1] }, ["id", "width", "height", "name"]);
                 if (nextmazes.length === 0) {
-                    if(maze.level===1){
+                    if (maze.level === 1) {
                         return "现在只开放第二层迷宫呢。敬请等待更新。";
                     }
                     const newmaze = await createMaze(maze.name, maze.width, maze.height, session?.channelId!, maze.level + 1);
@@ -299,14 +299,20 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/maze/position', 'get current position', { hidden: true, authority: 3 })
+    ctx.command('rpg/maze/position', 'get current position')
         .userFields(["rpgstate", "mazecellid", "timers"])
+        .option("detail", "-d 详细位置", { authority: 3 })
         .check(State.stateChecker(State.inMaze))
-        .action(async ({ session }) => {
+        .action(async ({ session, options = {} }) => {
             const user = session?.user!;
             const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell"]);
-            const maze = await database.getMazeById(cell.mazeId, ["width"]);
-            let msg = `你的位置是x:${cell.cell % maze.width}, y:${Math.floor(cell.cell / maze.width)}`;
+            const maze = await database.getMazeById(cell.mazeId, ["width", "level", "name"]);
+            let msg = "";
+            if (options.detail) {
+                msg = `${maze.name} x:${cell.cell % maze.width}, y:${Math.floor(cell.cell / maze.width)}, l:${maze.level}`;
+            } else {
+                msg = `你现在在${maze.name}迷宫第${maze.level}层。`
+            }
             return msg;
         });
 }
