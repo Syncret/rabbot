@@ -246,7 +246,6 @@ function apply(ctx: Context) {
             if (State.hasState(player.rpgstate, State.sleep)) {
                 await database.update("user", [{ id: player.id, rpgstate: player.rpgstate ^= State.sleep }]);
                 msg += `你轻轻地叫醒了${player.rpgname}。`;
-                msg += segment.at(player[session?.platform!]) + `醒来啦。`;
                 return msg;
             } else if (State.hasState(player.rpgstate, State.tentacle)) {
                 const target = 3;
