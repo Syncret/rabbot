@@ -386,6 +386,7 @@ export namespace Item {
                     validItems
                 };
             }
+            ctx.command("rpg/item", "道具相关指令");
             ctx.command("rpg.addItems <items:text>", "增加道具", { authority: 4, hidden: true })
                 .userFields(["rpgitems"])
                 .adminUser(({ target }, items) => {
@@ -408,6 +409,15 @@ export namespace Item {
                     if (money == null) return "请输入金钱";
                     if (!isInteger(money) || money <= 0) return "参数错误。"
                     target.money = money;
+                });
+            ctx.command("rpg/item/bag", "查看背包")
+                .userFields(["rpgitems", "money", "rpgstate", "timers"])
+                .check(State.stateChecker())
+                .option("detail", "-d 显示物品详细")
+                .action(async ({ session, options }) => {
+                    let msg = viewBag(session!, options?.detail);
+                    msg += checkBagFull(session!.user!.rpgitems);
+                    return msg;
                 });
             ctx.command("rpg/item/discard <items:text>", "扔掉道具")
                 .userFields(["rpgitems", "rpgstate", "timers"])

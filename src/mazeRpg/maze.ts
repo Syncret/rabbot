@@ -281,6 +281,7 @@ function apply(ctx: Context) {
         .check(State.stateChecker(State.inMaze, State.sleep | State.tentacle))
         .check(State.apChecker(true))
         .action(async ({ session, options = {} }, ap) => {
+            ap = ap || options.ap || 1;
             const user = session?.user!;
             const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell", "room"]);
             const room = Room.RoomRegistry[cell.room];
@@ -299,9 +300,9 @@ function apply(ctx: Context) {
             return msg;
         });
 
-    ctx.command('rpg/maze/position', 'get current position')
+    ctx.command('rpg/maze/position', '获取当前位置信息')
         .userFields(["rpgstate", "mazecellid", "timers"])
-        .option("detail", "-d 详细位置", { authority: 3 })
+        .option("detail", "-d 详细位置", { authority: 3, hidden: true })
         .check(State.stateChecker(State.inMaze))
         .action(async ({ session, options = {} }) => {
             const user = session?.user!;

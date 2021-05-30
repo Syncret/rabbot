@@ -71,7 +71,7 @@ export function apply(ctx: Context, config?: Config) {
             return `${name}结束了她的冒险生活...`;
         });
 
-    ctx.command("rpg/reset", "修复或重置角色状态")
+    ctx.command("rpg/reset", "修复或重置角色状态", { hidden: true })
         .userFields(rpgFields)
         .adminUser(({ target, session }) => {
             const user = target;
@@ -99,21 +99,6 @@ export function apply(ctx: Context, config?: Config) {
             }).filter((s) => !!s);
             await ctx.database.mysql.query(query);
             return `更新完毕`;
-        });
-    ctx.command("rpg/item/bag", "查看背包")
-        .userFields(["rpgitems", "money", "rpgstate", "timers"])
-        .check(State.stateChecker())
-        .option("detail", "-d 显示物品详细")
-        .action(async ({ session, options }) => {
-            let msg = Item.viewBag(session!, options?.detail);
-            msg += Item.checkBagFull(session!.user!.rpgitems);
-            return msg;
-        });
-    ctx.command("rpg/state", "检查状态")
-        .userFields(["rpgstate"])
-        .action(({ session }) => {
-            const state = session!.user!.rpgstate;
-            return state + "";
         });
 
     ctx.command("rpg/use <name:string>", "使用/装备道具")
