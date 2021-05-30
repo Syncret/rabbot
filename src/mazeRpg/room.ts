@@ -136,7 +136,7 @@ export namespace Room {
         name: "tentacleTrap",
         type: "trap",
         displayName: "触手陷阱",
-        probabilty: 20,
+        probabilty: 30,
         effect: 2,
         description: "房间里有好多触手。",
         items: { [RoomRemainingItemsKey]: 5, "触手": 3, "触手服": 3 },
