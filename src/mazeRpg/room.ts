@@ -218,8 +218,8 @@ export namespace Room {
 
     export const getEnterCellMsg = async (database: Database, cell: { id: number, door: number, room: string }, selfId: string) => {
         const room = Room.RoomRegistry[cell.room];
-        let msg: string[] = [];
-        msg.push(room.description);
+        let msgs: string[] = [];
+        msgs.push(room.description);
         let players = await getOtherPlayersInCell(database, cell.id, selfId);
         if (players.length > 0) {
             const playersUnion: Record<string, string[]> = {};
@@ -233,13 +233,14 @@ export namespace Room {
                 playersUnion[stateMsg].push(p.rpgname);
             });
             const playersMsg = Object.entries(playersUnion).map(([stateMsg, names]) => `${stateMsg}${names.join("、")}`).join(", ");
-            msg.push(`你还在房间里看到了${playersMsg}。`);
+            let msg = `你还在房间里看到了${playersMsg}。`;
             if (needHelp) {
-                return `可以使用aid指令帮助受难的朋友呢。`;
+                msg += `可以使用aid指令帮助受难的朋友呢。`;
             }
+            msgs.push(msg);
         }
-        msg.push(Room.getDoorDescription(cell.door));
-        return msg.join("\n");
+        msgs.push(Room.getDoorDescription(cell.door));
+        return msgs.join("\n");
     };
 
     export const onEnterCell = async (database: Database, mazeId: number, cellNo: number,
