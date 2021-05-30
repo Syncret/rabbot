@@ -225,7 +225,7 @@ export namespace Room {
             const playersUnion: Record<string, string[]> = {};
             let needHelp = false;
             players.forEach((p) => {
-                const stateMsg = State.describeState(p.rpgstate);
+                const stateMsg = State.describeState(p.rpgstate, true);
                 if (stateMsg && !needHelp) {
                     needHelp = true;
                 }
