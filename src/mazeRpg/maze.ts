@@ -43,6 +43,7 @@ function apply(ctx: Context) {
             });
         });
         await Promise.all(cellPromises);
+        await database.update("maze", [{ id: mazeId, state: State.MazeState.initialized }]);
         return maze;
     };
     const getPlayerInCell = async <F extends Tables.Field<"user">>(cellId: number, name: string, fields: F[]) => {
