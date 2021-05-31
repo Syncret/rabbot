@@ -120,4 +120,10 @@ export namespace State {
     export function setDebuffTime(user: User.Observed<"timers">, time: number) {
         user.timers[timerDebuffKey] = time;
     }
+
+    export const MazeState = {
+        initializing: 0,
+        initialized: 1,
+        completed: 2,
+    }
 }

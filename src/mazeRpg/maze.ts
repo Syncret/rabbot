@@ -146,8 +146,8 @@ function apply(ctx: Context) {
                 if (room.type !== Room.stairRoom.type) {
                     return "这里没有办法进入下一层迷宫呢。"
                 }
-                const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id"]);
-                const nextmazes = await database.get("maze", { channelId: [session?.channelId!], level: [maze.level + 1] }, ["id", "width", "height", "name"]);
+                const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id", "state"]);
+                const nextmazes = await database.get("maze", { channelId: [session?.channelId!], level: [maze.level + 1] }, ["id", "width", "height", "name", "state"]);
                 if (nextmazes.length === 0) {
                     if (maze.level === 1) {
                         return "现在只开放第二层迷宫呢。敬请等待更新。";
@@ -155,9 +155,18 @@ function apply(ctx: Context) {
                     const newmaze = await createMaze(maze.name, maze.width, maze.height, session?.channelId!, maze.level + 1);
                     targetMaze = newmaze;
                 } else {
+                    if (nextmazes[0].state === State.MazeState.initializing) {
+                        return "迷宫初始化中，请稍后再试。";
+                    }
                     targetMaze = nextmazes[0];
                 }
-                msgs.push("你启动了传送阵，一阵头晕目眩后，来到了下一层的迷宫。");
+                let msg = "";
+                if (maze.state === State.MazeState.initialized) {
+                    msg += "本层迷宫被通关啦，本层地图已向其他玩家开放。";
+                    await database.update("maze", [{ id: maze.id, state: State.MazeState.completed }]);
+                }
+                msg += "你启动了传送阵，一阵头晕目眩后，来到了下一层的迷宫。";
+                msgs.push(msg);
             } else {
                 const mazes = await database.get("maze", { channelId: [session?.channelId!], level: [0] }, ["id", "width", "height", "name"]);
                 if (mazes.length === 0) { // no existing maze for this channel
@@ -307,13 +316,16 @@ function apply(ctx: Context) {
         .action(async ({ session, options = {} }) => {
             const user = session?.user!;
             const cell = await database.getCellById(user.mazecellid, ["mazeId", "cell"]);
-            const maze = await database.getMazeById(cell.mazeId, ["width", "level", "name"]);
+            const maze = await database.getMazeById(cell.mazeId, ["width", "level", "name", "state"]);
             let msg = "";
-            if (options.detail) {
-                msg = `${maze.name} x:${cell.cell % maze.width}, y:${Math.floor(cell.cell / maze.width)}, l:${maze.level}`;
-            } else {
-                msg = `你现在在${maze.name}迷宫第${maze.level}层。`
+            const getCoordinates = (index: number, width: number) => `x:${index % width}, y:${Math.floor(index / width)}`;
+            msg = `你现在在${maze.name}迷宫第${maze.level}层。`;
+            if (options.detail || maze.state === State.MazeState.completed) {
+                msg += getCoordinates(cell.cell, maze.width) + "。";
+                const stairs = await database.get("mazecell", { mazeId: [cell.mazeId], room: [Room.stairRoom.type] }, ["cell"]);
+                msg += `终点${stairs.map((s) => getCoordinates(s.cell, maze.width)).join(';')}。`;
             }
+
             return msg;
         });
 }

@@ -31,6 +31,7 @@ export interface Maze {
     level: number,
     width: number,
     height: number,
+    state: number,
 };
 export interface MazeCell {
     id: number,
@@ -91,6 +92,7 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
         width: `SMALLINT`,
         height: `SMALLINT`,
         level: `TINYINT UNSIGNED`,
+        state: `TINYINT UNSIGNED`,
     }
 });
 
