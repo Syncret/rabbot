@@ -7,8 +7,6 @@ export namespace State {
     export const sleep = 0x4;
     export const tentacle = 0x8;
 
-    const trapTimerStates = [sleep, tentacle];
-
     const timerAPKey = "rpgap";
     const timerDebuffKey = "rpgdebuff";
     export const baseStateFields = ["rpgap", "rpgstate", "timers"] as const;
@@ -19,6 +17,7 @@ export namespace State {
         [sleep]: ["你现在是清醒的呢。", "你现在正沉沉地昏睡着。"],
         [tentacle]: ["附近没有触手啦。", "你被触手紧紧地束缚着完全动不了呢。"]
     };
+    
     const TrapTimerString: Record<number, [string, string]> = {
         [sleep]: ["你从昏睡中醒来啦！", `估计还要睡{0}小时。`],
     };
@@ -39,7 +38,7 @@ export namespace State {
                 }
                 if (hasState(falsy, checkState) && hasState(state, checkState)) {
                     let msg = msgs[1];
-                    if (trapTimerStates.includes(checkState) && trapTimer) {
+                    if (TrapTimerString[checkState] && trapTimer) {
                         if (trapTimer < Date.now()) {
                             user.rpgstate ^= sleep;
                             return TrapTimerString[checkState][0];
