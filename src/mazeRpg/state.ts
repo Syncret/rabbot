@@ -1,4 +1,5 @@
 import { Session, template, Time, User } from "koishi";
+import { Status } from "./database";
 import { getRemainingTime } from "./util";
 
 export namespace State {
@@ -17,7 +18,7 @@ export namespace State {
         [sleep]: ["你现在是清醒的呢。", "你现在正沉沉地昏睡着。"],
         [tentacle]: ["附近没有触手啦。", "你被触手紧紧地束缚着完全动不了呢。"]
     };
-    
+
     const TrapTimerString: Record<number, [string, string]> = {
         [sleep]: ["你从昏睡中醒来啦！", `估计还要睡{0}小时。`],
     };
@@ -97,12 +98,15 @@ export namespace State {
             }
         }
     }
-    export function describeState(state: number, short = false): string {
+    export function describeState(state: number, short = false, status?: Status): string {
         let msgs: string[] = [];
         if (State.hasState(state, State.sleep)) {
             msgs.push("沉沉睡着");
         } else if (State.hasState(state, State.tentacle)) {
             msgs.push("被触手紧紧束缚着");
+        }
+        if (status && status.rpgdice) {
+            // TODO
         }
         if (msgs.length > 0) {
             const msg = msgs.join("并");
