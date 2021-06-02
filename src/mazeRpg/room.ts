@@ -117,7 +117,7 @@ export namespace Room {
         onEnter: async (user, maze) => {
             let msg = "";
             let interupt = false;
-            const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
+            const prob = 0.8 + (maze.level - user.rpgstatus.level) / 10;
             const escape = Math.random() > prob;
             if (escape) {
                 msg += `你发现了房间中的有一个陷阱机关，你小心地躲开了它。`;
@@ -144,7 +144,7 @@ export namespace Room {
             let msg = "";
             let interupt = false;
             const equipTentacle = user.rpgstatus.weapon === "触手" || user.rpgstatus.armor === "触手服";
-            const prob = 0.5 + (maze.level - user.rpgstatus.level) / 10;
+            const prob = 0.8 + (maze.level - user.rpgstatus.level) / 10;
             const escape = equipTentacle ? false : Math.random() > prob;
             if (escape) {
                 msg += `你发现了房间中的好多触手，你小心地躲开了它们。`;
