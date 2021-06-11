@@ -188,7 +188,7 @@ function apply(ctx: Context) {
             msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));
             user.rpgstate |= State.inMaze;
             user.rpgrecords.visited = [];
-            user.rpgrecords = { ...user.rpgrecords };
+            user.rpgrecords = { ...user.rpgrecords }; // update database
 
             return msgs.join("\n");
         });
