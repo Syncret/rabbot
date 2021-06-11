@@ -87,8 +87,8 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     tables.maze = {
         id: `INT(10) UNSIGNED NOT NULL AUTO_INCREMENT`,
-        name: `VARCHAR(50) NOT NULL`,
-        channelId: `VARCHAR(50) NOT NULL`,
+        name: `VARCHAR(50)`,
+        channelId: `VARCHAR(50)`,
         width: `SMALLINT`,
         height: `SMALLINT`,
         level: `TINYINT UNSIGNED`,
@@ -99,7 +99,7 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     tables.mazecell = {
         id: `INT(10) UNSIGNED NOT NULL AUTO_INCREMENT`,
-        mazeId: `INT(10) NOT NULL`,
+        mazeId: `INT(10)`,
         cell: `SMALLINT UNSIGNED`,
         door: `SMALLINT UNSIGNED`,
         items: new Domain.Json(),
