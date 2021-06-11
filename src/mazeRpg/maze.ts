@@ -185,17 +185,14 @@ function apply(ctx: Context) {
                 targetMaze = maze;
             }
             const startCell = Random.int(targetMaze.width * targetMaze.height);
-            msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));
             user.rpgstate |= State.inMaze;
             user.rpgrecords.visited.length = 0;
-
+            
             // DEBUG
-            let result = await database.getUser("id", user.id, ["rpgrecords", "rpgname"]);
-            console.log(result);
+            console.log(user.rpgrecords);
             user.rpgrecords = { ...user.rpgrecords }; // update database
             console.log(user.rpgrecords);
-            result = await database.getUser("id", user.id, ["rpgrecords", "rpgname"]);
-            console.log(result);
+            msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));
 
             return msgs.join("\n");
         });
