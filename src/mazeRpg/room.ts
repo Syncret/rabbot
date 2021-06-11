@@ -64,7 +64,6 @@ export namespace Room {
         probabilty: 10,
         description: "房间里空旷又安静，似乎没有什么特别的东西。",
         items: { [RoomRemainingItemsKey]: 10 }
-
     };
     export const springRoom: BaseRoom = {
         name: "spring",
@@ -73,6 +72,24 @@ export namespace Room {
         probabilty: 5,
         effect: 10,
         description: "房间里氤氲着热腾腾的雾气。中间有一个水池，是一个温泉！似乎可以在这里休息的样子。",
+        items: { [RoomRemainingItemsKey]: 10 }
+    };
+    export const bedRoom: BaseRoom = {
+        name: "bed",
+        type: "rest",
+        displayName: "卧室",
+        probabilty: 5,
+        effect: 8,
+        description: "这里似乎是一个卧室，房间里有一些家具和火炉，还有一张床。似乎可以休息的样子。",
+        items: { [RoomRemainingItemsKey]: 10 }
+    };
+    export const grassRoom: BaseRoom = {
+        name: "garden",
+        type: "rest",
+        displayName: "花园",
+        probabilty: 5,
+        effect: 5,
+        description: "这里似乎是一个花园，长满了各种各样的花草，令人心矿神怡。似乎可以休息的样子。",
         items: { [RoomRemainingItemsKey]: 10 }
     };
     export const fallTrapRoom: TrapRoom = {
@@ -207,7 +224,7 @@ export namespace Room {
         items: { [RoomRemainingItemsKey]: 5 },
     };
 
-    [blankRoom, springRoom, fallTrapRoom, shopRoom, stairRoom, sleepTrapRoom, tentacleTrapRoom, amnesiaTrapRoom].forEach((room) => {
+    [blankRoom, springRoom, bedRoom, grassRoom, fallTrapRoom, shopRoom, stairRoom, sleepTrapRoom, tentacleTrapRoom, amnesiaTrapRoom].forEach((room) => {
         registerRoom(room);
     })
 

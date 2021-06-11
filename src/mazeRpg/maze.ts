@@ -1,7 +1,7 @@
 import { Context, Random, segment, Tables } from "koishi";
 import { Maze } from "./database";
 import { State } from "./state";
-import { generateMaze, MazeDirection, parseCellDoorCode } from "./maze.util";
+import { DoorCode, generateMaze, MazeDirection, parseCellDoorCode } from "./maze.util";
 import { assert } from "../util";
 import { getDiceMsg, min } from "./util";
 import { Room } from "./room";
@@ -25,7 +25,14 @@ function apply(ctx: Context) {
         });
         const mazeId = maze.id;
         const mazecells = generateMaze(maze.width, maze.height);
-        const endCell = Random.int(maze.width * maze.height);
+        const singleDoorCells: [number, number][] = [];
+        mazecells.forEach((value, index) => {
+            if (Object.values(DoorCode).includes(value)) {
+                singleDoorCells.push([value, index]);
+            }
+        });
+        let endCell = Random.int(singleDoorCells.length);
+        endCell = singleDoorCells[endCell][1];
         const cellPromises = mazecells.map((value, index) => {
             let room: string;
             if (index === endCell) {
@@ -150,8 +157,8 @@ function apply(ctx: Context) {
                 const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id", "state"]);
                 const nextmazes = await database.get("maze", { channelId: [session?.channelId!], level: [maze.level + 1] }, ["id", "width", "height", "name", "state"]);
                 if (nextmazes.length === 0) {
-                    if (maze.level === 1) {
-                        return "现在只开放第二层迷宫呢。敬请等待更新。";
+                    if (maze.level === 2) {
+                        return "现在只开放第三层迷宫呢。敬请等待更新。";
                     }
                     const newmaze = await createMaze(maze.name, maze.width, maze.height, session?.channelId!, maze.level + 1);
                     targetMaze = newmaze;

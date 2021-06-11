@@ -18,7 +18,7 @@ export function apply(ctx: Context, config?: Config) {
     ctx.plugin(Item.itemPlugin);
     ctx.plugin(RPGMaze);
 
-    ctx.command("rpg/start <name:string>", "开始")
+    ctx.command("rpg/start <name:string>", "开始冒险(创建角色)")
         .userFields(rpgFields)
         .check(State.stateChecker())
         .action(async ({ session, options }, name) => {
@@ -47,7 +47,7 @@ export function apply(ctx: Context, config?: Config) {
             return `你叫${name}, 你${Player.describeAppearance(user.appearance)}你的冒险旅程现在开始了!`;
         });
 
-    ctx.command("rpg/end <name:string>", "结束")
+    ctx.command("rpg/end <name:string>", "结束冒险(删除角色)")
         .userFields(rpgFields)
         .option("keep", "-k 保留道具和金钱等")
         .check(State.stateChecker())

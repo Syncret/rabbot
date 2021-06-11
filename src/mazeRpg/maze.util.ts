@@ -85,7 +85,7 @@ export function generateMaze(width: number, height: number, ringProb: number = 0
     return maze;
 }
 
-const DoorCode = {
+export const DoorCode = {
     up: 0x1,
     right: 0x2,
     down: 0x4,
