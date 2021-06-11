@@ -58,7 +58,7 @@ function generateRawMaze<T extends string>(width: number, height: number, ringPr
     return maze;
 }
 
-export function generateMaze(width: number, height: number, ringProb: number = 0.05,): number[] {
+export function generateMaze(width: number, height: number, ringProb: number = 0.02,): number[] {
     const rawMaze = generateRawMaze(width, height, ringProb);
     printMaze(rawMaze, width * 2 + 1);
     const maze: number[] = [];

@@ -187,7 +187,7 @@ function apply(ctx: Context) {
             const startCell = Random.int(targetMaze.width * targetMaze.height);
             msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));
             user.rpgstate |= State.inMaze;
-            user.rpgrecords.visited = [];
+            user.rpgrecords.visited.length = 0;
 
             // DEBUG
             let result = await database.getUser("id", user.id, ["rpgrecords", "rpgname"]);
