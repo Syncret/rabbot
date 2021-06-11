@@ -453,3 +453,15 @@ export namespace Item {
         }
     }
 }
+
+
+type p = 't' | 'h'
+function test(p: 't'): number
+function test(p: 'h'): string
+function test(p: 't' | 'h'): number | string {
+    if (p == "t") {
+        return 3
+    } else {
+        return ""
+    }
+}

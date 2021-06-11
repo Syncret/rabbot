@@ -188,7 +188,14 @@ function apply(ctx: Context) {
             msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));
             user.rpgstate |= State.inMaze;
             user.rpgrecords.visited = [];
+
+            // DEBUG
+            let result = await database.getUser("id", user.id, ["rpgrecords", "rpgname"]);
+            console.log(result);
             user.rpgrecords = { ...user.rpgrecords }; // update database
+            console.log(user.rpgrecords);
+            result = await database.getUser("id", user.id, ["rpgrecords", "rpgname"]);
+            console.log(result);
 
             return msgs.join("\n");
         });
@@ -264,6 +271,10 @@ function apply(ctx: Context) {
             if (State.hasState(player.rpgstate, State.sleep)) {
                 await database.update("user", [{ id: player.id, rpgstate: player.rpgstate ^= State.sleep }]);
                 msg += `你叫醒了${player.rpgname}。`;
+                // DEBUG
+                let test = await database.getUser('id', player.id, ["rpgname", "rpgstate"]);
+                console.log(test);
+
                 return msg;
             } else if (State.hasState(player.rpgstate, State.tentacle)) {
                 const target = 3;
@@ -275,11 +286,17 @@ function apply(ctx: Context) {
                     msg += `你小心地把${player.rpgname}从触手中扯出来。`;
                     msg += segment.at(player[session?.platform!]) + `从触手中挣脱出来啦。`;
                     await database.update("user", [{ id: player.id, rpgstate: player.rpgstate ^= State.tentacle }]);
+                    // DEBUG
+                    let test = await database.getUser('id', player.id, ["rpgname", "rpgstate"]);
+                    console.log(test);
                 } else if (dice === target) {
                     msg += `你成功地救出了${player.rpgname}，但是一不小心，自己却被触手缠住了...`;
                     player.rpgstate ^= State.tentacle;
                     Room.tentacleTrapRoom.onTrap(user, maze.level);
                     await database.update("user", [{ id: player.id, rpgstate: player.rpgstate ^= State.tentacle }]);
+                    // DEBUG
+                    let test = await database.getUser('id', player.id, ["rpgname", "rpgstate"]);
+                    console.log(test);
                 }
                 else if (dice === 1) {
                     msg += `大失败！你不仅没能救出${player.rpgname}, 连你自己也被触手缠住了！`;
