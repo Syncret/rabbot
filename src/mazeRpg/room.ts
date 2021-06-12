@@ -181,8 +181,8 @@ export namespace Room {
             return `可以使用挣脱(escape)指令掷骰${effect}点挣脱。`;
         }
     });
-    export const amnesiaTrapRoom: TrapRoom = {
-        name: "amnesiaTrap",
+    export const teleportTrapRoom: TrapRoom = {
+        name: "teleportTrapRoom",
         type: "trap",
         displayName: "传送陷阱",
         probabilty: 5,
@@ -224,7 +224,7 @@ export namespace Room {
         items: { [RoomRemainingItemsKey]: 5 },
     };
 
-    [blankRoom, springRoom, bedRoom, grassRoom, fallTrapRoom, shopRoom, stairRoom, sleepTrapRoom, tentacleTrapRoom, amnesiaTrapRoom].forEach((room) => {
+    [blankRoom, springRoom, bedRoom, grassRoom, fallTrapRoom, shopRoom, stairRoom, sleepTrapRoom, tentacleTrapRoom, teleportTrapRoom].forEach((room) => {
         registerRoom(room);
     })
 

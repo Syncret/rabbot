@@ -189,9 +189,7 @@ function apply(ctx: Context) {
             user.rpgrecords.visited.length = 0;
             
             // DEBUG
-            console.log(user.rpgrecords);
-            user.rpgrecords = { ...user.rpgrecords }; // update database
-            console.log(user.rpgrecords);
+            // user.rpgrecords = { ...user.rpgrecords }; // update database
             msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));
 
             return msgs.join("\n");
