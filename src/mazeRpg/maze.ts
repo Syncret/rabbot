@@ -154,13 +154,13 @@ function apply(ctx: Context) {
                 if (room.type !== Room.stairRoom.type) {
                     return "这里没有办法进入下一层迷宫呢。"
                 }
-                const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id", "state"]);
-                const nextmazes = await database.get("maze", { channelId: [session?.channelId!], level: [maze.level + 1] }, ["id", "width", "height", "name", "state"]);
+                const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id", "state", "channelId"]);
+                const nextmazes = await database.get("maze", { channelId: [maze.channelId!], level: [maze.level + 1] }, ["id", "width", "height", "name", "state"]);
                 if (nextmazes.length === 0) {
                     if (maze.level === 2) {
                         return "现在只开放第三层迷宫呢。敬请等待更新。";
                     }
-                    const newmaze = await createMaze(maze.name, maze.width, maze.height, session?.channelId!, maze.level + 1);
+                    const newmaze = await createMaze(maze.name, maze.width, maze.height, maze.channelId!, maze.level + 1);
                     targetMaze = newmaze;
                 } else {
                     if (nextmazes[0].state === State.MazeState.initializing) {
