@@ -286,12 +286,12 @@ function apply(ctx: Context) {
                     console.log(test);
                 } else if (dice === target) {
                     msg += `你成功地救出了${player.rpgname}，但是一不小心，自己却被触手缠住了...`;
-                    player.rpgstate ^= State.tentacle;
                     Room.tentacleTrapRoom.onTrap(user, maze.level);
                     await database.update("user", [{ id: player.id, rpgstate: player.rpgstate ^= State.tentacle }]);
                     // DEBUG
                     let test = await database.getUser('id', player.id, ["rpgname", "rpgstate"]);
                     console.log(test);
+                    player.rpgstate ^= State.tentacle;
                 }
                 else if (dice === 1) {
                     msg += `大失败！你不仅没能救出${player.rpgname}, 连你自己也被触手缠住了！`;
