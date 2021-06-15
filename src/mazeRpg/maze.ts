@@ -83,7 +83,7 @@ function apply(ctx: Context) {
             const mazes = await database.get("maze", { channelId: [session?.channelId!], level: [0] }, ["id", "width", "height"]);
             if (!name) {
                 if (session.groupId) {
-                    name = (await session.bot.getGroup(session.groupId)).groupName;
+                    name = (await session.bot.getGroup(session.groupId)).groupName!;
                 } else {
                     name = session.channelId!;
                 }
