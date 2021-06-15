@@ -28,25 +28,25 @@
     "@types/crypto-js": "^4.0.1",
     "axios": "^0.21.1",
     "crypto-js": "^4.0.0",
-    "koishi": "^3.9.1",
-    "koishi-adapter-onebot": "^3.0.8",
-    "koishi-plugin-common": "^4.2.3",
-    "koishi-plugin-eval": "^3.1.0",
-    "koishi-plugin-image-search": "^3.0.3",
-    "koishi-plugin-mysql": "^3.3.1",
-    "koishi-plugin-puppeteer": "^2.0.2",
+    "koishi": "^3.11.2",
+    "koishi-adapter-onebot": "^3.0.9",
+    "koishi-plugin-common": "^4.2.6",
+    "koishi-plugin-eval": "^3.1.4",
+    "koishi-plugin-image-search": "^3.0.4",
+    "koishi-plugin-mysql": "^3.3.2",
+    "koishi-plugin-puppeteer": "^2.1.3",
     "koishi-plugin-rss": "^2.0.0",
-    "koishi-plugin-schedule": "^3.0.4",
+    "koishi-plugin-schedule": "^3.0.5",
     "koishi-plugin-shell": "^0.0.4",
-    "koishi-plugin-teach": "^2.1.4",
-    "koishi-plugin-webui": "^4.3.0",
-    "tencentcloud-sdk-nodejs": "^4.0.99"
+    "koishi-plugin-teach": "^2.1.5",
+    "koishi-plugin-webui": "^4.6.1",
+    "tencentcloud-sdk-nodejs": "^4.0.145"
   },
   "devDependencies": {
-    "@types/jasmine": "^3.6.9",
-    "@types/node": "^14.14.41",
+    "@types/jasmine": "^3.7.7",
+    "@types/node": "^14.17.3",
     "jasmine": "^3.7.0",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.4"
+    "typescript": "^4.3.2"
   }
 }
