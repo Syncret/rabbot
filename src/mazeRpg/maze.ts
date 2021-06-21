@@ -151,7 +151,7 @@ function apply(ctx: Context) {
             if (State.hasState(user.rpgstate, State.inMaze)) {
                 const cell = await database.getCellById(user.mazecellid, ["mazeId", "room"]);
                 const room = Room.RoomRegistry[cell.room];
-                if (room.type !== Room.stairRoom.type) {
+                if (room.type !== Room.RoomType.stair) {
                     return "这里没有办法进入下一层迷宫呢。"
                 }
                 const maze = await database.getMazeById(cell.mazeId, ["level", "name", "width", "height", "id", "state", "channelId"]);
@@ -343,7 +343,7 @@ function apply(ctx: Context) {
             msg = `你现在在${maze.name}迷宫第${maze.level}层。`;
             if (options.detail || maze.state === State.MazeState.completed) {
                 msg += getCoordinates(cell.cell, maze.width) + "。";
-                const stairs = await database.get("mazecell", { mazeId: [cell.mazeId], room: [Room.stairRoom.type] }, ["cell"]);
+                const stairs = await database.get("mazecell", { mazeId: [cell.mazeId], room: [Room.stairRoom.name] }, ["cell"]);
                 msg += `终点${stairs.map((s) => getCoordinates(s.cell, maze.width)).join(';')}。`;
             }
 

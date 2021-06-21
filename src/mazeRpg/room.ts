@@ -1,12 +1,18 @@
 import { Database, Random, Time, User } from "koishi";
 import { Maze } from "./database";
 import { State } from "./state";
-import { createMutualMap, implementType, max } from "./util";
+import { createMutualMap, getLevelAmend, implementType, max } from "./util";
 import { parseCellDoorCode } from "./maze.util";
 
 export namespace Room {
 
-    type RoomType = "normal" | "trap" | "rest" | "shop" | "stair";
+    export enum RoomType {
+        normal = "normal",
+        trap = "trap",
+        rest = "rest",
+        shop = "shop",
+        stair = "stair",
+    }
     export const RoomDirectionMap: Map<string, string> = createMutualMap([
         ["up", "北"],
         ["right", "东"],
@@ -19,13 +25,13 @@ export namespace Room {
         name: string,
         type: RoomType,
         displayName: string,
-        probabilty: number,
+        probabilty: number, // probabily of generating this room
         description: string,
         effect?: number,
         items: Record<string, number>
     }
     type TrapRoom = BaseRoom & {
-        type: "trap",
+        type: RoomType.trap,
         effect: number;
         onEnter: (
             user: UserInCell,
@@ -59,7 +65,7 @@ export namespace Room {
 
     export const blankRoom: BaseRoom = {
         name: "blank",
-        type: "normal",
+        type: RoomType.normal,
         displayName: "空房间",
         probabilty: 10,
         description: "房间里空旷又安静，似乎没有什么特别的东西。",
@@ -67,7 +73,7 @@ export namespace Room {
     };
     export const springRoom: BaseRoom = {
         name: "spring",
-        type: "rest",
+        type: RoomType.rest,
         displayName: "泉水房间",
         probabilty: 5,
         effect: 10,
@@ -76,7 +82,7 @@ export namespace Room {
     };
     export const bedRoom: BaseRoom = {
         name: "bed",
-        type: "rest",
+        type: RoomType.rest,
         displayName: "卧室",
         probabilty: 5,
         effect: 8,
@@ -85,7 +91,7 @@ export namespace Room {
     };
     export const grassRoom: BaseRoom = {
         name: "garden",
-        type: "rest",
+        type: RoomType.rest,
         displayName: "花园",
         probabilty: 5,
         effect: 5,
@@ -94,7 +100,7 @@ export namespace Room {
     };
     export const fallTrapRoom: TrapRoom = {
         name: "fallTrap",
-        type: "trap",
+        type: RoomType.trap,
         displayName: "落穴陷阱",
         probabilty: 20,
         effect: 20,
@@ -103,7 +109,7 @@ export namespace Room {
         onEnter: async (user, maze) => {
             let msg = "";
             let interupt = false;
-            const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
+            const prob = 0.8 + getLevelAmend(maze.level, user.rpgstatus.level) / 10;
             const escape = Math.random() > prob;
             msg += `你触发了落穴陷阱！`;
             if (escape) {
@@ -125,7 +131,7 @@ export namespace Room {
     };
     export const sleepTrapRoom: TrapRoom = {
         name: "sleepTrap",
-        type: "trap",
+        type: RoomType.trap,
         displayName: "催眠陷阱",
         probabilty: 20,
         effect: 7,
@@ -134,7 +140,7 @@ export namespace Room {
         onEnter: async (user, maze) => {
             let msg = "";
             let interupt = false;
-            const prob = 0.8 + (maze.level - user.rpgstatus.level) / 10;
+            const prob = 0.8 + getLevelAmend(maze.level, user.rpgstatus.level) / 10;
             const escape = Math.random() > prob;
             if (escape) {
                 msg += `你发现了房间中的有一个陷阱机关，你小心地躲开了它。`;
@@ -151,7 +157,7 @@ export namespace Room {
     };
     export const tentacleTrapRoom = implementType<TrapRoom>()({
         name: "tentacleTrap",
-        type: "trap",
+        type: RoomType.trap,
         displayName: "触手陷阱",
         probabilty: 30,
         effect: 2,
@@ -161,7 +167,7 @@ export namespace Room {
             let msg = "";
             let interupt = false;
             const equipTentacle = user.rpgstatus.weapon === "触手" || user.rpgstatus.armor === "触手服";
-            const prob = 0.8 + (maze.level - user.rpgstatus.level) / 10;
+            const prob = 0.8 + getLevelAmend(maze.level, user.rpgstatus.level) / 10;
             const escape = equipTentacle ? false : Math.random() > prob;
             if (escape) {
                 msg += `你发现了房间中的好多触手，你小心地躲开了它们。`;
@@ -183,7 +189,7 @@ export namespace Room {
     });
     export const teleportTrapRoom: TrapRoom = {
         name: "teleportTrapRoom",
-        type: "trap",
+        type: RoomType.trap,
         displayName: "传送陷阱",
         probabilty: 5,
         effect: 0,
@@ -192,7 +198,7 @@ export namespace Room {
         onEnter: async (user, maze, database) => {
             let msg = "";
             let interupt = false;
-            const prob = 1 + (maze.level - user.rpgstatus.level) / 10;
+            const prob = 0.8 + getLevelAmend(maze.level, user.rpgstatus.level) / 10;
             const escape = Math.random() > prob;
             if (escape) {
                 msg += `你发现了房间中的传送陷阱，你小心地躲开了它。`;
@@ -209,7 +215,7 @@ export namespace Room {
 
     export const shopRoom: BaseRoom = {
         name: "shop",
-        type: "shop",
+        type: RoomType.shop,
         displayName: "商店",
         probabilty: 10,
         description: "房间里有一个穿着兜帽，看不清面庞的怪人，似乎在兜售一些小玩意。（请等待后续更新商店）",
@@ -217,11 +223,19 @@ export namespace Room {
     };
     export const stairRoom: BaseRoom = {
         name: "stair",
-        type: "stair",
+        type: RoomType.stair,
         displayName: "阶梯",
         probabilty: 0,
         description: "房间里有一个传送阵，似乎就是通向迷宫下一层的路呢。可以使用entermaze指令进入下一层。",
         items: { [RoomRemainingItemsKey]: 5 },
+    };
+    export const stair2Room: BaseRoom = {
+        name: "stair2",
+        type: RoomType.stair,
+        displayName: "阶梯",
+        probabilty: 0,
+        description: "这层迷宫似乎已经被人通关了，通往下层的传送阵在每个房间亮起。可以使用entermaze指令直接进入下一层。",
+        items: {},
     };
 
     [blankRoom, springRoom, bedRoom, grassRoom, fallTrapRoom, shopRoom, stairRoom, sleepTrapRoom, tentacleTrapRoom, teleportTrapRoom].forEach((room) => {

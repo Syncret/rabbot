@@ -35,3 +35,7 @@ export function getDiceMsg(dice: number, range: number, target: number): string 
 export function implementType<T>() {
     return <U extends T>(u: U) => u;
 }
+
+export function getLevelAmend(userLevel: number, mazeLevel: number): number {
+    return 0; // since we don't have real level yet
+}
