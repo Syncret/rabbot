@@ -172,6 +172,13 @@ function apply(ctx: Context) {
                 if (maze.state === State.MazeState.initialized) {
                     msg += "本层迷宫被通关啦，本层地图已向其他玩家开放。";
                     await database.update("maze", [{ id: maze.id, state: State.MazeState.completed }]);
+                    if (maze.level - 1 >= 0) {
+                        const upmaze = (await database.get("maze", { channelId: [maze.channelId!], level: [maze.level - 1] }, ["id", "channelId"]))[0];
+                        if (upmaze) {
+                            await database.mysql.query(`update mazecell set room = ? where mazeid = ?? and channelId = ??`, [Room.stairRoom.name, upmaze.id, upmaze.channelId]);
+                            msg += "上层迷宫已经完全开放。";
+                        }
+                    }
                 }
                 msg += "你启动了传送阵，一阵头晕目眩后，来到了下一层的迷宫。";
                 msgs.push(msg);
@@ -187,7 +194,7 @@ function apply(ctx: Context) {
             const startCell = Random.int(targetMaze.width * targetMaze.height);
             user.rpgstate |= State.inMaze;
             user.rpgrecords.visited.length = 0;
-            
+
             // DEBUG
             // user.rpgrecords = { ...user.rpgrecords }; // update database
             msgs.push(await Room.onEnterCell(database, targetMaze.id, startCell, user));

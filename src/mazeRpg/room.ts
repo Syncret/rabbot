@@ -234,7 +234,7 @@ export namespace Room {
         type: RoomType.stair,
         displayName: "阶梯",
         probabilty: 0,
-        description: "这层迷宫似乎已经被人通关了，通往下层的传送阵在每个房间亮起。可以使用entermaze指令直接进入下一层。",
+        description: "这层迷宫已经完全开放了，每个房间都亮起了传送阵。可以使用entermaze指令直接进入下一层。",
         items: {},
     };
 
