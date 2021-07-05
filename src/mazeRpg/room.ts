@@ -172,7 +172,7 @@ export namespace Room {
             if (escape) {
                 msg += `你发现了房间中的好多触手，你小心地躲开了它们。`;
             } else {
-                msg += equipTentacle ? `房间中有许多触手，你一进房间，身上的触手就和它们纠缠在了一起，你一时动弹不得。` : `房间中有许多触手，你一不小心，被触手紧紧地束缚住了！`;
+                msg += equipTentacle ? `房间中有许多触手，你一进房间，装备的触手就和它们纠缠在了一起，你一时动弹不得。` : `房间中有许多触手，你一不小心，被触手紧紧地束缚住了！`;
                 msg += await tentacleTrapRoom.onTrap(user, maze.level);
                 interupt = true;
             }
@@ -229,12 +229,12 @@ export namespace Room {
         description: "房间里有一个传送阵，似乎就是通向迷宫下一层的路呢。可以使用entermaze指令进入下一层。",
         items: { [RoomRemainingItemsKey]: 5 },
     };
-    export const stair2Room: BaseRoom = {
-        name: "stair2",
+    export const stairClearRoom: BaseRoom = {
+        name: "stairClear",
         type: RoomType.stair,
         displayName: "阶梯",
         probabilty: 0,
-        description: "这层迷宫已经完全开放了，每个房间都亮起了传送阵。可以使用entermaze指令直接进入下一层。",
+        description: "这层迷宫已经完全开放，每个房间都亮起了传送阵。可以使用entermaze指令直接进入下一层。",
         items: {},
     };
 

@@ -175,8 +175,8 @@ function apply(ctx: Context) {
                     if (maze.level - 1 >= 0) {
                         const upmaze = (await database.get("maze", { channelId: [maze.channelId!], level: [maze.level - 1] }, ["id", "channelId"]))[0];
                         if (upmaze) {
-                            await database.mysql.query(`update mazecell set room = ? where mazeid = ?? and channelId = ??`, [Room.stairRoom.name, upmaze.id, upmaze.channelId]);
-                            msg += "上层迷宫已经完全开放。";
+                            await database.mysql.query(`update mazecell set room = ? where mazeid = ? and channelId = ?`, [Room.stairClearRoom.name, upmaze.id, upmaze.channelId]);
+                            msg += "上层迷宫也已经完全开放。";
                         }
                     }
                 }

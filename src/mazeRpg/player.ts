@@ -5,8 +5,8 @@ import { getDiceMsg, max, min } from "./util";
 
 export namespace Player {
     export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "金", "虹",
-        "玫瑰", "琥珀", "天青", "翡翠", "琉璃"];
-    export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发", "大波浪"];
+        "玫瑰", "琥珀", "天青", "翡翠", "琉璃", "薄绿", "金灰"];
+    export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发"];
 
     export function maxHp(status: Status): number {
         return status.level * 10 + 90;

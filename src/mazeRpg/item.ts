@@ -84,6 +84,7 @@ export namespace Item {
         ["狙击枪", Rarity.SR, WpType.Long, 40],
         ["法杖", Rarity.N, WpType.Magic, 20],
         ["魔导书", Rarity.N, WpType.Magic, 30],
+        ["魔法少女杖", Rarity.R, WpType.Magic, 40],
     ];
     export const weaponItems = weaponItemArgs.map((a) => createWeaponItem(...a));
     const WeaponTypeMetadata: ItemTypeMetadata<WeaponItem> = {
