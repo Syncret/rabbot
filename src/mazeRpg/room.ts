@@ -12,6 +12,7 @@ export namespace Room {
         rest = "rest",
         shop = "shop",
         stair = "stair",
+        item = "item",
     }
     export const RoomDirectionMap: Map<string, string> = createMutualMap([
         ["up", "北"],
@@ -235,6 +236,14 @@ export namespace Room {
         displayName: "阶梯",
         probabilty: 0,
         description: "这层迷宫已经完全开放，每个房间都亮起了传送阵。可以使用entermaze指令直接进入下一层。",
+        items: {},
+    };
+    export const keyRoom: BaseRoom = {
+        name: "key",
+        type: RoomType.item,
+        displayName: "钥匙",
+        probabilty: 0,
+        description: "房间中央有一块魔力结晶，似乎是启动下一层传送阵的钥匙。",
         items: {},
     };
 
