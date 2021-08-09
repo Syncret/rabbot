@@ -19,9 +19,9 @@ declare module 'koishi-core' {
         mazecell: MazeCell
     }
     interface Database {
-        getCellById<F extends Tables.Field<"mazecell">>(id: number, fields?: F[]): Promise<Pick<Tables["mazecell"], F>>,
-        getMazeById<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>,
-        getMazeByCellId<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
+        getCellById<F extends keyof MazeCell>(id: number, fields?: F[]): Promise<Pick<Tables["mazecell"], F>>,
+        getMazeById<F extends keyof Maze>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>,
+        getMazeByCellId<F extends keyof Maze>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
     }
 };
 export interface Maze {

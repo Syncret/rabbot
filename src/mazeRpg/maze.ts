@@ -1,4 +1,4 @@
-import { Context, Random, segment, Tables } from "koishi";
+import { Context, Random, segment, Tables, User } from "koishi";
 import { Maze } from "./database";
 import { State } from "./state";
 import { DoorCode, generateMaze, MazeDirection, parseCellDoorCode } from "./maze.util";
@@ -53,7 +53,7 @@ function apply(ctx: Context) {
         await database.update("maze", [{ id: mazeId, state: State.MazeState.initialized }]);
         return maze;
     };
-    const getPlayerInCell = async <F extends Tables.Field<"user">>(cellId: number, name: string, fields: F[]) => {
+    const getPlayerInCell = async <F extends keyof User>(cellId: number, name: string, fields: F[]) => {
         if (!name) {
             return "请指定目标角色。";
         }
