@@ -6,6 +6,8 @@ import { string2ItemWithCountArray } from "./util";
 export interface Config {
     initialMoney?: number,
     stocks?: Record<string, string | Partial<StockBaseInfo>>,
+    openTime?: number,
+    closeTime?: number,
 }
 
 export const stockBaseInfos: Record<string, StockBaseInfo> = {};
@@ -33,8 +35,14 @@ function filterValidStockNames<T>(items: Array<T>, getName: (item: T) => string)
 }
 
 export function apply(ctx: Context, config?: Config) {
-    const initialMoney = config?.initialMoney || 1000;
-    const stocks = config?.stocks || defaultStocks;
+    const { initialMoney = 1000, stocks = defaultStocks, openTime = 8, closeTime = 23 } = config || {};
+    const checkMarketOpenTime = () => {
+        const now = new Date();
+        if (now.getUTCHours() < openTime || now.getUTCHours() > closeTime) {
+            return messages.marketNotOpen;
+        }
+        return undefined;
+    }
     Object.entries(stocks).forEach(([id, info]) => {
         stockBaseInfos[id] = createStockBaseInfo(id, info);
     });
@@ -48,7 +56,7 @@ export function apply(ctx: Context, config?: Config) {
             return JSON.stringify(response);
         });
     rootCommand.subcommand("marketinfo", messages.marketInfoDescription)
-        .alias("市场")
+        .alias(messages.market)
         .userFields(["id", "money"])
         .action(async ({ session, options },) => {
             const infos = await database.getStockInfo();
@@ -69,7 +77,8 @@ export function apply(ctx: Context, config?: Config) {
         });
 
     rootCommand.subcommand("buyin <items:text>", messages.buyinDescription)
-        .alias("买入")
+        .alias(messages.buyin)
+        .check(() => checkMarketOpenTime())
         .userFields(["id", "money"])
         .action(async ({ session, options }, text) => {
             try {
@@ -115,7 +124,8 @@ export function apply(ctx: Context, config?: Config) {
         });
 
     rootCommand.subcommand("sellout <items:text>", messages.selloutDescription)
-        .alias("卖出")
+        .alias(messages.sellout)
+        .check(() => checkMarketOpenTime())
         .userFields(["id", "money"])
         .action(async ({ session, options }, text) => {
             try {
@@ -167,15 +177,24 @@ export function apply(ctx: Context, config?: Config) {
         });
 
     rootCommand.subcommand("warehouse", messages.warehouseDescription)
-        .alias("仓库")
+        .alias(messages.warehouse)
         .userFields(["id", "money"])
         .action(async ({ session }) => {
             try {
-                let msg = "";
                 const user = session?.user!;
                 const myStocks = await database.get("userstock", { id: [Number(user.id)] }, Object.keys(stockBaseInfos));
-
-                
+                if (myStocks.length === 0) {
+                    return messages.emptyWarehouse;
+                }
+                const myStock = myStocks[0];
+                const stocksMsg = Object.entries(myStock).map(([key, value]) => {
+                    const baseInfo = stockBaseInfos[key];
+                    if (baseInfo) {
+                        return `${baseInfo.name}*${value}${baseInfo.unit}`;
+                    }
+                    return undefined;
+                }).filter((i) => i).join(", ");
+                return formatString(messages.userCurrentWarehouse, user.money, stocksMsg);
             } catch (e) {
                 if (e.message) {
                     return e.message;
@@ -183,7 +202,6 @@ export function apply(ctx: Context, config?: Config) {
                 console.error(e);
             }
         });
-
 }
 
 export const name = "Market";
