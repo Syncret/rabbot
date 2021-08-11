@@ -1,14 +1,20 @@
-import { Context } from "koishi";
+import { Context, Logger, Random } from "koishi";
 import { createStockBaseInfo, defaultStocks, StockBaseInfo } from "./stock";
 import { initializeStockBaseInfoTable, UserStockTable } from "./database";
 import { formatString, messages } from "./messages";
-import { string2ItemWithCountArray } from "./util";
+import { limitNumberValue, string2ItemWithCountArray } from "./util";
+import * as schedule from "node-schedule";
+
+export const name = "Market";
 export interface Config {
     initialMoney?: number,
     stocks?: Record<string, string | Partial<StockBaseInfo>>,
     openTime?: number,
     closeTime?: number,
+    timezoneOffset?: number,
 }
+
+const logger = new Logger(name);
 
 export const stockBaseInfos: Record<string, StockBaseInfo> = {};
 
@@ -35,32 +41,76 @@ function filterValidStockNames<T>(items: Array<T>, getName: (item: T) => string)
 }
 
 export function apply(ctx: Context, config?: Config) {
-    const { initialMoney = 1000, stocks = defaultStocks, openTime = 8, closeTime = 23 } = config || {};
+    const { initialMoney = 1000, stocks = defaultStocks, openTime = 8, closeTime = 23, timezoneOffset = 8 } = config || {};
+    const database = ctx.database;
+
+    // initialize Stock base info
+    Object.entries(stocks).forEach(([id, info]) => {
+        stockBaseInfos[id] = createStockBaseInfo(id, info);
+    });
+
+    // initialize database
+    initializeStockBaseInfoTable(stockBaseInfos);
+    database.patchStockInfo(stockBaseInfos);
+
+    // initialize utility functions
+    const utcHour2LocalTimeZone = (utcHour: number) => (utcHour + 24 + timezoneOffset) % 24;
     const checkMarketOpenTime = () => {
         const now = new Date();
-        if (now.getUTCHours() < openTime || now.getUTCHours() > closeTime) {
+        const curHour = utcHour2LocalTimeZone(now.getUTCHours());
+        if (curHour < openTime || curHour > closeTime) {
             return messages.marketNotOpen;
         }
         return undefined;
     }
-    Object.entries(stocks).forEach(([id, info]) => {
-        stockBaseInfos[id] = createStockBaseInfo(id, info);
+    const updateMarket = async () => {
+        const infos = await database.getStockInfo();
+        const newStocks = infos.map((info) => {
+            const baseInfo = stockBaseInfos[info.id];
+            if (baseInfo) {
+                const variation = Math.random() * baseInfo.range * 2 - baseInfo.range;
+                let newPrice = Math.round(info.price * variation);
+                newPrice = limitNumberValue(newPrice, baseInfo.minPrice, baseInfo.maxPrice);
+                return {
+                    id: info.id,
+                    lastprice: info.lastprice,
+                    price: newPrice
+                };
+            }
+            return undefined!;
+        }).filter((m) => !!m);
+        return await database.update("stockinfo", newStocks);
+    }
+    const rule = new schedule.RecurrenceRule();
+    rule.hour = (openTime + 24 - timezoneOffset) % 24;
+
+    const job = schedule.scheduleJob(rule, async () => {
+        try {
+            await updateMarket();
+            logger.info("Market daily updated");
+        } catch (e) {
+            logger.error(e);
+        }
     });
-    initializeStockBaseInfoTable(stockBaseInfos);
+
+    // register commands
     const rootCommand = ctx.command("market", messages.marketCommandDescription);
-    const database = ctx.database;
-    database.patchStockInfo(stockBaseInfos);
-    rootCommand.subcommand("market.patchdatabase", "update database", { hidden: true })
+    rootCommand.subcommand("market.patchDatabase", "update database", { hidden: true })
         .action(async ({ }) => {
             const response = await database.patchStockInfo(stockBaseInfos);
             return JSON.stringify(response);
         });
+    rootCommand.subcommand("dailyUpdate", "explicitly update stock prices", { hidden: true })
+        .action(async ({ }) => {
+            const response = await updateMarket();
+            return JSON.stringify(response) || "complete";
+        });
     rootCommand.subcommand("marketinfo", messages.marketInfoDescription)
         .alias(messages.market)
         .userFields(["id", "money"])
-        .action(async ({ session, options },) => {
+        .action(async ({ session, options }) => {
             const infos = await database.getStockInfo();
-            infos.map((info) => {
+            const msgs = infos.map((info) => {
                 const baseInfo = stockBaseInfos[info.id];
                 let msg = "";
                 if (baseInfo) {
@@ -69,11 +119,11 @@ export function apply(ctx: Context, config?: Config) {
                         const diff = info.lastprice / info.price - 1;
                         additionalMsg += `, ${diff >= 0 ? "↑" : "↓"}${Number(diff.toFixed(2))}`;
                     }
-                    msg = `${baseInfo.name}元/${baseInfo.unit}: ${info.price}${additionalMsg};`
+                    msg = `${baseInfo.name}${messages.moneyUnit}/${baseInfo.unit}: ${info.price}${additionalMsg};`
                 }
                 return msg;
             }).filter((m) => !!m);
-            return infos.join(" ");
+            return msgs.join(" ");
         });
 
     rootCommand.subcommand("buyin <items:text>", messages.buyinDescription)
@@ -187,7 +237,7 @@ export function apply(ctx: Context, config?: Config) {
                     return messages.emptyWarehouse;
                 }
                 const myStock = myStocks[0];
-                const stocksMsg = Object.entries(myStock).map(([key, value]) => {
+                const stocksMsg = Object.entries(myStock).slice(0, 10).map(([key, value]) => {
                     const baseInfo = stockBaseInfos[key];
                     if (baseInfo) {
                         return `${baseInfo.name}*${value}${baseInfo.unit}`;
@@ -203,5 +253,3 @@ export function apply(ctx: Context, config?: Config) {
             }
         });
 }
-
-export const name = "Market";

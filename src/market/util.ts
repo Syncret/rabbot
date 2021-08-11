@@ -20,3 +20,13 @@ export function string2ItemWithCount(text: string, allowNegtive = false, allowDe
     }
     return [name, count];
 }
+
+export function limitNumberValue(value: number, min?: number, max?: number): number {
+    if (min != null && value < min) {
+        return min;
+    }
+    if (max != null && value > max) {
+        return max;
+    }
+    return value;
+}

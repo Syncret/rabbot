@@ -39,7 +39,7 @@ Database.extend("koishi-plugin-mysql", {
             const result = await this.get("stockinfo", [name]);
             return result[0];
         }
-        return await this.query("select * from stockinfo limit 10;");
+        return await this.query("select * from stockinfo;");
     },
     /**
      * Initialize database or patch new stockinfo to database
