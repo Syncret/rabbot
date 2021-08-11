@@ -22,9 +22,10 @@ function filterValidStockNames<T>(items: Array<T>, getName: (item: T) => string)
     const validItems: T[] = [];
     const invalidItems: T[] = [];
     let invalidItemsMsg = "";
+    const stockNameList = Object.values(stockBaseInfos).map((s) => s.name);
     for (const item of items) {
         const name = getName(item);
-        if (stockBaseInfos[name as string]) {
+        if (stockNameList.includes(name)) {
             validItems.push(item);
         } else {
             invalidItems.push(item);
