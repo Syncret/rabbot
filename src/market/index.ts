@@ -96,8 +96,8 @@ export function apply(ctx: Context, config?: Config) {
     const rootCommand = ctx.command("market", messages.marketCommandDescription);
     rootCommand.subcommand("marketpatchdatabase", "update database", { hidden: true })
         .action(async ({ }) => {
-            const response = await database.patchStockInfo(stockBaseInfos);
-            return JSON.stringify(response);
+            await database.patchStockInfo(stockBaseInfos);
+            return `complete`;
         });
     rootCommand.subcommand("dailyupdate", "explicitly update stock prices", { hidden: true })
         .action(async ({ }) => {
@@ -116,9 +116,9 @@ export function apply(ctx: Context, config?: Config) {
                     let additionalMsg = "";
                     if (info.lastprice) {
                         const diff = info.lastprice / info.price - 1;
-                        additionalMsg += `, ${diff >= 0 ? "↑" : "↓"}${Number(diff.toFixed(2))}`;
+                        additionalMsg += `, ${diff >= 0 ? diff === 0 ? "=" : "↑" : "↓"}${Number(diff.toFixed(2))}`;
                     }
-                    msg = `${baseInfo.name}${messages.moneyUnit}/${baseInfo.unit}: ${info.price}${additionalMsg};`
+                    msg = `${baseInfo.name}: ${info.price}${messages.moneyUnit}/${baseInfo.unit}${additionalMsg};`
                 }
                 return msg;
             }).filter((m) => !!m);

@@ -3,7 +3,7 @@ export function string2ItemWithCountArray(text: string, allowNegtive = false, al
 }
 
 export function string2ItemWithCount(text: string, allowNegtive = false, allowDecimal = false): [string, number] {
-    const parsedTexts = text.trim().split(/X|x|*/);
+    const parsedTexts = text.trim().split(/X|x|\*/);
     const name = parsedTexts[0];
     let count = 1;
     if (parsedTexts[1]) {
