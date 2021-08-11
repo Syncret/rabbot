@@ -269,7 +269,7 @@ export namespace Room {
                 if (stateMsg && !needHelp) {
                     needHelp = true;
                 }
-                playersUnion[stateMsg] ||= [];
+                playersUnion[stateMsg] = playersUnion[stateMsg] || [];
                 playersUnion[stateMsg].push(p.rpgname);
             });
             const playersMsg = Object.entries(playersUnion).map(([stateMsg, names]) => `${stateMsg}${names.join("、")}`).join(", ");
