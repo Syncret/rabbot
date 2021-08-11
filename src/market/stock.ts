@@ -1,4 +1,5 @@
 export type StockBaseInfo = {
+    id: string,
     name: string,
     unit: string,
     initialPrice: number,
@@ -7,6 +8,8 @@ export type StockBaseInfo = {
     range: number
 }
 
+export const stockName2IdMap: Record<string, string> = {}
+
 export function createStockBaseInfo(id: string, info?: string | Partial<StockBaseInfo>): StockBaseInfo {
     if (info === null) {
         info = id;
@@ -14,7 +17,8 @@ export function createStockBaseInfo(id: string, info?: string | Partial<StockBas
     if (typeof info === "string") {
         info = { name: info };
     }
-    return {
+    const result = {
+        id,
         name: id,
         unit: "kg",
         initialPrice: 100,
@@ -23,6 +27,8 @@ export function createStockBaseInfo(id: string, info?: string | Partial<StockBas
         range: 20,
         ...info
     };
+    stockName2IdMap[id] = result.name;
+    return result;
 }
 
 export const defaultStocks: Record<string, Partial<StockBaseInfo>> = {

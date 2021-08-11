@@ -1,5 +1,5 @@
 import { Context, Logger, Random } from "koishi";
-import { createStockBaseInfo, defaultStocks, StockBaseInfo } from "./stock";
+import { createStockBaseInfo, defaultStocks, StockBaseInfo, stockName2IdMap } from "./stock";
 import { initializeStockBaseInfoTable, UserStockTable } from "./database";
 import { formatString, messages } from "./messages";
 import { limitNumberValue, string2ItemWithCountArray } from "./util";
@@ -22,10 +22,9 @@ function filterValidStockNames<T>(items: Array<T>, getName: (item: T) => string)
     const validItems: T[] = [];
     const invalidItems: T[] = [];
     let invalidItemsMsg = "";
-    const stockNameList = Object.values(stockBaseInfos).map((s) => s.name);
     for (const item of items) {
         const name = getName(item);
-        if (stockNameList.includes(name)) {
+        if (stockName2IdMap[name]) {
             validItems.push(item);
         } else {
             invalidItems.push(item);
@@ -141,7 +140,7 @@ export function apply(ctx: Context, config?: Config) {
                 if (stocks.length === 0) {
                     return msg;
                 }
-                const prices = await database.get("stockinfo", stocks.map((i) => i[0]), ["price"]);
+                const prices = await database.get("stockinfo", stocks.map((i) => stockName2IdMap[i[0]]), ["price"]);
                 let cost = 0;
                 const equations = prices.map((p, index) => {
                     const count = stocks[index][1];
@@ -157,7 +156,7 @@ export function apply(ctx: Context, config?: Config) {
                     msg += formatString(messages.notEnoughMoney, cost, user.money);
                     return msg;
                 }
-                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, stocks.map((i) => i[0] as string));
+                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, stocks.map((i) => stockName2IdMap[i[0]]));
                 if (currentUserStocks.length > 0) {
                     const userStock = currentUserStocks[0];
                     stocks.forEach((item) => item[1] += userStock[item[0]]);
@@ -165,7 +164,7 @@ export function apply(ctx: Context, config?: Config) {
                 user.money -= cost;
                 const query: Partial<UserStockTable> = { id: Number(user.id) };
                 stocks.forEach((stock) => {
-                    query[stock[0]] = stock[1];
+                    query[stockName2IdMap[stock[0]]] = stock[1];
                 })
                 await database.update("userstock", [query]);
                 return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, stocks.map((i) => `${i[0]}*${i[1]}`).join(", "));
@@ -191,7 +190,7 @@ export function apply(ctx: Context, config?: Config) {
                 if (stocks.length === 0) {
                     return msg;
                 }
-                const prices = await database.get("stockinfo", stocks.map((i) => i[0]), ["price"]);
+                const prices = await database.get("stockinfo", stocks.map((i) => stockName2IdMap[i[0]]), ["price"]);
                 let cost = 0;
                 const equations = prices.map((p, index) => {
                     const count = stocks[index][1];
@@ -203,7 +202,7 @@ export function apply(ctx: Context, config?: Config) {
                     user.money = initialMoney;
                     msg += formatString(messages.initializeUserMoney, initialMoney);
                 }
-                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, stocks.map((i) => i[0] as string));
+                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, stocks.map((i) => stockName2IdMap[i[0]]));
                 if (currentUserStocks.length > 0) {
                     const userStock = currentUserStocks[0];
                     stocks.forEach((item) => {
@@ -221,7 +220,7 @@ export function apply(ctx: Context, config?: Config) {
                 user.money += cost;
                 const query: Partial<UserStockTable> = { id: Number(user.id) };
                 stocks.forEach((stock) => {
-                    query[stock[0]] = stock[1];
+                    query[stockName2IdMap[stock[0]]] = stock[1];
                 })
                 await database.update("userstock", [query]);
                 return formatString(messages.selloutStock, stocks.map((i) => `${i[0]}*${i[1]}`).join(", "), `${equations.join("+")}=${cost}`);
