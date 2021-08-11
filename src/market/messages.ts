@@ -24,5 +24,6 @@ export const messages = {
     itemNotFound: "找不到{0}。",
     userCurrentWarehouse: "你有{0}元，{1}。",
     marketNotOpen: "还没开门呢。开门时间每日{0}点到{1}点。",
-    moneyUnit: "元"
+    moneyUnit: "元",
+    noStockInMarket: "目前没有商品呢。"
 }

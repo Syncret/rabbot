@@ -51,7 +51,6 @@ export function apply(ctx: Context, config?: Config) {
 
     // initialize database
     initializeStockBaseInfoTable(stockBaseInfos);
-    database.patchStockInfo(stockBaseInfos);
 
     // initialize utility functions
     const utcHour2LocalTimeZone = (utcHour: number) => (utcHour + 24 + timezoneOffset) % 24;
@@ -84,7 +83,7 @@ export function apply(ctx: Context, config?: Config) {
     const rule = new schedule.RecurrenceRule();
     rule.hour = (openTime + 24 - timezoneOffset) % 24;
 
-    const job = schedule.scheduleJob(rule, async () => {
+    schedule.scheduleJob(rule, async () => {
         try {
             await updateMarket();
             logger.info("Market daily updated");
@@ -95,12 +94,12 @@ export function apply(ctx: Context, config?: Config) {
 
     // register commands
     const rootCommand = ctx.command("market", messages.marketCommandDescription);
-    rootCommand.subcommand("marketPatchDatabase", "update database", { hidden: true })
+    rootCommand.subcommand("marketpatchdatabase", "update database", { hidden: true })
         .action(async ({ }) => {
             const response = await database.patchStockInfo(stockBaseInfos);
             return JSON.stringify(response);
         });
-    rootCommand.subcommand("dailyUpdate", "explicitly update stock prices", { hidden: true })
+    rootCommand.subcommand("dailyupdate", "explicitly update stock prices", { hidden: true })
         .action(async ({ }) => {
             const response = await updateMarket();
             return JSON.stringify(response) || "complete";
@@ -123,7 +122,8 @@ export function apply(ctx: Context, config?: Config) {
                 }
                 return msg;
             }).filter((m) => !!m);
-            return msgs.join(" ");
+            const msg = msgs.join(" ") || messages.noStockInMarket;
+            return msg;
         });
 
     rootCommand.subcommand("buyin <items:text>", messages.buyinDescription)

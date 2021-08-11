@@ -49,7 +49,7 @@ Database.extend("koishi-plugin-mysql", {
             return `INSERT IGNORE INTO stockinfo
             (id, price, lastprice)
         VALUES
-            (${stock}, ${info.initialPrice}, ${info.initialPrice});`
+            (${this.escape(stock)}, ${info.initialPrice}, ${info.initialPrice});`
         });
         return await this.query(sources);
     },
