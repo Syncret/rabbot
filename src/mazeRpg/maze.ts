@@ -1,4 +1,4 @@
-import { Context, Random, segment, Tables, User } from "koishi";
+import { Context, Logger, Random, segment, Tables, User } from "koishi";
 import { Maze } from "./database";
 import { State } from "./state";
 import { DoorCode, generateMaze, MazeDirection, parseCellDoorCode } from "./maze.util";
@@ -11,6 +11,7 @@ const defaultWidth = 8;
 const defaultHeight = 8;
 const defaultOpenGatePeople = 4;
 const maxMazeNameLength = 20;
+const logger = new Logger("maze");
 
 function apply(ctx: Context) {
     const { database } = ctx;
@@ -211,6 +212,10 @@ function apply(ctx: Context) {
             const user = session?.user!;
             const cells = await database.get("mazecell", [user.mazecellid], ["id", "door", "room", "mazeId", "cell"]);
             const cell = cells[0];
+            if (cell == null) {
+                logger.error(`can't find cell of No ${user.mazecellid}`)
+                return ` 数据出错啦, 找不到房间${user.mazecellid}。请联系管理员。`;
+            }
             const doors = parseCellDoorCode(cell.door);
             let innerDirection = direction as MazeDirection;
             if (!doors[innerDirection]) {
