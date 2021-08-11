@@ -95,7 +95,7 @@ export function apply(ctx: Context, config?: Config) {
 
     // register commands
     const rootCommand = ctx.command("market", messages.marketCommandDescription);
-    rootCommand.subcommand("market.patchDatabase", "update database", { hidden: true })
+    rootCommand.subcommand("marketPatchDatabase", "update database", { hidden: true })
         .action(async ({ }) => {
             const response = await database.patchStockInfo(stockBaseInfos);
             return JSON.stringify(response);
