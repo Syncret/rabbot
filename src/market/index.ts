@@ -137,6 +137,9 @@ export function apply(ctx: Context, config?: Config) {
                 const validation = filterValidStockNames(items, (item) => item[0]);
                 msg += validation.invalidItemsMsg;
                 const stocks = validation.valid as Array<[string, number]>;
+                if (stocks.length === 0) {
+                    return msg;
+                }
                 const prices = await database.get("stockinfo", stocks.map((i) => i[0]), ["price"]);
                 let cost = 0;
                 const equations = prices.map((p, index) => {
@@ -184,6 +187,9 @@ export function apply(ctx: Context, config?: Config) {
                 const validation = filterValidStockNames(items, (item) => item[0]);
                 msg += validation.invalidItemsMsg;
                 const stocks = validation.valid as Array<[string, number]>;
+                if (stocks.length === 0) {
+                    return msg;
+                }
                 const prices = await database.get("stockinfo", stocks.map((i) => i[0]), ["price"]);
                 let cost = 0;
                 const equations = prices.map((p, index) => {
