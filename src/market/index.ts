@@ -208,14 +208,15 @@ export function apply(ctx: Context, config?: Config) {
                     return msg;
                 }
                 const userStock = currentUserStocks[0];
-                validStocks.forEach((item) => {
+                for (const item of validStocks) {
                     const curStock = userStock[item.id];
                     if (curStock < item.count) {
                         msg += formatString(messages.stockNotEnough, item.count + stockBaseInfos[item.id].unit + item.name, curStock);
                         return msg;
+                    } else {
+                        item.count = curStock - item.count;
                     }
-                    item.count = curStock - item.count;
-                });
+                }
                 const tax = Math.ceil(cost * 0.01);
                 user.money += cost - tax;
                 const query: Partial<UserStockTable> = { id: Number(user.id) };
@@ -246,7 +247,7 @@ export function apply(ctx: Context, config?: Config) {
                 const myStock = myStocks[0];
                 const stocksMsg = Object.entries(myStock).slice(0, 10).map(([key, value]) => {
                     const baseInfo = stockBaseInfos[key];
-                    if (baseInfo) {
+                    if (baseInfo && value !== 0) {
                         return `${baseInfo.name}*${value}${baseInfo.unit}`;
                     }
                     return undefined;

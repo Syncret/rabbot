@@ -33,17 +33,20 @@ export function createStockBaseInfo(id: string, info?: string | Partial<StockBas
 
 export const defaultStocks: Record<string, Partial<StockBaseInfo>> = {
     carrot: {
-        name: "红萝卜",
+        name: "胡萝卜",
+        unit: "斤",
         initialPrice: 200,
         range: 0.1
     },
     cabbage: {
         name: "大白菜",
+        unit: "斤",
         initialPrice: 100,
         range: 0.05
     },
     pork: {
         name: "猪肉",
+        unit: "斤",
         initialPrice: 500,
         range: 0.15
     },
