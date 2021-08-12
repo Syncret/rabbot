@@ -94,18 +94,7 @@ export function apply(ctx: Context, config?: Config) {
     });
 
     // register commands
-    const rootCommand = ctx.command("market", messages.marketCommandDescription);
-    rootCommand.subcommand("marketpatchdatabase", "update database", { hidden: true })
-        .action(async ({ }) => {
-            await database.patchStockInfo(stockBaseInfos);
-            return `complete`;
-        });
-    rootCommand.subcommand("dailyupdate", "explicitly update stock prices", { hidden: true })
-        .action(async ({ }) => {
-            const response = await updateMarket();
-            return JSON.stringify(response) || "complete";
-        });
-    rootCommand.subcommand("marketinfo", messages.marketInfoDescription)
+    const rootCommand = ctx.command("market", messages.marketCommandDescription)
         .alias(messages.market)
         .userFields(["id", "money"])
         .action(async ({ session, options }) => {
@@ -117,7 +106,7 @@ export function apply(ctx: Context, config?: Config) {
                     let additionalMsg = "";
                     if (info.lastprice) {
                         const diff = info.price / info.lastprice - 1;
-                        additionalMsg += `, ${diff >= 0 ? diff === 0 ? "=" : "↑" : "↓"}${Number(diff.toFixed(2))}%`;
+                        additionalMsg += `, ${diff >= 0 ? diff === 0 ? "=" : "↑" : "↓"}${Number((diff * 100).toFixed(1))}%`;
                     }
                     msg = `${baseInfo.name}: ${info.price}${messages.moneyUnit}/${baseInfo.unit}${additionalMsg};`
                 }
@@ -125,6 +114,16 @@ export function apply(ctx: Context, config?: Config) {
             }).filter((m) => !!m);
             const msg = msgs.join(" ") || messages.noStockInMarket;
             return msg;
+        });;
+    rootCommand.subcommand("marketpatchdatabase", "update database", { hidden: true })
+        .action(async ({ }) => {
+            await database.patchStockInfo(stockBaseInfos);
+            return `complete`;
+        });
+    rootCommand.subcommand("dailyupdate", "explicitly update stock prices", { hidden: true })
+        .action(async ({ }) => {
+            const response = await updateMarket();
+            return JSON.stringify(response) || "complete";
         });
 
     rootCommand.subcommand("buyin <items:text>", messages.buyinDescription)
@@ -168,7 +167,7 @@ export function apply(ctx: Context, config?: Config) {
                     query[stock.id] = stock.count;
                 })
                 await database.update("userstock", [query]);
-                return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, validStocks.map((i) => `${i.name}*${i.count}`).join(", "));
+                return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, validStocks.map((i) => `${i.name}*${i.count}${stockBaseInfos[i.id].unit}`).join(", "));
             } catch (e) {
                 if (e.message) {
                     return e.message;
@@ -204,27 +203,28 @@ export function apply(ctx: Context, config?: Config) {
                     msg += formatString(messages.initializeUserMoney, initialMoney);
                 }
                 const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, validStocks.map((i) => i.id));
-                if (currentUserStocks.length > 0) {
-                    const userStock = currentUserStocks[0];
-                    validStocks.forEach((item) => {
-                        const curStock = userStock[item.id];
-                        if (curStock < item.count) {
-                            msg += formatString(messages.stockNotEnough, item.count + stockBaseInfos[item.id].unit + item.name, curStock);
-                            return msg;
-                        }
-                        item.count = curStock - item.count;
-                    });
-                } else {
+                if (currentUserStocks.length === 0) {
                     msg += messages.emptyWarehouse;
                     return msg;
                 }
-                user.money += cost;
+                const userStock = currentUserStocks[0];
+                validStocks.forEach((item) => {
+                    const curStock = userStock[item.id];
+                    if (curStock < item.count) {
+                        msg += formatString(messages.stockNotEnough, item.count + stockBaseInfos[item.id].unit + item.name, curStock);
+                        return msg;
+                    }
+                    item.count = curStock - item.count;
+                });
+                const tax = Math.ceil(cost * 0.01);
+                user.money += cost - tax;
                 const query: Partial<UserStockTable> = { id: Number(user.id) };
                 validStocks.forEach((stock) => {
                     query[stock.id] = stock.count;
                 })
                 await database.update("userstock", [query]);
-                return formatString(messages.selloutStock, validStocks.map((i) => `${i.name}*${i.count}`).join(", "), `${equations.join("+")}=${cost}`);
+                return formatString(messages.selloutStock, validStocks.map((i) => `${i.name}*${userStock[i.id] - i.count}${stockBaseInfos[i.id].unit}`).join(", "),
+                    `${equations.join("+")}=${cost}`, tax);
             } catch (e) {
                 if (e.message) {
                     return e.message;
@@ -258,5 +258,11 @@ export function apply(ctx: Context, config?: Config) {
                 }
                 console.error(e);
             }
+        });
+    rootCommand.subcommand("money", messages.moneyDescription)
+        .alias(messages.money)
+        .userFields(["money"])
+        .action(async ({ session }) => {
+            return formatString(messages.currentMoney, session?.user?.money!);
         });
 }
