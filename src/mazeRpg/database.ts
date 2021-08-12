@@ -19,9 +19,9 @@ declare module 'koishi-core' {
         mazecell: MazeCell
     }
     interface Database {
-        getCellById<F extends Tables.Field<"mazecell">>(id: number, fields?: F[]): Promise<Pick<Tables["mazecell"], F>>,
-        getMazeById<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>,
-        getMazeByCellId<F extends Tables.Field<"maze">>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
+        getCellById<F extends keyof MazeCell>(id: number, fields?: F[]): Promise<Pick<Tables["mazecell"], F>>,
+        getMazeById<F extends keyof Maze>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>,
+        getMazeByCellId<F extends keyof Maze>(id: number, fields?: F[]): Promise<Pick<Tables["maze"], F>>
     }
 };
 export interface Maze {
@@ -31,6 +31,7 @@ export interface Maze {
     level: number,
     width: number,
     height: number,
+    state: number,
 };
 export interface MazeCell {
     id: number,
@@ -86,18 +87,19 @@ Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     tables.maze = {
         id: `INT(10) UNSIGNED NOT NULL AUTO_INCREMENT`,
-        name: `VARCHAR(50) NOT NULL`,
-        channelId: `VARCHAR(50) NOT NULL`,
+        name: `VARCHAR(50)`,
+        channelId: `VARCHAR(50)`,
         width: `SMALLINT`,
         height: `SMALLINT`,
         level: `TINYINT UNSIGNED`,
+        state: `TINYINT UNSIGNED`,
     }
 });
 
 Database.extend('koishi-plugin-mysql', ({ Domain, tables }) => {
     tables.mazecell = {
         id: `INT(10) UNSIGNED NOT NULL AUTO_INCREMENT`,
-        mazeId: `INT(10) NOT NULL`,
+        mazeId: `INT(10)`,
         cell: `SMALLINT UNSIGNED`,
         door: `SMALLINT UNSIGNED`,
         items: new Domain.Json(),

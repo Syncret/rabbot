@@ -64,6 +64,7 @@ const config: AppConfig = {
     "./src/voice": { admins: [admin], on: true },
     "./src/mazeRpg": {},
     "./src/gensinHelper": {},
+    "./src/market": {},
 
     "./src/postPlugins": {},
     // dice: {},

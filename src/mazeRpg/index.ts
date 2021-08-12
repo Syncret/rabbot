@@ -18,7 +18,7 @@ export function apply(ctx: Context, config?: Config) {
     ctx.plugin(Item.itemPlugin);
     ctx.plugin(RPGMaze);
 
-    ctx.command("rpg/start <name:string>", "开始")
+    ctx.command("rpg/start <name:string>", "开始冒险(创建角色)")
         .userFields(rpgFields)
         .check(State.stateChecker())
         .action(async ({ session, options }, name) => {
@@ -47,7 +47,7 @@ export function apply(ctx: Context, config?: Config) {
             return `你叫${name}, 你${Player.describeAppearance(user.appearance)}你的冒险旅程现在开始了!`;
         });
 
-    ctx.command("rpg/end <name:string>", "结束")
+    ctx.command("rpg/end <name:string>", "结束冒险(删除角色)")
         .userFields(rpgFields)
         .option("keep", "-k 保留道具和金钱等")
         .check(State.stateChecker())
@@ -71,7 +71,7 @@ export function apply(ctx: Context, config?: Config) {
             return `${name}结束了她的冒险生活...`;
         });
 
-    ctx.command("rpg/reset", "修复或重置角色状态")
+    ctx.command("rpg/reset", "修复或重置角色状态", { hidden: true })
         .userFields(rpgFields)
         .adminUser(({ target, session }) => {
             const user = target;
@@ -99,21 +99,6 @@ export function apply(ctx: Context, config?: Config) {
             }).filter((s) => !!s);
             await ctx.database.mysql.query(query);
             return `更新完毕`;
-        });
-    ctx.command("rpg/item/bag", "查看背包")
-        .userFields(["rpgitems", "money", "rpgstate", "timers"])
-        .check(State.stateChecker())
-        .option("detail", "-d 显示物品详细")
-        .action(async ({ session, options }) => {
-            let msg = Item.viewBag(session!, options?.detail);
-            msg += Item.checkBagFull(session!.user!.rpgitems);
-            return msg;
-        });
-    ctx.command("rpg/state", "检查状态")
-        .userFields(["rpgstate"])
-        .action(({ session }) => {
-            const state = session!.user!.rpgstate;
-            return state + "";
         });
 
     ctx.command("rpg/use <name:string>", "使用/装备道具")

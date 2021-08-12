@@ -1,12 +1,12 @@
 import { Context, Random } from "koishi";
 import { Appearance, Status } from "./database";
 import { State } from "./state";
-import { getDiceMsg } from "./util";
+import { getDiceMsg, max, min } from "./util";
 
 export namespace Player {
     export const ColorText = ["白", "黑", "银", "红", "蓝", "绿", "黄", "紫", "粉", "橙", "灰", "金", "虹",
-        "玫瑰", "琥珀", "天青", "翡翠", "琉璃"];
-    export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发", "大波浪"];
+        "玫瑰", "琥珀", "天青", "翡翠", "琉璃", "薄绿", "金灰"];
+    export const HairType = ["双马尾", "单马尾", "长发", "短发", "双麻花辫", "卷发", "碎发"];
 
     export function maxHp(status: Status): number {
         return status.level * 10 + 90;
@@ -16,6 +16,16 @@ export namespace Player {
     }
     export function maxExp(status: Status): number {
         return status.level * 100;
+    }
+    export function addMp(status: Status, mp: number): string {
+        let operator = "+";
+        if (mp >= 0) {
+            status.mp = min(maxMp(status), status.mp + mp);
+        } else {
+            status.mp = max(0, status.mp + mp);
+            operator = '';
+        }
+        return `MP${operator}${mp}=${status.mp}. `;
     }
 
     export function generateAppearance(): Appearance {
@@ -64,7 +74,7 @@ export namespace Player {
             .action(({ session }) => {
                 const user = session!.user!;
                 const apMsg = State.apChecker(false, true)({ session, options: { ap: 0 } });
-                return `${user.rpgname}: ${describeStatus(user.rpgstatus)}${apMsg}${State.stateChecker(0, State.sleep | State.tentacle)({ session })}`;
+                return `${user.rpgname}: ${describeStatus(user.rpgstatus)}${apMsg}${State.stateChecker(0, State.sleep | State.tentacle)({ session }) || ""}`;
             });
         ctx.command("rpg/player/appearance", "查看外观")
             .userFields(["appearance", "rpgname", "rpgstate", "rpgstatus", "timers"])
@@ -89,8 +99,12 @@ export namespace Player {
                 if (dice >= user.rpgstatus.rpgdice!) {
                     msg += `成功了！你从触手中挣脱了出来！`;
                     user.rpgstate ^= State.tentacle;
+                } else if (dice === 1) {
+                    const penalty = Random.int(20) + 10;
+                    msg += `大失败！你不仅没能挣脱触手，还被吸取了${penalty}点魔力。`;
+                    msg += addMp(user.rpgstatus, -penalty);
                 } else {
-                    msg += `你费尽了力气, 然而还是被触手紧紧地缠绕着。`
+                    msg += `你费尽了力气, 然而还是被触手紧紧地缠绕着。`;
                 }
                 msg += State.consumeAP(user, ap);
                 return msg;

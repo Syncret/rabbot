@@ -2,7 +2,7 @@ import { Context } from "koishi-core";
 import { getCQImageUrlFromMsg, removeCQ } from "./CQUtil";
 import { tencentCloudApis } from "./TencentCloudApis";
 
-export interface Options {}
+export interface Options { }
 export const translatorKeywordRegex = /^兔兔(图片整?段?落?)?(?:(.+?)[文|语])?([翻|译|到]+)(?:(.+?)[文|语])?\S*/;
 
 const lanMap: Record<string, string> = {
