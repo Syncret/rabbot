@@ -115,12 +115,12 @@ export function apply(ctx: Context, config?: Config) {
             const msg = msgs.join(" ") || messages.noStockInMarket;
             return messages.dailyMarket + msg;
         });;
-    rootCommand.subcommand("marketpatchdatabase", "update database", { hidden: true })
+    rootCommand.subcommand("marketpatchdatabase", "update database", { hidden: true, authority: 3 })
         .action(async ({ }) => {
             await database.patchStockInfo(stockBaseInfos);
             return `complete`;
         });
-    rootCommand.subcommand("dailyupdate", "explicitly update stock prices", { hidden: true })
+    rootCommand.subcommand("dailyupdate", "explicitly update stock prices", { hidden: true, authority: 3 })
         .action(async ({ }) => {
             const response = await updateMarket();
             return JSON.stringify(response) || "complete";

@@ -15,7 +15,7 @@ export const messages = {
     dailyMarket: "今日行情：",
     notEnoughMoney: "需要{0}元(现在{1})。没有足够的钱呢。",
     buyinStock: "你花费{0}元，买入{1}。",
-    selloutStock: "你卖出{0}，获得{1}元，并缴纳了{2}元手续费。",
+    selloutStock: "你卖出{0}，获得{1}元，并缴纳了{2}元交易费用。",
     marketCommandDescription: "一个市场模拟游戏。",
     buyinDescription: "买入 {商品1}*{数量},{商品2}*{数量}...",
     selloutDescription: "卖出 {商品1}*{数量},{商品2}*{数量}...",
