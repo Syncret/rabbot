@@ -144,7 +144,7 @@ export function apply(ctx: Context, config?: Config) {
                 let cost = 0;
                 const equations = prices.map((p, index) => {
                     const stock = validStocks.find((s) => s.id === p.id);
-                    if (stock) {
+                    if (stock == null) {
                         throw Error(formatString(messages.stockNotFoundInDatabase, p.id));
                     }
                     const count = stock!.count;
@@ -198,7 +198,7 @@ export function apply(ctx: Context, config?: Config) {
                 let cost = 0;
                 const equations = prices.map((p) => {
                     const stock = validStocks.find((s) => s.id === p.id);
-                    if (stock) {
+                    if (stock == null) {
                         throw Error(formatString(messages.stockNotFoundInDatabase, p.id));
                     }
                     const count = stock!.count;
