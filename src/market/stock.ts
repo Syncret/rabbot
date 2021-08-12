@@ -24,10 +24,10 @@ export function createStockBaseInfo(id: string, info?: string | Partial<StockBas
         initialPrice: 100,
         minPrice: 1,
         maxPrice: 100000,
-        range: 20,
+        range: 0.2,
         ...info
     };
-    stockName2IdMap[id] = result.name;
+    stockName2IdMap[result.name] = id;
     return result;
 }
 
@@ -35,16 +35,16 @@ export const defaultStocks: Record<string, Partial<StockBaseInfo>> = {
     carrot: {
         name: "红萝卜",
         initialPrice: 200,
-        range: 20
+        range: 0.1
     },
     cabbage: {
         name: "大白菜",
         initialPrice: 100,
-        range: 10
+        range: 0.05
     },
     pork: {
         name: "猪肉",
         initialPrice: 500,
-        range: 30
+        range: 0.15
     },
 }

@@ -26,5 +26,6 @@ export const messages = {
     userCurrentWarehouse: "你有{0}元，{1}。",
     marketNotOpen: "还没开门呢。开门时间每日{0}点到{1}点。",
     moneyUnit: "元",
-    noStockInMarket: "目前没有商品呢。"
+    noStockInMarket: "目前没有商品呢。",
+    requireInputStocks: "需要输入商品名呢。"
 }

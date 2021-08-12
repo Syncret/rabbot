@@ -68,11 +68,11 @@ export function apply(ctx: Context, config?: Config) {
             const baseInfo = stockBaseInfos[info.id];
             if (baseInfo) {
                 const variation = Math.random() * baseInfo.range * 2 - baseInfo.range;
-                let newPrice = Math.round(info.price * variation);
+                let newPrice = Math.round(info.price * (1 + variation));
                 newPrice = limitNumberValue(newPrice, baseInfo.minPrice, baseInfo.maxPrice);
                 return {
                     id: info.id,
-                    lastprice: info.lastprice,
+                    lastprice: info.price,
                     price: newPrice
                 };
             }
@@ -82,6 +82,7 @@ export function apply(ctx: Context, config?: Config) {
     }
     const rule = new schedule.RecurrenceRule();
     rule.hour = (openTime + 24 - timezoneOffset) % 24;
+    rule.minute = 0;
 
     schedule.scheduleJob(rule, async () => {
         try {
@@ -115,8 +116,8 @@ export function apply(ctx: Context, config?: Config) {
                 if (baseInfo) {
                     let additionalMsg = "";
                     if (info.lastprice) {
-                        const diff = info.lastprice / info.price - 1;
-                        additionalMsg += `, ${diff >= 0 ? diff === 0 ? "=" : "↑" : "↓"}${Number(diff.toFixed(2))}`;
+                        const diff = info.price / info.lastprice - 1;
+                        additionalMsg += `, ${diff >= 0 ? diff === 0 ? "=" : "↑" : "↓"}${Number(diff.toFixed(2))}%`;
                     }
                     msg = `${baseInfo.name}: ${info.price}${messages.moneyUnit}/${baseInfo.unit}${additionalMsg};`
                 }
@@ -136,14 +137,14 @@ export function apply(ctx: Context, config?: Config) {
                 const items = string2ItemWithCountArray(text);
                 const validation = filterValidStockNames(items, (item) => item[0]);
                 msg += validation.invalidItemsMsg;
-                const stocks = validation.valid as Array<[string, number]>;
-                if (stocks.length === 0) {
-                    return msg;
+                const validStocks = validation.valid.map((v) => ({ id: stockName2IdMap[v[0]], count: v[1], name: v[0] }));
+                if (validStocks.length === 0) {
+                    return msg || messages.requireInputStocks;
                 }
-                const prices = await database.get("stockinfo", stocks.map((i) => stockName2IdMap[i[0]]), ["price"]);
+                const prices = await database.get("stockinfo", validStocks.map((i) => i.id), ["price"]);
                 let cost = 0;
                 const equations = prices.map((p, index) => {
-                    const count = stocks[index][1];
+                    const count = validStocks[index].count;
                     cost += p.price * count;
                     return `${p.price}*${count}`;
                 });
@@ -156,18 +157,18 @@ export function apply(ctx: Context, config?: Config) {
                     msg += formatString(messages.notEnoughMoney, cost, user.money);
                     return msg;
                 }
-                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, stocks.map((i) => stockName2IdMap[i[0]]));
+                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, validStocks.map((i) => i.id));
                 if (currentUserStocks.length > 0) {
                     const userStock = currentUserStocks[0];
-                    stocks.forEach((item) => item[1] += userStock[item[0]]);
+                    validStocks.forEach((i) => i.count += userStock[i.id]);
                 }
                 user.money -= cost;
                 const query: Partial<UserStockTable> = { id: Number(user.id) };
-                stocks.forEach((stock) => {
-                    query[stockName2IdMap[stock[0]]] = stock[1];
+                validStocks.forEach((stock) => {
+                    query[stock.id] = stock.count;
                 })
                 await database.update("userstock", [query]);
-                return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, stocks.map((i) => `${i[0]}*${i[1]}`).join(", "));
+                return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, validStocks.map((i) => `${i.name}*${i.count}`).join(", "));
             } catch (e) {
                 if (e.message) {
                     return e.message;
@@ -186,14 +187,14 @@ export function apply(ctx: Context, config?: Config) {
                 const items = string2ItemWithCountArray(text);
                 const validation = filterValidStockNames(items, (item) => item[0]);
                 msg += validation.invalidItemsMsg;
-                const stocks = validation.valid as Array<[string, number]>;
-                if (stocks.length === 0) {
-                    return msg;
+                const validStocks = validation.valid.map((v) => ({ id: stockName2IdMap[v[0]], count: v[1], name: v[0] }));
+                if (validStocks.length === 0) {
+                    return msg || messages.requireInputStocks;
                 }
-                const prices = await database.get("stockinfo", stocks.map((i) => stockName2IdMap[i[0]]), ["price"]);
+                const prices = await database.get("stockinfo", validStocks.map((i) => i.id), ["price"]);
                 let cost = 0;
                 const equations = prices.map((p, index) => {
-                    const count = stocks[index][1];
+                    const count = validStocks[index].count;
                     cost += p.price * count;
                     return `${p.price}*${count}`;
                 });
@@ -202,16 +203,16 @@ export function apply(ctx: Context, config?: Config) {
                     user.money = initialMoney;
                     msg += formatString(messages.initializeUserMoney, initialMoney);
                 }
-                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, stocks.map((i) => stockName2IdMap[i[0]]));
+                const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, validStocks.map((i) => i.id));
                 if (currentUserStocks.length > 0) {
                     const userStock = currentUserStocks[0];
-                    stocks.forEach((item) => {
-                        const curStock = userStock[item[0]];
-                        if (curStock < item[1]) {
-                            msg += formatString(messages.notEnoughMoney, item[1] + stockBaseInfos[item[0]].unit + item[0], curStock);
+                    validStocks.forEach((item) => {
+                        const curStock = userStock[item.id];
+                        if (curStock < item.count) {
+                            msg += formatString(messages.stockNotEnough, item.count + stockBaseInfos[item.id].unit + item.name, curStock);
                             return msg;
                         }
-                        item[1] = curStock - item[1];
+                        item.count = curStock - item.count;
                     });
                 } else {
                     msg += messages.emptyWarehouse;
@@ -219,11 +220,11 @@ export function apply(ctx: Context, config?: Config) {
                 }
                 user.money += cost;
                 const query: Partial<UserStockTable> = { id: Number(user.id) };
-                stocks.forEach((stock) => {
-                    query[stockName2IdMap[stock[0]]] = stock[1];
+                validStocks.forEach((stock) => {
+                    query[stock.id] = stock.count;
                 })
                 await database.update("userstock", [query]);
-                return formatString(messages.selloutStock, stocks.map((i) => `${i[0]}*${i[1]}`).join(", "), `${equations.join("+")}=${cost}`);
+                return formatString(messages.selloutStock, validStocks.map((i) => `${i.name}*${i.count}`).join(", "), `${equations.join("+")}=${cost}`);
             } catch (e) {
                 if (e.message) {
                     return e.message;
