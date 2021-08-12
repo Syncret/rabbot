@@ -140,10 +140,14 @@ export function apply(ctx: Context, config?: Config) {
                 if (validStocks.length === 0) {
                     return msg || messages.requireInputStocks;
                 }
-                const prices = await database.get("stockinfo", validStocks.map((i) => i.id), ["price"]);
+                const prices = await database.get("stockinfo", validStocks.map((i) => i.id), ["id", "price"]);
                 let cost = 0;
                 const equations = prices.map((p, index) => {
-                    const count = validStocks[index].count;
+                    const stock = validStocks.find((s) => s.id === p.id);
+                    if (stock) {
+                        throw Error(formatString(messages.stockNotFoundInDatabase, p.id));
+                    }
+                    const count = stock!.count;
                     cost += p.price * count;
                     return `${p.price}*${count}`;
                 });
@@ -190,10 +194,14 @@ export function apply(ctx: Context, config?: Config) {
                 if (validStocks.length === 0) {
                     return msg || messages.requireInputStocks;
                 }
-                const prices = await database.get("stockinfo", validStocks.map((i) => i.id), ["price"]);
+                const prices = await database.get("stockinfo", validStocks.map((i) => i.id), ["id", "price"]);
                 let cost = 0;
-                const equations = prices.map((p, index) => {
-                    const count = validStocks[index].count;
+                const equations = prices.map((p) => {
+                    const stock = validStocks.find((s) => s.id === p.id);
+                    if (stock) {
+                        throw Error(formatString(messages.stockNotFoundInDatabase, p.id));
+                    }
+                    const count = stock!.count;
                     cost += p.price * count;
                     return `${p.price}*${count}`;
                 });
@@ -242,7 +250,7 @@ export function apply(ctx: Context, config?: Config) {
                 const user = session?.user!;
                 const myStocks = await database.get("userstock", { id: [Number(user.id)] }, Object.keys(stockBaseInfos));
                 if (myStocks.length === 0) {
-                    return messages.emptyWarehouse;
+                    return formatString(messages.currentMoney, user.money);
                 }
                 const myStock = myStocks[0];
                 const stocksMsg = Object.entries(myStock).slice(0, 10).map(([key, value]) => {

@@ -31,5 +31,6 @@ export const messages = {
     marketNotOpen: "还没开门呢。开门时间每日{0}点到{1}点。",
     moneyUnit: "元",
     noStockInMarket: "目前没有商品呢。",
-    requireInputStocks: "需要输入商品名呢。"
+    requireInputStocks: "需要输入商品名呢。",
+    stockNotFoundInDatabase: "数据库中找不到{0}商品，请联系管理员更新数据库。"
 }

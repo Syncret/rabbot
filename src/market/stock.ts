@@ -39,7 +39,7 @@ export const defaultStocks: Record<string, Partial<StockBaseInfo>> = {
         range: 0.1
     },
     cabbage: {
-        name: "大白菜",
+        name: "白菜",
         unit: "斤",
         initialPrice: 100,
         range: 0.05
