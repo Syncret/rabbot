@@ -160,6 +160,7 @@ export function apply(ctx: Context, config?: Config) {
                     msg += formatString(messages.notEnoughMoney, cost, user.money);
                     return msg;
                 }
+                const stockChangeMsg = validStocks.map((i) => `${i.name}*${i.count}${stockBaseInfos[i.id].unit}`).join(", ");
                 const currentUserStocks = await database.get("userstock", { id: [Number(user.id)] }, validStocks.map((i) => i.id));
                 if (currentUserStocks.length > 0) {
                     const userStock = currentUserStocks[0];
@@ -171,7 +172,7 @@ export function apply(ctx: Context, config?: Config) {
                     query[stock.id] = stock.count;
                 })
                 await database.update("userstock", [query]);
-                return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, validStocks.map((i) => `${i.name}*${i.count}${stockBaseInfos[i.id].unit}`).join(", "));
+                return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, stockChangeMsg);
             } catch (e) {
                 if (e.message) {
                     return e.message;
@@ -215,6 +216,7 @@ export function apply(ctx: Context, config?: Config) {
                     msg += messages.emptyWarehouse;
                     return msg;
                 }
+                const stockChangeMsg = validStocks.map((i) => `${i.name}*${i.count}${stockBaseInfos[i.id].unit}`).join(", ");
                 const userStock = currentUserStocks[0];
                 for (const item of validStocks) {
                     const curStock = userStock[item.id];
@@ -232,8 +234,7 @@ export function apply(ctx: Context, config?: Config) {
                     query[stock.id] = stock.count;
                 })
                 await database.update("userstock", [query]);
-                return formatString(messages.selloutStock, validStocks.map((i) => `${i.name}*${userStock[i.id] - i.count}${stockBaseInfos[i.id].unit}`).join(", "),
-                    `${equations.join("+")}=${cost}`, tax);
+                return formatString(messages.selloutStock, stockChangeMsg, `${equations.join("+")}=${cost}`, tax);
             } catch (e) {
                 if (e.message) {
                     return e.message;
