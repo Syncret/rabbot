@@ -108,12 +108,12 @@ export function apply(ctx: Context, config?: Config) {
                         const diff = info.price / info.lastprice - 1;
                         additionalMsg += `, ${diff >= 0 ? diff === 0 ? "=" : "↑" : "↓"}${Number((diff * 100).toFixed(1))}%`;
                     }
-                    msg = `${baseInfo.name}: ${info.price}${messages.moneyUnit}/${baseInfo.unit}${additionalMsg};`
+                    msg = `${baseInfo.name}${info.price}${messages.moneyUnit}/${baseInfo.unit}${additionalMsg};`
                 }
                 return msg;
             }).filter((m) => !!m);
             const msg = msgs.join(" ") || messages.noStockInMarket;
-            return msg;
+            return messages.dailyMarket + msg;
         });;
     rootCommand.subcommand("marketpatchdatabase", "update database", { hidden: true })
         .action(async ({ }) => {

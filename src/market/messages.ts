@@ -12,6 +12,7 @@ export const messages = {
     sellout: "卖出",
     market: "市场",
     money: "现金",
+    dailyMarket: "今日行情：",
     notEnoughMoney: "需要{0}元(现在{1})。没有足够的钱呢。",
     buyinStock: "你花费{0}元，买入{1}。",
     selloutStock: "你卖出{0}，获得{1}元，并缴纳了{2}元手续费。",
