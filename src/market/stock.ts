@@ -50,4 +50,10 @@ export const defaultStocks: Record<string, Partial<StockBaseInfo>> = {
         initialPrice: 500,
         range: 0.15
     },
+    watermelon: {
+        name: "西瓜",
+        unit: "个",
+        initialPrice: 400,
+        range: 0.20
+    },
 }

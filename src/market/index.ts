@@ -58,7 +58,7 @@ export function apply(ctx: Context, config?: Config) {
         const now = new Date();
         const curHour = utcHour2LocalTimeZone(now.getUTCHours());
         if (curHour < openTime || curHour > closeTime) {
-            return messages.marketNotOpen;
+            return formatString(messages.marketNotOpen, openTime, closeTime);
         }
         return undefined;
     }
@@ -121,9 +121,9 @@ export function apply(ctx: Context, config?: Config) {
             return `complete`;
         });
     rootCommand.subcommand("dailyupdate", "explicitly update stock prices", { hidden: true, authority: 3 })
-        .action(async ({ }) => {
+        .action(async ({ session }) => {
             const response = await updateMarket();
-            return JSON.stringify(response) || "complete";
+            return session?.execute("market");
         });
 
     rootCommand.subcommand("buyin <items:text>", messages.buyinDescription)
@@ -249,7 +249,7 @@ export function apply(ctx: Context, config?: Config) {
         .action(async ({ session }) => {
             try {
                 const user = session?.user!;
-                const myStocks = await database.get("userstock", { id: [Number(user.id)] }, Object.keys(stockBaseInfos));
+                const myStocks = await database.get("userstock", { id: [Number(user.id)] });
                 if (myStocks.length === 0) {
                     return formatString(messages.currentMoney, user.money);
                 }
