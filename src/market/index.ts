@@ -67,8 +67,9 @@ export function apply(ctx: Context, config?: Config) {
         const newStocks = infos.map((info) => {
             const baseInfo = stockBaseInfos[info.id];
             if (baseInfo) {
-                const variation = Math.random() * baseInfo.range * 2 - baseInfo.range;
-                let newPrice = Math.round(info.price * (1 + variation));
+                const range: [number, number] = typeof baseInfo.range === "number" ? [1 - 1 / (1 + baseInfo.range), baseInfo.range] : baseInfo.range;
+                const variation = info.price * (Math.random() * (range[0] + range[1]) - range[0]);
+                let newPrice = Math.ceil(info.price + variation);
                 newPrice = limitNumberValue(newPrice, baseInfo.minPrice, baseInfo.maxPrice);
                 return {
                     id: info.id,

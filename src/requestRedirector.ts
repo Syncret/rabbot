@@ -136,7 +136,8 @@ function createCommand(
   return parentCommand
     .subcommand(
       handlerInfo.commandName,
-      `handle ${handlerInfo.requestType} requests`
+      `handle ${handlerInfo.requestType} requests`,
+      {authority: 3}
     )
     .option("list", "-l") // list all requests
     .option("all", "-a") // apply to all pending requests

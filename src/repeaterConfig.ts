@@ -1,5 +1,11 @@
 import { Random, segment, Session } from "koishi";
 import { Config } from "koishi-plugin-common";
+import { formatString } from "./util";
+
+const banMessages = [
+  `复读机失控了！兔兔只来得及逮捕最后一个复读机！那个人就是...{0}! `,
+  `每个复读机都觉得自己不会被捉，今天由兔兔来教会{0}世界的残酷！`,
+];
 
 export function repeaterConfig(enableBanGroups: string[] = []): Config {
   return {
@@ -21,10 +27,8 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
         }
         if (state.times > 2 && Random.bool(state.times / 20)) {
           ban(session, session.userId!, state.times);
-          return (
-            `复读机失控了！兔兔只来得及逮捕最后一个复读机！` +
-            `那个人就是...${segment.at(session.userId!)}! `
-          );
+          const banMessage = Random.pick(banMessages);
+          return formatString(banMessage, segment.at(session.userId!));
         }
       }
       if (state.times > 2 && !state.repeated && Random.bool(0.4)) {
