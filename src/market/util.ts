@@ -1,15 +1,23 @@
-export function string2ItemWithCountArray(text: string, allowNegtive = false, allowDecimal = false): Array<[string, number]> {
-    return text.split(/,|，|;|；/).filter((i) => i && i.trim()).map((i) => string2ItemWithCount(i, allowNegtive, allowDecimal));
+export function string2ItemWithCountArray(text: string, separator?: string | RegExp, allowNegtive?: boolean, allowDecimal?: boolean): Array<[string, number, string]> {
+    return text.split(/,|，|;|；/).filter((i) => i && i.trim()).map((i) => string2ItemWithCount(i, separator, allowNegtive, allowDecimal));
 }
 
-export function string2ItemWithCount(text: string, allowNegtive = false, allowDecimal = false): [string, number] {
-    const parsedTexts = text.trim().split(/X|x|\*/);
-    const name = parsedTexts[0];
+export function string2ItemWithCount(text: string, separator: string | RegExp = /X|x|\*|\//, allowNegtive = false, allowDecimal = false): [string, number, string] {
+    const parsedTexts = text.trim().split(separator);
+    let name: string = "";
     let count = 1;
-    if (parsedTexts[1]) {
+    if (parsedTexts.length === 1) {
+        name = parsedTexts[0];
+    } else {
         count = Number(parsedTexts[1]);
         if (isNaN(count)) {
-            throw `Can't parse ${text}.`;
+            count = Number(parsedTexts[0]);
+            if (isNaN(count)) {
+                throw `Can't parse ${text}.`;
+            }
+            name = parsedTexts[1];
+        } else {
+            name = parsedTexts[0];
         }
         if (!allowNegtive && count <= 0) {
             throw `Invalid count for ${name}.`;
@@ -18,7 +26,7 @@ export function string2ItemWithCount(text: string, allowNegtive = false, allowDe
             throw `Cannot be decimal for ${name}'s count.`;
         }
     }
-    return [name, count];
+    return [name, count, text];
 }
 
 export function limitNumberValue(value: number, min?: number, max?: number): number {

@@ -4,7 +4,7 @@ import { formatString } from "./util";
 
 const banMessages = [
   `复读机失控了！兔兔只来得及逮捕最后一个复读机！那个人就是...{0}! `,
-  `每个复读机都觉得自己不会被捉，今天由兔兔来教会{0}世界的残酷！`,
+  `每个复读机都觉得自己不会被捉，今天就由兔兔来教会{0}世界的残酷！`,
 ];
 
 export function repeaterConfig(enableBanGroups: string[] = []): Config {

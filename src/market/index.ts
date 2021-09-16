@@ -24,7 +24,7 @@ function filterValidStockNames<T>(items: Array<T>, getName: (item: T) => string)
     let invalidItemsMsg = "";
     for (const item of items) {
         const name = getName(item);
-        if (stockName2IdMap[name]) {
+        if (name && stockName2IdMap[name]) {
             validItems.push(item);
         } else {
             invalidItems.push(item);
@@ -88,7 +88,7 @@ export function apply(ctx: Context, config?: Config) {
     schedule.scheduleJob(rule, async () => {
         try {
             await updateMarket();
-            logger.info("Market daily updated");
+            logger.info(new Date().toISOString() + ": Market daily updated");
         } catch (e) {
             logger.error(e);
         }
@@ -137,7 +137,7 @@ export function apply(ctx: Context, config?: Config) {
                 const items = string2ItemWithCountArray(text);
                 const validation = filterValidStockNames(items, (item) => item[0]);
                 msg += validation.invalidItemsMsg;
-                const validStocks = validation.valid.map((v) => ({ id: stockName2IdMap[v[0]], count: v[1], name: v[0] }));
+                const validStocks = validation.valid.map((v) => ({ id: stockName2IdMap[v[0]], count: v[1], name: v[0], raw: v[2] }));
                 if (validStocks.length === 0) {
                     return msg || messages.requireInputStocks;
                 }
@@ -148,7 +148,9 @@ export function apply(ctx: Context, config?: Config) {
                     if (stock == null) {
                         throw Error(formatString(messages.stockNotFoundInDatabase, p.id));
                     }
-                    const count = stock!.count;
+                    const raw = stock.raw;
+                    const count = raw.indexOf("/") > 0 ? Math.floor(stock.count / p.price) : stock.count;
+                    stock.count = count;
                     cost += p.price * count;
                     return `${p.price}*${count}`;
                 });
@@ -175,7 +177,7 @@ export function apply(ctx: Context, config?: Config) {
                 await database.update("userstock", [query]);
                 return formatString(messages.buyinStock, `${equations.join("+")}=${cost}`, stockChangeMsg);
             } catch (e) {
-                if (e.message) {
+                if (e instanceof Error) {
                     return e.message;
                 }
                 console.error(e);
@@ -192,7 +194,7 @@ export function apply(ctx: Context, config?: Config) {
                 const items = string2ItemWithCountArray(text);
                 const validation = filterValidStockNames(items, (item) => item[0]);
                 msg += validation.invalidItemsMsg;
-                const validStocks = validation.valid.map((v) => ({ id: stockName2IdMap[v[0]], count: v[1], name: v[0] }));
+                const validStocks = validation.valid.map((v) => ({ id: stockName2IdMap[v[0]], count: v[1], name: v[0], raw: v[2] }));
                 if (validStocks.length === 0) {
                     return msg || messages.requireInputStocks;
                 }
@@ -203,7 +205,9 @@ export function apply(ctx: Context, config?: Config) {
                     if (stock == null) {
                         throw Error(formatString(messages.stockNotFoundInDatabase, p.id));
                     }
-                    const count = stock!.count;
+                    const raw = stock.raw;
+                    const count = raw.indexOf("/") > 0 ? Math.ceil(stock.count / p.price) : stock.count;
+                    stock.count = count;
                     cost += p.price * count;
                     return `${p.price}*${count}`;
                 });
@@ -237,7 +241,7 @@ export function apply(ctx: Context, config?: Config) {
                 await database.update("userstock", [query]);
                 return formatString(messages.selloutStock, stockChangeMsg, `${equations.join("+")}=${cost}`, tax);
             } catch (e) {
-                if (e.message) {
+                if (e instanceof Error) {
                     return e.message;
                 }
                 console.error(e);
@@ -264,7 +268,7 @@ export function apply(ctx: Context, config?: Config) {
                 }).filter((i) => i).join(", ");
                 return formatString(messages.userCurrentWarehouse, user.money, stocksMsg);
             } catch (e) {
-                if (e.message) {
+                if (e instanceof Error) {
                     return e.message;
                 }
                 console.error(e);
