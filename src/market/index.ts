@@ -67,7 +67,7 @@ export function apply(ctx: Context, config?: Config) {
         const newStocks = infos.map((info) => {
             const baseInfo = stockBaseInfos[info.id];
             if (baseInfo) {
-                const range: [number, number] = typeof baseInfo.range === "number" ? [1 - 1 / (1 + baseInfo.range), baseInfo.range] : baseInfo.range;
+                const range: [number, number] = typeof baseInfo.range === "number" ? [baseInfo.range, baseInfo.range] : baseInfo.range;
                 const variation = info.price * (Math.random() * (range[0] + range[1]) - range[0]);
                 let newPrice = Math.ceil(info.price + variation);
                 newPrice = limitNumberValue(newPrice, baseInfo.minPrice, baseInfo.maxPrice);
@@ -81,18 +81,18 @@ export function apply(ctx: Context, config?: Config) {
         }).filter((m) => !!m);
         return await database.update("stockinfo", newStocks);
     }
-    const rule = new schedule.RecurrenceRule();
-    rule.hour = (openTime + 24 - timezoneOffset) % 24;
-    rule.minute = 0;
+    // const rule = new schedule.RecurrenceRule();
+    // rule.hour = (openTime + 24 - timezoneOffset) % 24;
+    // rule.minute = 0;
 
-    schedule.scheduleJob(rule, async () => {
-        try {
-            await updateMarket();
-            logger.info(new Date().toISOString() + ": Market daily updated");
-        } catch (e) {
-            logger.error(e);
-        }
-    });
+    // schedule.scheduleJob(rule, async () => {
+    //     try {
+    //         await updateMarket();
+    //         logger.info(new Date().toISOString() + ": Market daily updated");
+    //     } catch (e) {
+    //         logger.error(e);
+    //     }
+    // });
 
     // register commands
     const rootCommand = ctx.command("market", messages.marketCommandDescription)

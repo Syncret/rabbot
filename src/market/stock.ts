@@ -54,6 +54,6 @@ export const defaultStocks: Record<string, Partial<StockBaseInfo>> = {
         name: "西瓜",
         unit: "个",
         initialPrice: 400,
-        range: [0.10, 0.35]
+        range: 0.18
     },
 }
