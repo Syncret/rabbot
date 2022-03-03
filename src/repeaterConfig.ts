@@ -11,6 +11,28 @@ const banMessages = [
   }
 ];
 
+enum TimeSpan {
+  daily = "daily",
+  weekly = "weekly",
+  monthly = "monthly",
+  eternal = "eternal",
+}
+const timeSpanString: Record<TimeSpan, string> = {
+  [TimeSpan.daily]: "今日",
+  [TimeSpan.weekly]: "本周",
+  [TimeSpan.monthly]: "本月",
+  [TimeSpan.eternal]: "目前"
+}
+const defaultTimeSpan = TimeSpan.eternal;
+
+const rolePermissionMap = {
+  owner: 3,
+  admin: 2,
+  member: 1,
+};
+let banRecord: Record<string, number> = {};
+let banDate = -1;
+
 export function repeaterConfig(enableBanGroups: string[] = []): Config {
   return {
     onRepeat: (
@@ -42,25 +64,67 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
         return state.content;
       }
     },
+    onInterrupt: (
+      state: {
+        times: number;
+        repeated: boolean;
+        content: string;
+        users: Record<string, number>;
+      },
+      session: Session
+    ) => {
+      const { times, content, users } = state;
+      const userId = session.userId!;
+      if (!enableBanGroups.includes(session.groupId!)) {
+        return;
+      }
+      if (state.content.startsWith("/") || times < 3) {
+        return;
+      }
+      if (/打断|举报/.test(content)) {
+        const deductCount = times < 7 ? 1 : 2;
+        const banCount = updateBanRecord(userId, "deduct", defaultTimeSpan, deductCount);
+        const newBanUser = Random.pick(Object.keys(users));
+        ban(session, userId, times);
+        const msg = `你成功地举报了一个${banCount === 1 ? "小型" : "大型"}复读现场！作为奖励去掉你的${deductCount}次逮捕记录，目前的逮捕记录是${banCount}。${segment.at(userId)}\n`
+          + `同时随机挑选一名被举报的复读机送进小黑屋！就你了，${segment.at(newBanUser)}！`;
+        return msg;
+      }
+    },
   };
 };
 
-const rolePermissionMap = {
-  owner: 3,
-  admin: 2,
-  member: 1,
-};
-let banRecord: Record<string, number> = {};
-let banDate = -1;
-function addTodayBanRecord(userId: string, weekly = false) {
+function updateBanRecord(userId: string, operator: "add" | "deduct", timeSpan: TimeSpan, count: number = 1) {
   const date = new Date();
-  let today = weekly ? date.getDate() - date.getDay() + 1 : date.getDate();
+  let today = date.getDate();
+  switch (timeSpan) {
+    case TimeSpan.weekly:
+      today = date.getDate() - date.getDay() + 1;
+      break;
+    case TimeSpan.monthly:
+      today = date.getMonth();
+      break;
+    case TimeSpan.eternal:
+      today = banDate;
+      break;
+    default:
+      break;
+  }
   if (today !== banDate) {
     banDate = today;
     banRecord = {};
   }
   let banTimes = banRecord[userId] || 0;
-  banRecord[userId] = ++banTimes;
+  if (operator === "add") {
+    banTimes += count;
+    banRecord[userId] = banTimes;
+  } else if (operator === "deduct") {
+    banTimes -= count;
+    if (banTimes < 0) {
+      banTimes = 0;
+    }
+    banRecord[userId] = banTimes;
+  }
   return banTimes;
 }
 
@@ -73,9 +137,11 @@ async function ban(session: Session, userId: string, time: number): Promise<void
   if (self.role !== "admin" && self.role !== "owner") {
     return;
   }
-  const weekly = true;
-  const dayString = weekly ? "本周" : "今天";
-  const banCount = addTodayBanRecord(userId, weekly);
+  if(selfId===userId){
+    session.sendQueued("什么是兔兔自己？...啦，啦啦啦啦~♪");
+  }
+  const dayString = timeSpanString[defaultTimeSpan];
+  const banCount = updateBanRecord(userId, "add", defaultTimeSpan);
   const factor = 2 ** (banCount - 1);
   const banTimeString = `${time}${banCount > 1 ? "x2".repeat(banCount - 1) + `=${time * factor}` : ""}分钟`;
   const user = await session.bot.$getGroupMemberInfo(groupId, userId);
