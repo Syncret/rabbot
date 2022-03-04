@@ -21,7 +21,7 @@ const timeSpanString: Record<TimeSpan, string> = {
   [TimeSpan.daily]: "今日",
   [TimeSpan.weekly]: "本周",
   [TimeSpan.monthly]: "本月",
-  [TimeSpan.eternal]: "目前"
+  [TimeSpan.eternal]: "累计"
 }
 const defaultTimeSpan = TimeSpan.eternal;
 
@@ -73,28 +73,53 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
       },
       session: Session
     ) => {
-      const { times, content, users } = state;
+      const { times, users } = state;
       const userId = session.userId!;
+      const content = session.content;
       if (!enableBanGroups.includes(session.groupId!)) {
         return;
       }
-      if (state.content.startsWith("/") || times < 3) {
+      if (!content || content.startsWith("/") || times < 3) {
         return;
       }
       if (/打断|举报/.test(content)) {
-        const deductCount = times < 7 ? 1 : 2;
-        const banCount = updateBanRecord(userId, "deduct", defaultTimeSpan, deductCount);
-        const newBanUser = Random.pick(Object.keys(users));
+        const repeatedUsers = Object.keys(users);
+        const deductCount = times < 6 ? 0 : times < 10 ? 1 : 2;
+        const banCount = updateBanRecord(userId, defaultTimeSpan, -deductCount);
+        const newBanUser = Random.pick(repeatedUsers);
         ban(session, userId, times);
-        const msg = `你成功地举报了一个${banCount === 1 ? "小型" : "大型"}复读现场！作为奖励去掉你的${deductCount}次逮捕记录，目前的逮捕记录是${banCount}。${segment.at(userId)}\n`
-          + `同时随机挑选一名被举报的复读机送进小黑屋！就你了，${segment.at(newBanUser)}！`;
+        let msg = "";
+        switch (deductCount) {
+          case 0:
+            if (repeatedUsers.includes(userId)) {
+              msg += `看来你迷途知返了呢，再接再厉哦！`;
+            } else {
+              msg += `感谢你的举报！拍头，继续加油哦！`;
+            }
+            break;
+          case 1:
+            if (banCount > 0) {
+              msg += `背叛复读机的滋味是不是很美妙，以后也不要让兔兔失望哦！`;
+            } else {
+              msg += `你成功地举报了一个小型复读现场！`;
+            }
+            break;
+          case 2:
+            msg += `你成功地举报了一个大型复读现场！`
+            break;
+        }
+        if (deductCount > 0) {
+          msg += `作为奖励去掉你的${deductCount}次逮捕记录，目前的逮捕记录是${banCount}次。`;
+        }
+        msg += `${segment.at(userId)}\n`;
+        msg += `让我们送一名被举报的复读机进小黑屋吧！就你了，${segment.at(newBanUser)}！`;
         return msg;
       }
     },
   };
 };
 
-function updateBanRecord(userId: string, operator: "add" | "deduct", timeSpan: TimeSpan, count: number = 1) {
+function updateBanRecord(userId: string, timeSpan: TimeSpan, count: number = 1) {
   const date = new Date();
   let today = date.getDate();
   switch (timeSpan) {
@@ -115,16 +140,11 @@ function updateBanRecord(userId: string, operator: "add" | "deduct", timeSpan: T
     banRecord = {};
   }
   let banTimes = banRecord[userId] || 0;
-  if (operator === "add") {
-    banTimes += count;
-    banRecord[userId] = banTimes;
-  } else if (operator === "deduct") {
-    banTimes -= count;
-    if (banTimes < 0) {
-      banTimes = 0;
-    }
-    banRecord[userId] = banTimes;
+  banTimes += count;
+  if (banTimes < 0) {
+    banTimes = 0;
   }
+  banRecord[userId] = banTimes;
   return banTimes;
 }
 
@@ -137,18 +157,18 @@ async function ban(session: Session, userId: string, time: number): Promise<void
   if (self.role !== "admin" && self.role !== "owner") {
     return;
   }
-  if(selfId===userId){
-    session.sendQueued("什么是兔兔自己？...啦，啦啦啦啦~♪");
+  if (selfId === userId) {
+    session.sendQueued("什么是兔兔自己？...啦，啦啦啦~♪");
   }
   const dayString = timeSpanString[defaultTimeSpan];
-  const banCount = updateBanRecord(userId, "add", defaultTimeSpan);
+  const banCount = updateBanRecord(userId, defaultTimeSpan);
   const factor = 2 ** (banCount - 1);
   const banTimeString = `${time}${banCount > 1 ? "x2".repeat(banCount - 1) + `=${time * factor}` : ""}分钟`;
   const user = await session.bot.$getGroupMemberInfo(groupId, userId);
   if (rolePermissionMap[self.role!] > rolePermissionMap[user.role!]) {
     setTimeout(
       () => {
-        session.send(`${dayString}第${banCount}次被捕，${banCount > 1 ? "惩罚翻倍！" : ""}禁言时间为本次复读次数${banTimeString}!`);
+        session.send(`${dayString}第${banCount}次被捕，${banCount > 1 ? `惩罚${"翻".repeat(banCount)}倍！` : ""}禁言时间为本次复读次数${banTimeString}!`);
         session.bot.$setGroupBanAsync(groupId, userId, time * factor * 60);
       },
       500
