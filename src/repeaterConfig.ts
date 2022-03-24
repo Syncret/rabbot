@@ -48,16 +48,18 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
         return;
       }
       if (enableBanGroups.includes(session.groupId!)) {
-        if (state.users[session.userId!] > 1) {
-          return segment.at(session.userId!) + "兔兔出警，不许重复复读！";
+        const userId = session.userId!;
+        if (state.users[userId] > 1) {
+          return segment.at(userId) + "兔兔出警，不许重复复读！";
         }
         if (state.times > 2 && Random.bool(state.times / 19)) {
-          ban(session, session.userId!, state.times);
+          updateBanRecord(userId)
+          ban(session, userId, state.times);
           const banMessage = Random.pick(banMessages);
           if (typeof banMessage === "function") {
-            return banMessage(state.content, session.userId!);
+            return banMessage(state.content, userId);
           }
-          return formatString(banMessage, segment.at(session.userId!));
+          return formatString(banMessage, segment.at(userId));
         }
       }
       if (state.times > 2 && !state.repeated && Random.bool(0.4)) {
@@ -82,12 +84,12 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
       if (!content || content.startsWith("/") || times < 3) {
         return;
       }
-      if (/打断|举报/.test(content)) {
+      if (/举报复读/.test(content)) {
         const repeatedUsers = Object.keys(users);
-        const deductCount = times < 6 ? 0 : times < 10 ? 1 : 2;
-        const banCount = updateBanRecord(userId, defaultTimeSpan, -deductCount);
+        const deductCount = times < 5 ? 0 : times < 10 ? 1 : 2;
+        const banCount = updateBanRecord(userId, -deductCount);
         const newBanUser = Random.pick(repeatedUsers);
-        ban(session, userId, times);
+        ban(session, newBanUser, times);
         let msg = "";
         switch (deductCount) {
           case 0:
@@ -119,8 +121,10 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
   };
 };
 
-function updateBanRecord(userId: string, timeSpan: TimeSpan, count: number = 1) {
+
+function getBanCount(userId: string) {
   const date = new Date();
+  const timeSpan = defaultTimeSpan as TimeSpan;
   let today = date.getDate();
   switch (timeSpan) {
     case TimeSpan.weekly:
@@ -140,7 +144,11 @@ function updateBanRecord(userId: string, timeSpan: TimeSpan, count: number = 1) 
     banRecord = {};
   }
   let banTimes = banRecord[userId] || 0;
-  banTimes += count;
+  return banTimes;
+}
+
+function updateBanRecord(userId: string, count: number = 1) {
+  let banTimes = getBanCount(userId) + count;
   if (banTimes < 0) {
     banTimes = 0;
   }
@@ -161,22 +169,24 @@ async function ban(session: Session, userId: string, time: number): Promise<void
     session.sendQueued("什么是兔兔自己？...啦，啦啦啦~♪");
   }
   const dayString = timeSpanString[defaultTimeSpan];
-  const banCount = updateBanRecord(userId, defaultTimeSpan);
+  const banCount = getBanCount(userId);
   const factor = 2 ** (banCount - 1);
   const banTimeString = `${time}${banCount > 1 ? "x2".repeat(banCount - 1) + `=${time * factor}` : ""}分钟`;
   const user = await session.bot.$getGroupMemberInfo(groupId, userId);
   if (rolePermissionMap[self.role!] > rolePermissionMap[user.role!]) {
     setTimeout(
       () => {
-        session.send(`${dayString}第${banCount}次被捕，${banCount > 1 ? `惩罚${"翻".repeat(banCount)}倍！` : ""}禁言时间为本次复读次数${banTimeString}!`);
+        session.sendQueued(`${dayString}已有${banCount}次被捕，${banCount > 1 ? `惩罚${"翻".repeat(banCount)}倍！` : ""}禁言时间为本次复读次数${banTimeString}!`);
         session.bot.$setGroupBanAsync(groupId, userId, time * factor * 60);
+        if (banCount > 1 && Random.bool(0.3)) {
+          session.sendQueued(`(兔兔低语：举报大规模复读现场可以减轻刑罚哦~)`);
+        }
       },
-      500
+      2000
     );
-
   } else if (user.role === "admin") {
     setTimeout(
-      () => session.sendQueued(`可恶，是狗管理，兔兔的力量还不够大...${dayString}第${banCount}次被捕，请自觉禁言${banTimeString}。`),
+      () => session.sendQueued(`可恶，是狗管理，兔兔的力量还不够大...${dayString}第${banCount}次被捕，请自觉禁...算了反正你们也不会自觉的。`),
       2000
     );
   } else if (user.role === "owner") {
