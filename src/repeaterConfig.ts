@@ -21,7 +21,7 @@ const timeSpanString: Record<TimeSpan, string> = {
   [TimeSpan.daily]: "今日",
   [TimeSpan.weekly]: "本周",
   [TimeSpan.monthly]: "本月",
-  [TimeSpan.eternal]: "累计"
+  [TimeSpan.eternal]: ""
 }
 const defaultTimeSpan = TimeSpan.eternal;
 
@@ -53,8 +53,8 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
           return segment.at(userId) + "兔兔出警，不许重复复读！";
         }
         if (state.times > 2 && Random.bool(state.times / 19)) {
-          updateBanRecord(userId)
           ban(session, userId, state.times);
+          updateBanRecord(userId)
           const banMessage = Random.pick(banMessages);
           if (typeof banMessage === "function") {
             return banMessage(state.content, userId);
@@ -170,16 +170,24 @@ async function ban(session: Session, userId: string, time: number): Promise<void
   }
   const dayString = timeSpanString[defaultTimeSpan];
   const banCount = getBanCount(userId);
-  const factor = 2 ** (banCount - 1);
-  const banTimeString = `${time}${banCount > 1 ? "x2".repeat(banCount - 1) + `=${time * factor}` : ""}分钟`;
+  const banTimeInMinute = time * (2 ** banCount);
+  const banTimeString = `${time}${banCount > 1 ? "x2".repeat(banCount) + `=${banTimeInMinute}` : ""}分钟`;
   const user = await session.bot.$getGroupMemberInfo(groupId, userId);
   if (rolePermissionMap[self.role!] > rolePermissionMap[user.role!]) {
     setTimeout(
       () => {
-        session.sendQueued(`${dayString}已有${banCount}次被捕，${banCount > 1 ? `惩罚${"翻".repeat(banCount)}倍！` : ""}禁言时间为本次复读次数${banTimeString}!`);
-        session.bot.$setGroupBanAsync(groupId, userId, time * factor * 60);
-        if (banCount > 1 && Random.bool(0.3)) {
-          session.sendQueued(`(兔兔低语：举报大规模复读现场可以减轻刑罚哦~)`);
+        session.sendQueued(`${banCount > 0 ? `${dayString}已有${banCount}次被捕，惩罚${"翻".repeat(banCount)}倍！` : ""}禁言时间为本次复读次数${banTimeString}!`);
+        if (Random.bool(0.2)) {
+          session.sendQueued(`不过今天兔兔心情好，这次就算了吧，兔兔我也很忙的！`);
+          return;
+        }
+        if (banTimeInMinute > 60 && Random.bool(0.4)) {
+          session.sendQueued(`怎么又是你！唉看你也怪可怜的，这次兔兔就大发慈悲地放过你吧~`);
+          return;
+        }
+        session.bot.$setGroupBanAsync(groupId, userId, banTimeInMinute * 60);
+        if (banCount > 0 && Random.bool(0.3)) {
+          session.sendQueued(`(兔兔低语：举报5人以上复读现场可以减轻刑罚哦~)`);
         }
       },
       2000
