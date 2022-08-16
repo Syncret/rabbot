@@ -21,7 +21,7 @@ const timeSpanString: Record<TimeSpan, string> = {
   [TimeSpan.daily]: "今日",
   [TimeSpan.weekly]: "本周",
   [TimeSpan.monthly]: "本月",
-  [TimeSpan.eternal]: ""
+  [TimeSpan.eternal]: "之前"
 }
 const defaultTimeSpan = TimeSpan.eternal;
 
@@ -31,6 +31,7 @@ const rolePermissionMap = {
   member: 1,
 };
 let banRecord: Record<string, number> = {};
+const firstSpeakerByGroup: Record<string, string> = {};
 let banDate = -1;
 
 export function repeaterConfig(enableBanGroups: string[] = []): Config {
@@ -47,10 +48,15 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
       if (state.content.startsWith("/")) {
         return;
       }
-      if (enableBanGroups.includes(session.groupId!)) {
+      const groupId = session.groupId!;
+      if (enableBanGroups.includes(groupId)) {
         const userId = session.userId!;
         if (state.users[userId] > 1) {
           return segment.at(userId) + "兔兔出警，不许重复复读！";
+        }
+        if (state.times === 2) {
+          const firstSpeaker = Object.keys(state.users).filter((u) => u !== userId)[0];
+          firstSpeakerByGroup[groupId] = firstSpeaker;
         }
         if (state.times > 2 && Random.bool(state.times / 19)) {
           ban(session, userId, state.times);
@@ -77,15 +83,16 @@ export function repeaterConfig(enableBanGroups: string[] = []): Config {
     ) => {
       const { times, users } = state;
       const userId = session.userId!;
+      const groupId = session.groupId!;
       const content = session.content;
-      if (!enableBanGroups.includes(session.groupId!)) {
+      if (!enableBanGroups.includes(groupId)) {
         return;
       }
       if (!content || content.startsWith("/") || times < 3) {
         return;
       }
       if (/举报复读/.test(content)) {
-        const repeatedUsers = Object.keys(users);
+        const repeatedUsers = Object.keys(users).filter((u) => u !== firstSpeakerByGroup[groupId]);
         const deductCount = times < 5 ? 0 : times < 10 ? 1 : 2;
         const banCount = updateBanRecord(userId, -deductCount);
         const newBanUser = Random.pick(repeatedUsers);
@@ -171,7 +178,7 @@ async function ban(session: Session, userId: string, time: number): Promise<void
   const dayString = timeSpanString[defaultTimeSpan];
   const banCount = getBanCount(userId);
   const banTimeInMinute = time * (2 ** banCount);
-  const banTimeString = `${time}${banCount > 1 ? "x2".repeat(banCount) + `=${banTimeInMinute}` : ""}分钟`;
+  const banTimeString = `${time}${banCount > 0 ? "x2".repeat(banCount) + `=${banTimeInMinute}` : ""}分钟`;
   const user = await session.bot.$getGroupMemberInfo(groupId, userId);
   if (rolePermissionMap[self.role!] > rolePermissionMap[user.role!]) {
     setTimeout(
@@ -194,7 +201,7 @@ async function ban(session: Session, userId: string, time: number): Promise<void
     );
   } else if (user.role === "admin") {
     setTimeout(
-      () => session.sendQueued(`可恶，是狗管理，兔兔的力量还不够大...${dayString}第${banCount}次被捕，请自觉禁...算了反正你们也不会自觉的。`),
+      () => session.sendQueued(`可恶，是狗管理，兔兔的力量还不够大...${dayString}已有${banCount}次被捕，请自觉禁...算了反正你们也不会自觉的。`),
       2000
     );
   } else if (user.role === "owner") {
