@@ -31,7 +31,7 @@
     "koishi": "^3.13.0",
     "koishi-adapter-onebot": "^3.1.0",
     "koishi-plugin-common": "^4.3.2",
-    "koishi-plugin-eval": "^3.2.3",
+    "koishi-plugin-eval": "^4.1.4",
     "koishi-plugin-image-search": "^3.0.4",
     "koishi-plugin-mysql": "^3.4.0",
     "koishi-plugin-puppeteer": "^2.1.4",
