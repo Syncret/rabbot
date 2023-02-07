@@ -2,7 +2,7 @@ import { Context } from "koishi-core";
 import { checkinList } from "./dailyCheckin.config";
 import axios from "axios";
 
-export interface Options {}
+export interface Options { }
 
 export const DailyCheckin = {
   name: "DailyCheckin",
@@ -27,8 +27,8 @@ export const DailyCheckin = {
               });
               session.sendQueued(ci.url + "\n" + JSON.stringify(response.data));
             }
-          } catch (e) {
-            session.sendQueued("Error" + e.message);
+          } catch (e: any) {
+            session.sendQueued("Error" + e?.message);
             throw e;
           }
         });

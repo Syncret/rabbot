@@ -4,7 +4,7 @@ import { repeaterConfig } from "./src/repeaterConfig";
 import { config as rabbotConfig } from "./rabbot.config";
 import { } from "./src/database";
 
-const { admin, selfId, secret, token, sqlUser, sqlPassword, server } = rabbotConfig;
+const { admin, selfId, secret, token, sqlUser, sqlPassword, server, openaiApiKey } = rabbotConfig;
 
 
 const config: AppConfig = {
@@ -65,6 +65,7 @@ const config: AppConfig = {
     "./src/mazeRpg": {},
     "./src/gensinHelper": {},
     "./src/market": {},
+    "./src/chatgpt": { apiKey: [openaiApiKey] },
 
     "./src/postPlugins": {},
     // dice: {},
@@ -74,4 +75,4 @@ const config: AppConfig = {
   },
 };
 
-export = config;
+export default config;
