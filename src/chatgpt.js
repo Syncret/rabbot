@@ -9,6 +9,7 @@ async function apply(ctx, options) {
     timeoutMs: 2 * 60 * 1000
   };
   const channelMessageCache = {};
+  const channelMessageStatus = {};
   ctx
     .command("chat", "Talk with chatgpt")
     .option("new", "-n Create a new session")
@@ -25,13 +26,24 @@ async function apply(ctx, options) {
         return "你什么都没说呢";
       }
       const previousMessage = channelMessageCache[channelId];
-      const res = await api.sendMessage(message, previousMessage && !options.new ? {
-        ...defaultMessageOptions,
-        conversationId: previousMessage.conversationId,
-        parentMessageId: previousMessage.id
-      } : defaultMessageOptions);
-      channelMessageCache[channelId] = res;
-      return res.text;
+      const chatStatus = channelMessageStatus[channelId];
+      if (chatStatus) {
+        return "还在回复上一条消息";
+      }
+      try {
+        channelMessageStatus[channelId] = true;
+        const res = await api.sendMessage(message, previousMessage && !options.new ? {
+          ...defaultMessageOptions,
+          conversationId: previousMessage.conversationId,
+          parentMessageId: previousMessage.id
+        } : defaultMessageOptions);
+        channelMessageCache[channelId] = res;
+        return res.text;
+      } catch (e) {
+        return e + "";
+      } finally {
+        channelMessageStatus[channelId] = false;
+      }
     });
 }
 
