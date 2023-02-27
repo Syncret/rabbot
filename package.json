@@ -27,7 +27,7 @@
   "dependencies": {
     "@types/crypto-js": "^4.0.2",
     "axios": "^0.21.1",
-    "chatgpt": "^4.1.1",
+    "chatgpt": "^4.7.2",
     "crypto-js": "^4.1.1",
     "koishi": "^3.13.0",
     "koishi-adapter-onebot": "^3.1.0",
