@@ -78,6 +78,7 @@ async function apply(ctx, options) {
         const result = await messagePromise;
         return result;
       } catch (e) {
+        currentJobPromise = undefined;
         return e + "";
       } finally {
         channelMessageStatus[channelId] = false;
