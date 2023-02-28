@@ -1,32 +1,39 @@
 const name = "ChatGPT";
+const ApiReverseProxyUrl = {
+  duti: "https://chat.duti.tech/api/conversation",
+  pawan: "https://gpt.pawan.krd/backend-api/conversation"
+}
 async function apply(ctx, options) {
-  const { accessToken } = options;
+  let { accessToken } = options;
   const chatgpt = await import('chatgpt');
-  const api = new chatgpt.ChatGPTUnofficialProxyAPI({
-    accessToken,
-    apiReverseProxyUrl: "https://chat.duti.tech/api/conversation"
-  });
+  let currentProxyUrl = ApiReverseProxyUrl.duti;
+  const createApi = () => {
+    return new chatgpt.ChatGPTUnofficialProxyAPI({
+      accessToken,
+      apiReverseProxyUrl: currentProxyUrl
+    })
+  }
+  let api = createApi();
   const defaultMessageOptions = {
-    timeoutMs: 2 * 60 * 1000
+    timeoutMs: 5 * 60 * 1000
   };
   let enabled = true;
   let queueAllMessages = true;
   let currentJobPromise;
-  const channelMessageCache = {};
+  let channelMessageCache = {};
   const channelMessageStatus = {};
   ctx
     .command("chat", "Talk with chatgpt")
     .option("new", "-n Create a new session")
-    .option("channelId", "-c Get channel Id", { hidden: true })
+    .option("clean", "-c Clean all conversations", { hidden: true, authority: 3 })
     .option("on", "-o Turn on/off chat", { hidden: true, authority: 3 })
     .option("queue", "-q Queue messages of all channels", { hidden: true, authority: 3 })
+    .option("proxy", "-p Switch api reverse proxy url", { hidden: true, authority: 3 })
+    .option("token", "-t Update access token", { hidden: true, authority: 3 })
     .action(async ({ session, options = {} }, message) => {
       const channelId = session?.channelId;
       if (!channelId) {
         return "Invalid channelId";
-      }
-      if (options.channelId) {
-        return channelId;
       }
       if (options.on) {
         enabled = !enabled;
@@ -36,53 +43,70 @@ async function apply(ctx, options) {
         queueAllMessages = !queueAllMessages;
         return `消息队列已${queueAllMessages ? "开启" : "关闭"}`;
       }
-      if (!enabled) {
-        return "兔兔的零花钱烧完了，聊天功能暂停中...";
+      if (options.proxy) {
+        currentProxyUrl = currentProxyUrl === ApiReverseProxyUrl.duti ? ApiReverseProxyUrl.pawan : ApiReverseProxyUrl.duti;
+        api = createApi();
+        return `代理地址已切换至${currentProxyUrl}`;
       }
-      if (!message) {
-        if (options.new) {
-          delete channelMessageCache[channelId];
-          return "对话历史已清理";
+      if (options.token) {
+        if (message) {
+          accessToken = message;
+          api = createApi();
+          return `Access token已更新`;
         } else {
-          return "你什么都没说呢";
+          return `无效Access token`;
         }
+      }
+      if (options.clean) {
+        channelMessageCache = {};
+        return "所有对话历史已清理";
+      }
+      if (options.new) {
+        delete channelMessageCache[channelId];
+        if (!message) {
+          return "对话历史已清理";
+        }
+      }
+      if (!enabled) {
+        return "兔兔的脑细胞烧完了，聊天功能暂停中...";
       }
       const previousMessage = channelMessageCache[channelId];
       const chatStatus = channelMessageStatus[channelId];
       if (chatStatus) {
         return "还在回复上一条消息";
       }
-      try {
-        channelMessageStatus[channelId] = true;
-        if (queueAllMessages && currentJobPromise != null) {
-          let lastAwaitJob = undefined;
-          while (lastAwaitJob !== currentJobPromise) {
-            lastAwaitJob = currentJobPromise;
-            await currentJobPromise;
-            if (lastAwaitJob !== currentJobPromise) {
-              console.log(`${channelId} waits again`);
-            }
+      if (!message) {
+        return "你什么都没说呢";
+      }
+      channelMessageStatus[channelId] = true;
+      if (queueAllMessages && currentJobPromise != null) {
+        let lastAwaitJob = undefined;
+        while (lastAwaitJob !== currentJobPromise) {
+          lastAwaitJob = currentJobPromise;
+          await currentJobPromise;
+          if (lastAwaitJob !== currentJobPromise) {
+            console.log(`${channelId} waits again`);
           }
         }
-        const sendMessage = async () => {
-          const res = await api.sendMessage(message, previousMessage && !options.new ? {
+      }
+      const sendMessage = async () => {
+        try {
+          const res = await api.sendMessage(message, previousMessage ? {
             ...defaultMessageOptions,
             conversationId: previousMessage.conversationId,
             parentMessageId: previousMessage.id
           } : defaultMessageOptions);
           channelMessageCache[channelId] = res;
           return res.text ? res.text : JSON.stringify(res);
-        };
-        const messagePromise = sendMessage();
-        currentJobPromise = messagePromise;
-        const result = await messagePromise;
-        return result;
-      } catch (e) {
-        currentJobPromise = undefined;
-        return e + "";
-      } finally {
-        channelMessageStatus[channelId] = false;
-      }
+        } catch (e) {
+          return e + "";
+        }
+      };
+      const messagePromise = sendMessage();
+      currentJobPromise = messagePromise;
+      const result = await messagePromise;
+      channelMessageStatus[channelId] = false;
+      return result;
     });
 }
 
