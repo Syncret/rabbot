@@ -226,12 +226,6 @@ export function apply(ctx: Context, options: Options) {
   ctx.on("friend-deleted", (session) => {
     session.bot.sendPrivateMessage(admin, `${JSON.stringify(session)}`);
   });
-  ctx.on("group-member-deleted", (session) => {
-    session.bot.sendGroupMessage(
-      session.groupId!,
-      `${session.username} 离开了我们...`
-    );
-  });
 
   const requestCommand = ctx.command(
     "request",
