@@ -8,14 +8,20 @@ export interface Options {
 
 export const name = "ChatGPT";
 const ApiReverseProxyUrl = {
-  duti: "https://chat.duti.tech/api/conversation",
+  duti: undefined,
   pawan: "https://gpt.pawan.krd/backend-api/conversation"
 }
 export async function apply(ctx: Context, options: Options) {
   let { accessToken } = options;
+  let enabled = true;
+  let queueAllMessages = true;
+  let currentJobPromise: Promise<string> | undefined;
+  let channelMessageCache: Record<string, ChatMessage> = {};
+  const channelMessageStatus: Record<string, boolean> = {};
+  let currentProxyUrl: string | undefined = ApiReverseProxyUrl.duti;
   const chatgpt = await import('chatgpt');
-  let currentProxyUrl = ApiReverseProxyUrl.duti;
   const createApi = () => {
+    channelMessageCache = {};
     return new chatgpt.ChatGPTUnofficialProxyAPI({
       accessToken,
       apiReverseProxyUrl: currentProxyUrl
@@ -23,13 +29,8 @@ export async function apply(ctx: Context, options: Options) {
   }
   let api = createApi();
   const defaultMessageOptions: SendMessageOptions = {
-    timeoutMs: 5 * 60 * 1000
+    timeoutMs: 3 * 60 * 1000
   };
-  let enabled = true;
-  let queueAllMessages = true;
-  let currentJobPromise: Promise<string> | undefined;
-  let channelMessageCache: Record<string, ChatMessage> = {};
-  const channelMessageStatus: Record<string, boolean> = {};
   ctx
     .command("chat", "Talk with chatgpt")
     .option("new", "-n Create a new session")
