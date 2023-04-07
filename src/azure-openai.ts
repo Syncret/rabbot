@@ -7,7 +7,6 @@ export interface Options {
 }
 
 export const name = "AzureOpenAI";
-const defaultSystemInstruction = "You're a chat bot named 兔兔, act and talk like a young 17 year old Japanese high school girl.";
 export async function apply(ctx: Context, options: Options) {
   let { resourceName, accessKey } = options;
   let enabled = true;
@@ -62,6 +61,7 @@ export async function apply(ctx: Context, options: Options) {
       }
       if (options.system) {
         channelSystemCache[channelId] = message || "";
+        return `唔...我...${channelSystemCache[channelId]?.replace("你","我")}...`;
       }
       if (!enabled) {
         return "兔兔的脑细胞烧完了，聊天功能暂停中...";
@@ -87,7 +87,7 @@ export async function apply(ctx: Context, options: Options) {
       const sendMessage = async () => {
         try {
           const messages = [{ role: "user", content: message }];
-          const systemInstruction = channelSystemCache[channelId] == "" ? undefined : channelSystemCache[channelId] || defaultSystemInstruction;
+          const systemInstruction = channelSystemCache[channelId];
           if (systemInstruction) {
             messages.unshift({ role: "system", content: systemInstruction });
           }
@@ -95,8 +95,8 @@ export async function apply(ctx: Context, options: Options) {
             messages
           })
           const responseMessage = response.data?.choices?.[0]?.message;
-          const content = responseMessage?.content;
-          return content ?? responseMessage ?? response.data?.choices ?? response.data;
+          const content = responseMessage?.content as string;
+          return content?.trim() ?? responseMessage ?? response.data?.choices ?? response.data;
         } catch (e) {
           return e + "";
         }
