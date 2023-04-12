@@ -5,7 +5,13 @@ export interface Options {
   resourceName: string;
   accessKey: string;
 }
-
+const defaultCompletionParams = {
+  temperature: 0.8,
+  top_p: 1.0,
+  presence_penalty: 1.0,
+  frequency_penalty: 0,
+  max_tokens: 800,
+}
 export const name = "AzureOpenAI";
 export async function apply(ctx: Context, options: Options) {
   let { resourceName, accessKey } = options;
@@ -25,13 +31,11 @@ export async function apply(ctx: Context, options: Options) {
     },
   });
   ctx
-    .command("chat", "Talk with chatgpt")
+    .command("chat <message:text>", "Talk with chatgpt")
     .option("new", "-n Create a new session")
     .option("clean", "-c Clean all conversations", { hidden: true, authority: 3 })
     .option("on", "-o Turn on/off chat", { hidden: true, authority: 3 })
     .option("queue", "-q Queue messages of all channels", { hidden: true, authority: 3 })
-    .option("proxy", "-p Switch api reverse proxy url", { hidden: true, authority: 3 })
-    .option("token", "-t Update access token", { hidden: true, authority: 3 })
     .option("system", "-s Set system message", { hidden: true, authority: 3 })
     .action(async ({ session, options = {} }, message) => {
       const channelId = session?.channelId;
@@ -61,7 +65,7 @@ export async function apply(ctx: Context, options: Options) {
       }
       if (options.system) {
         channelSystemCache[channelId] = message || "";
-        return `唔...我...${channelSystemCache[channelId]?.replace("你","我")}...`;
+        return `唔...我...${channelSystemCache[channelId]?.replace("你", "我")}...`;
       }
       if (!enabled) {
         return "兔兔的脑细胞烧完了，聊天功能暂停中...";
@@ -92,6 +96,7 @@ export async function apply(ctx: Context, options: Options) {
             messages.unshift({ role: "system", content: systemInstruction });
           }
           const response = await axiosClient.post("", {
+            ...defaultCompletionParams,
             messages
           })
           const responseMessage = response.data?.choices?.[0]?.message;
