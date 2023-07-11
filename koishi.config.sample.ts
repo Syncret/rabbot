@@ -63,7 +63,6 @@ const config: AppConfig = {
     "./src/recalledMessage": {},
     "./src/voice": { admins: [admin], on: true },
     "./src/mazeRpg": {},
-    "./src/gensinHelper": {},
     "./src/market": {},
     "./src/chatgpt": { apiKey: [openaiApiKey] },
 
