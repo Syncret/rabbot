@@ -17,8 +17,7 @@ export async function apply(ctx: Context, options: Options) {
   let { resourceName, accessKey } = options;
   let enabled = true;
   const messagePlaceHolder = "$message";
-  let defaultPrompt = `Translate below paragraph into Chinese: ${messagePlaceHolder}`;
-  const channelMessageStatus: Record<string, boolean> = {};
+  let defaultPrompt = `Translate below paragraph into Chinese: """${messagePlaceHolder}"""`;
   const axiosClient: AxiosInstance = axios.create({
     baseURL: `https://${resourceName}.openai.azure.com/openai/deployments/gpt35/chat/completions`,
     params: {
@@ -38,7 +37,7 @@ export async function apply(ctx: Context, options: Options) {
       if (!channelId) {
         return "Invalid channelId";
       }
-      if (message?.length > 800) { // check this before you use message in system or user
+      if (message?.length > 1000) { // check this before you use message in system or user
         return "唔，文字太长了...";
       }
       if (options.on) {
@@ -48,10 +47,6 @@ export async function apply(ctx: Context, options: Options) {
       if (!enabled) {
         return "兔兔的脑细胞烧完了，翻译功能暂停中...";
       }
-      const chatStatus = channelMessageStatus[channelId];
-      if (chatStatus) {
-        return "还在翻译上一段文字...";
-      }
       if (!message) {
         return "你什么都没说呢";
       }
@@ -59,7 +54,6 @@ export async function apply(ctx: Context, options: Options) {
         defaultPrompt = message;
         return "Prompt已更新"
       }
-      channelMessageStatus[channelId] = true;
       try {
         message = defaultPrompt.replace(messagePlaceHolder, message);
         const messages = [{ role: "user", content: message }];
@@ -72,8 +66,6 @@ export async function apply(ctx: Context, options: Options) {
         return content?.trim() ?? responseMessage ?? response.data?.choices ?? response.data;
       } catch (e) {
         return e + "";
-      } finally {
-        channelMessageStatus[channelId] = false;
-      }
+      } 
     });
 }

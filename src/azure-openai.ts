@@ -29,6 +29,7 @@ export async function apply(ctx: Context, options: Options) {
     headers: {
       "api-key": accessKey,
     },
+    timeout: 5 * 60 * 1000
   });
   ctx
     .command("chat <message:text>", "Talk with chatgpt")
@@ -70,10 +71,10 @@ export async function apply(ctx: Context, options: Options) {
       if (!enabled) {
         return "兔兔的脑细胞烧完了，聊天功能暂停中...";
       }
-      const chatStatus = channelMessageStatus[channelId];
-      if (chatStatus) {
-        return "还在回复上一条消息";
-      }
+      // const chatStatus = channelMessageStatus[channelId];
+      // if (chatStatus) {
+      //   return "还在回复上一条消息";
+      // }
       if (!message) {
         return "你什么都没说呢";
       }
@@ -103,6 +104,7 @@ export async function apply(ctx: Context, options: Options) {
           const content = responseMessage?.content as string;
           return content?.trim() ?? responseMessage ?? response.data?.choices ?? response.data;
         } catch (e) {
+          console.log(e);
           return e + "";
         }
       };
