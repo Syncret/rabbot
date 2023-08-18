@@ -1,9 +1,11 @@
 import axios, { AxiosInstance } from "axios";
 import { Context } from "koishi-core";
+import { banWords } from "../rabbot.config";
 
 export interface Options {
   resourceName: string;
   accessKey: string;
+  banWords: string[];
 }
 const defaultCompletionParams = {
   temperature: 0.8,
@@ -110,8 +112,16 @@ export async function apply(ctx: Context, options: Options) {
       };
       const messagePromise = sendMessage();
       currentJobPromise = messagePromise;
-      const result = await messagePromise;
+      let result = await messagePromise;
       channelMessageStatus[channelId] = false;
+      if(result){
+        for(const banWord of banWords){
+          if(result.toLowerCase().includes(banWord.toLowerCase())){
+            result=`检测到危险词语，不能说呢..`;
+            break;
+          }
+        }
+      }
       return result;
     });
 }
