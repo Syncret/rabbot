@@ -3,6 +3,7 @@ plugins:
     server:dg7llu:
       port: 5140
       maxPort: 5149
+      host: 0.0.0.0
     ~server-satori:fqlal6: {}
     ~server-temp:35djr6: {}
   group:basic:
@@ -21,7 +22,9 @@ plugins:
     analytics:yec8ee: {}
     android:z96i0r:
       $if: env.KOISHI_AGENT?.includes('Android')
-    ~auth:0za1rw: {}
+    auth:0za1rw:
+      admin:
+        password: samplepw
     config:j7ll7z: {}
     console:yzb9v7:
       open: true
@@ -70,5 +73,5 @@ plugins:
     hmr:8lo134:
       root: .
   adapter-onebot:07h386:
-    selfId:
-    token:
+    selfId: '0000000'
+    token: sampletoken
