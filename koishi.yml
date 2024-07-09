@@ -69,3 +69,6 @@ plugins:
     $if: env.NODE_ENV === 'development'
     hmr:8lo134:
       root: .
+  adapter-onebot:07h386:
+    selfId:
+    token:
