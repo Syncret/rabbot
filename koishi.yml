@@ -7,12 +7,12 @@ plugins:
     ~server-satori:fqlal6: {}
     ~server-temp:35djr6: {}
   group:basic:
-    ~admin:jk6kwv: {}
+    admin:jk6kwv: {}
     ~bind:lgmzsj: {}
     commands:76uds9: {}
     help:sro3ci: {}
     http:ilbr9q: {}
-    ~inspect:card7x: {}
+    inspect:card7x: {}
     locales:9pgexd: {}
     proxy-agent:dpdkh0: {}
     rate-limit:ekm2w8: {}
@@ -24,7 +24,7 @@ plugins:
       $if: env.KOISHI_AGENT?.includes('Android')
     auth:0za1rw:
       admin:
-        password: samplepw
+        password: ${{ env.ADMIN_PASSWORD }}
     config:j7ll7z: {}
     console:yzb9v7:
       open: true
@@ -73,5 +73,22 @@ plugins:
     hmr:8lo134:
       root: .
   adapter-onebot:07h386:
-    selfId: '0000000'
-    token: sampletoken
+    selfId: ${{ env.QQ_ID }}
+    token: ${{ env.ONEBOT_TOKEN }}
+  echo:isyinu: {}
+  ~puppeteer:xhzsjw: {}
+  rabbit-repeater:lcfwwl:
+    $filter:
+      $in:
+        - $: guildId
+        - - '546670563'
+          - '180726738'
+          - '783074045'
+  waifu:35q9je:
+    onlyActiveUser: true
+    forceMarry: true
+  cache-database:pp9o4w: {}
+prefix:
+  - .
+nickname:
+  - 兔兔
