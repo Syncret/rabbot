@@ -101,7 +101,7 @@ function apply(ctx: Context) {
             let gate = defaultOpenGatePeople;
             let msg = "";
             if (options.size) {
-                [width, height] = options.size.split(/x|*/).map((l) => Number(l));
+                [width, height] = options.size.split(/x|\*/).map((l) => Number(l));
                 msg += assert(typeof width === "number" && width > 0 && width < 13, "输入宽度不合法", true);
                 msg += assert(typeof height === "number" && height > 0 && height < 13, "输入长度不合法", true);
             }

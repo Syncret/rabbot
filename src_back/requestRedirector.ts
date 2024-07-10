@@ -19,7 +19,7 @@ const pendingFriendRequests = new Map<string, RequestInfo>();
 const pendingGroupRequests = new Map<string, RequestInfo>();
 
 type RequestType = "friend-request" | "group-request";
-type RequestSession = Session<never, never, "onebot", RequestType>;
+type RequestSession = Session<never, never, "onebot", any>;
 interface RequestHandlerInfo {
   requestType: RequestType;
   pendingRequest: Map<string, RequestInfo>;
@@ -77,8 +77,7 @@ const groupInviteRequestHandlerInfo: RequestHandlerInfo = {
     session.bot.getGroup(session.groupId!).then((info) => {
       session.bot.sendPrivateMessage(
         admin,
-        `${session.groupId} Info\nGroupName:${
-          info.groupName
+        `${session.groupId} Info\nGroupName:${info.groupName
         }\n; ${JSON.stringify(info)}`
       );
       const cacheInfo = pendingGroupRequests.get(session.groupId!);
@@ -100,7 +99,7 @@ function createReceiver(
 ) {
   ctx.on(
     handlerInfo.requestType,
-    async (session: Session<never, never, "onebot", RequestType>) => {
+    async (session: RequestSession) => {
       const id = handlerInfo.getId(session);
       if (admin) {
         handlerInfo.sendRequestInfoToAdmin(admin, session);
@@ -111,8 +110,7 @@ function createReceiver(
           .then(() => {
             session.bot.sendPrivateMessage(
               admin,
-              `Auto ${autoAccept ? "accepted" : "reject"} ${
-                handlerInfo.requestType
+              `Auto ${autoAccept ? "accepted" : "reject"} ${handlerInfo.requestType
               }\nId:${id}`
             );
           });
@@ -136,7 +134,8 @@ function createCommand(
   return parentCommand
     .subcommand(
       handlerInfo.commandName,
-      `handle ${handlerInfo.requestType} requests`
+      `handle ${handlerInfo.requestType} requests`,
+      { authority: 3 }
     )
     .option("list", "-l") // list all requests
     .option("all", "-a") // apply to all pending requests
@@ -226,12 +225,6 @@ export function apply(ctx: Context, options: Options) {
   });
   ctx.on("friend-deleted", (session) => {
     session.bot.sendPrivateMessage(admin, `${JSON.stringify(session)}`);
-  });
-  ctx.on("group-member-deleted", (session) => {
-    session.bot.sendGroupMessage(
-      session.groupId!,
-      `${session.username} 离开了我们...`
-    );
   });
 
   const requestCommand = ctx.command(

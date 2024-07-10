@@ -5,7 +5,7 @@ export type StockBaseInfo = {
     initialPrice: number,
     minPrice: number,
     maxPrice?: number,
-    range: number
+    range: number | [number, number] // [down rage, up range]
 }
 
 export const stockName2IdMap: Record<string, string> = {}
@@ -22,7 +22,7 @@ export function createStockBaseInfo(id: string, info?: string | Partial<StockBas
         name: id,
         unit: "kg",
         initialPrice: 100,
-        minPrice: 1,
+        minPrice: 13,
         maxPrice: 100000,
         range: 0.2,
         ...info
@@ -49,5 +49,11 @@ export const defaultStocks: Record<string, Partial<StockBaseInfo>> = {
         unit: "斤",
         initialPrice: 500,
         range: 0.15
+    },
+    watermelon: {
+        name: "西瓜",
+        unit: "个",
+        initialPrice: 400,
+        range: 0.18
     },
 }

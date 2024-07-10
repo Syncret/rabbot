@@ -120,6 +120,14 @@ export function assert(
   }
 }
 
+export function formatString(msg: string, ...values: Array<string | number>): string {
+  values.forEach((v, index) => {
+      const reg = new RegExp(`\\{${index}\\}`, "g")
+      msg = msg.replace(reg, v + "");
+  });
+  return msg;
+}
+
 export class FixedSizeRecord<T> {
   private _record: Record<string, T> = {};
   private _keyArray: string[] = [];

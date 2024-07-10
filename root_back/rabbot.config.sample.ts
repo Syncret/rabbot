@@ -7,3 +7,6 @@ export const config = {
   sqlPassword: "",
   server: "",
 };
+
+export const banWords =[
+]
