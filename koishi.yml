@@ -7,6 +7,7 @@ plugins:
     ~server-satori:fqlal6: {}
     ~server-temp:35djr6: {}
   group:basic:
+    $collapsed: true
     admin:jk6kwv: {}
     ~bind:lgmzsj: {}
     commands:76uds9: {}
@@ -18,6 +19,7 @@ plugins:
     rate-limit:ekm2w8: {}
     telemetry:jzyspa: {}
   group:console:
+    $collapsed: true
     actions:2amkkn: {}
     analytics:yec8ee: {}
     android:z96i0r:
@@ -53,6 +55,7 @@ plugins:
       path: data/koishi.db
     assets-local:m4klai: {}
   group:adapter:
+    $collapsed: true
     ~adapter-dingtalk:ce0wcj: {}
     ~adapter-discord:q8fesp: {}
     ~adapter-kook:bg9t65: {}
@@ -76,18 +79,18 @@ plugins:
     selfId: ${{ env.QQ_ID }}
     token: ${{ env.ONEBOT_TOKEN }}
   echo:isyinu: {}
-  ~puppeteer:xhzsjw: {}
+  puppeteer:xhzsjw: {}
   rabbit-repeater:lcfwwl:
-    $filter:
-      $in:
-        - $: guildId
-        - - '546670563'
-          - '180726738'
-          - '783074045'
+    enabledGuilds: ${{ env.REPEAT_GUILD_IDS }}
   waifu:35q9je:
     onlyActiveUser: true
     forceMarry: true
   cache-database:pp9o4w: {}
+  screenshot:m9juod:
+    $filter:
+      $eq:
+        - $: isDirect
+        - true
 prefix:
   - .
 nickname:
