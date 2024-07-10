@@ -1,0 +1,97 @@
+plugins:
+  group:server:
+    server:dg7llu:
+      port: 5140
+      maxPort: 5149
+      host: 0.0.0.0
+    ~server-satori:fqlal6: {}
+    ~server-temp:35djr6: {}
+  group:basic:
+    $collapsed: true
+    admin:jk6kwv: {}
+    ~bind:lgmzsj: {}
+    commands:76uds9: {}
+    help:sro3ci: {}
+    http:ilbr9q: {}
+    inspect:card7x: {}
+    locales:9pgexd: {}
+    proxy-agent:dpdkh0: {}
+    rate-limit:ekm2w8: {}
+    telemetry:jzyspa: {}
+  group:console:
+    $collapsed: true
+    actions:2amkkn: {}
+    analytics:yec8ee: {}
+    android:z96i0r:
+      $if: env.KOISHI_AGENT?.includes('Android')
+    auth:0za1rw:
+      admin:
+        password: ${{ env.ADMIN_PASSWORD }}
+    config:j7ll7z: {}
+    console:yzb9v7:
+      open: true
+    dataview:8420yq: {}
+    desktop:p8fysb:
+      $if: env.KOISHI_AGENT?.includes('Desktop')
+    explorer:9ifvb9: {}
+    logger:nl15x8: {}
+    insight:si9xkm: {}
+    market:64vn4b:
+      search:
+        endpoint: https://registry.koishi.chat/index.json
+    notifier:vx9n4a: {}
+    oobe:ka7x93: {}
+    sandbox:elu7nf: {}
+    status:ie4tju: {}
+    theme-vanilla:4jx7yq: {}
+  group:storage:
+    ~database-mongo:keskpj:
+      database: koishi
+    ~database-mysql:2b856h:
+      database: koishi
+    ~database-postgres:5hf0wg:
+      database: koishi
+    database-sqlite:4scfjd:
+      path: data/koishi.db
+    assets-local:m4klai: {}
+  group:adapter:
+    $collapsed: true
+    ~adapter-dingtalk:ce0wcj: {}
+    ~adapter-discord:q8fesp: {}
+    ~adapter-kook:bg9t65: {}
+    ~adapter-lark:ndpxfd: {}
+    ~adapter-line:agjhck: {}
+    ~adapter-mail:ikfv5r: {}
+    ~adapter-matrix:75o4fv: {}
+    ~adapter-qq:izbo9s: {}
+    ~adapter-satori:dak3wm: {}
+    ~adapter-slack:jyqyhd: {}
+    ~adapter-telegram:olo3pf: {}
+    ~adapter-wechat-official:ol0tdg: {}
+    ~adapter-wecom:448hi4: {}
+    ~adapter-whatsapp:dixlbu: {}
+    ~adapter-zulip:g34exj: {}
+  group:develop:
+    $if: env.NODE_ENV === 'development'
+    hmr:8lo134:
+      root: .
+  adapter-onebot:07h386:
+    selfId: ${{ env.QQ_ID }}
+    token: ${{ env.ONEBOT_TOKEN }}
+  echo:isyinu: {}
+  puppeteer:xhzsjw: {}
+  rabbit-repeater:lcfwwl:
+    enabledGuilds: ${{ env.REPEAT_GUILD_IDS }}
+  waifu:35q9je:
+    onlyActiveUser: true
+    forceMarry: true
+  cache-database:pp9o4w: {}
+  screenshot:m9juod:
+    $filter:
+      $eq:
+        - $: isDirect
+        - true
+prefix:
+  - .
+nickname:
+  - 兔兔

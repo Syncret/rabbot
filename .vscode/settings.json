@@ -1,9 +1,15 @@
 {
-    "cSpell.words": [
-        "buyin",
-        "lastprice",
-        "stockinfo",
-        "subcommand",
-        "userstock"
-    ]
+  "git.repositoryScanIgnoredFolders": [
+    "node_modules",
+    ".yarn",
+  ],
+  "git.repositoryScanMaxDepth": 10,
+  "git.autoRepositoryDetection": "subFolders",
+  "cSpell.words": [
+      "buyin",
+      "lastprice",
+      "stockinfo",
+      "subcommand",
+      "userstock"
+  ]
 }
