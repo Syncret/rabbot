@@ -236,7 +236,6 @@ async function ban(session: Session, userId: string, time: number): Promise<void
 }
 
 export function apply(ctx: Context, config: Config = {}) {
-  console.log(config);
   ctx = ctx.guild();
   const enabledGuilds = (config.enabledGuilds ?? "").split(",").map((i) => i.trim());
   let repeaterConfig = getRepeaterConfig(enabledGuilds);

@@ -91,6 +91,11 @@ plugins:
       $eq:
         - $: isDirect
         - true
+  azure-openai:sn0z76:
+    chatDeploymentUrl: ${{ env.AZURE_OPENAI_CHATMODEL }}
+    accessKey: ${{ env.AZURE_OPENAI_ACCESSKEY }}
+    banWordString: ${{ env.AZURE_OPENAI_CHAT_BANWORDS }}
+    defaultSystemMessage: ${{ env.AZURE_OPENAI_CHAT_DEFAULT_SYSTEM_MESSAGE }}
 prefix:
   - .
 nickname:

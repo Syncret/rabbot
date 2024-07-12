@@ -1,0 +1,24 @@
+{
+  "name": "koishi-plugin-azure-openai",
+  "description": "Provide support for Azure OpenAI",
+  "version": "0.0.1",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib",
+    "dist"
+  ],
+  "license": "MIT",
+  "scripts": {},
+  "keywords": [
+    "chatbot",
+    "koishi",
+    "plugin"
+  ],
+  "peerDependencies": {
+    "koishi": "^4.17.9"
+  },
+  "dependencies": {
+    "axios": "^1.7.2"
+  }
+}
