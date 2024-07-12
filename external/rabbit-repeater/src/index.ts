@@ -25,7 +25,7 @@ type StateCallback = (state: RepeatState, session: Session) => void | string
 const banMessages = [
   `复读机失控了！兔兔只来得及逮捕最后一个复读机！那个人就是...{0}! `,
   `每个复读机都觉得自己不会被捉，今天就由兔兔来教会{0}世界的残酷！`,
-  `{0}复读机从历史中学到的唯一教训,就是复读机无法从历史中学到任何教训...(兔兔叹气`,
+  `{0} 复读机从历史中学到的唯一教训,就是复读机无法从历史中学到任何教训...(兔兔叹气`,
   (message: string, id: string) => {
     return `${message.substring(0, 3)}...你以为兔兔也要复读吗？不！${segment.at(id)}你被逮捕了！`;
   }
@@ -74,7 +74,7 @@ export function getRepeaterConfig(enableGuilds: string[] = []) {
       }
       const userId = session.userId!;
       if (state.users[userId] > 1) {
-        return segment.at(userId) + "兔兔出警，不许重复复读！";
+        return segment.at(userId) + " 兔兔出警，不许重复复读！";
       }
       if (state.times === 2) {
         const firstSpeaker = Object.keys(state.users).filter((u) => u !== userId)[0];
@@ -141,7 +141,7 @@ export function getRepeaterConfig(enableGuilds: string[] = []) {
         if (deductCount > 0) {
           msg += `作为奖励去掉你的${deductCount}次逮捕记录，目前的逮捕记录是${banCount}次。`;
         }
-        msg += `${segment.at(userId)}\n`;
+        msg += `${segment.at(userId)} `;
         msg += `让我们送一名被举报的复读机进小黑屋吧！就你了，${segment.at(newBanUser)}！`;
         return msg;
       }
@@ -215,7 +215,7 @@ async function ban(session: Session, userId: string, time: number): Promise<void
           session.sendQueued(`怎么又是你！唉看你也怪可怜的，这次兔兔就大发慈悲地放过你吧~`);
           return;
         }
-        session.bot.muteGuildMember(guildId, userId, banTimeInMinute * 60);
+        session.onebot.setGroupBanAsync(guildId, userId, banTimeInMinute * 60);
         if (banCount > 0 && Random.bool(0.3)) {
           session.sendQueued(`(兔兔低语: 举报5人以上复读现场可以减轻刑罚哦~)`);
         }
