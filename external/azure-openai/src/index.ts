@@ -110,7 +110,7 @@ export async function apply(ctx: Context, options: Config) {
       const sendMessage = async () => {
         try {
           const messages = [{ role: "user", content: message }];
-          const systemInstruction = channelSystemCache[channelId] ?? "" + defaultSystemMessage;
+          const systemInstruction = channelSystemCache[channelId] ?? defaultSystemMessage;
           if (systemInstruction) {
             messages.unshift({ role: "system", content: systemInstruction });
           }

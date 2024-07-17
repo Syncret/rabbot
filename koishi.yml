@@ -96,7 +96,15 @@ plugins:
     accessKey: ${{ env.AZURE_OPENAI_ACCESSKEY }}
     banWordString: ${{ env.AZURE_OPENAI_CHAT_BANWORDS }}
     defaultSystemMessage: ${{ env.AZURE_OPENAI_CHAT_DEFAULT_SYSTEM_MESSAGE }}
+  image-search:pavk0v: {}
+  '@rinkuto/pixiv:jq4iqu':
+    recallTime: 0
+  ~rr2:xczt5c:
+    output: minimal
 prefix:
   - .
 nickname:
   - 兔兔
+delay:
+  character: 20
+  message: 1000
