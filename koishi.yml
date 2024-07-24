@@ -92,8 +92,9 @@ plugins:
         - $: isDirect
         - true
   azure-openai:sn0z76:
-    chatDeploymentUrl: ${{ env.AZURE_OPENAI_CHATMODEL }}
-    accessKey: ${{ env.AZURE_OPENAI_ACCESSKEY }}
+    endpoint: ${{ env.AZURE_OPENAI_ENDPOINT }}
+    deployment: ${{ env.AZURE_OPENAI_DEPLOYMENT }}
+    apiKey: ${{ env.AZURE_OPENAI_APIKEY }}
     banWordString: ${{ env.AZURE_OPENAI_CHAT_BANWORDS }}
     defaultSystemMessage: ${{ env.AZURE_OPENAI_CHAT_DEFAULT_SYSTEM_MESSAGE }}
   image-search:pavk0v: {}
