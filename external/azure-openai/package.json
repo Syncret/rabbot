@@ -1,6 +1,6 @@
 {
   "name": "koishi-plugin-azure-openai",
-  "description": "Provide support for Azure OpenAI",
+  "description": "A Koishi plugin to provide support for Azure OpenAI",
   "version": "0.0.1",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -8,6 +8,13 @@
     "lib",
     "dist"
   ],
+  "contributors": [
+    "Syncret <syncret@outlook.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/syncret/koishi-plugin-azure-openai.git"
+  },
   "license": "MIT",
   "scripts": {},
   "keywords": [
@@ -24,6 +31,9 @@
     "openai": "^4.53.0"
   },
   "koishi": {
+    "description": {
+      "zh": "提供基于Azure OpenAI的聊天服务与指令(可选), 需要有Azure OpenAI账号。"
+    },
     "service": {
       "implements": [
         "azureOpenAI"

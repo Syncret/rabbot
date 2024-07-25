@@ -8,15 +8,6 @@ declare module 'koishi' {
     azureOpenAI: AzureOpenAIPlugin
   }
 }
-
-const defaultCompletionParams = {
-  temperature: 0.8,
-  top_p: 1.0,
-  presence_penalty: 1.0,
-  frequency_penalty: 0,
-  max_tokens: 800,
-}
-
 class AzureOpenAIPlugin extends Service {
   constructor(ctx: Context, private _options: AzureOpenAIPlugin.Config) {
     super(ctx, 'azureOpenAI');
@@ -28,7 +19,7 @@ class AzureOpenAIPlugin extends Service {
       this._options.endpoint = "https://" + this._options.endpoint;
     }
 
-    let { endpoint, apiKey, deployment, banWordString = "", defaultSystemMessage = "" } = this._options;
+    let { banWordString = "", defaultSystemMessage = "", enableCommands } = this._options;
     let enabled = true;
     let queueAllMessages = true;
     let currentJobPromise: Promise<string> | undefined;
@@ -36,31 +27,14 @@ class AzureOpenAIPlugin extends Service {
     let channelSystemCache: Record<string, string | undefined> = {};
     const banWords = banWordString.split(",").map(i => i.trim());
     const channelMessageStatus: Record<string, boolean> = {};
-    /**
-    if (!chatDeploymentUrl.startsWith("https://")) {
-      chatDeploymentUrl = `https://${chatDeploymentUrl}`;
-    }
-    if (!chatDeploymentUrl.endsWith("/")) {
-      chatDeploymentUrl += "/";
-    }
-    const axiosClient: AxiosInstance = axios.create({
-      baseURL: `${chatDeploymentUrl}chat/completions`,
-      params: {
-        "api-version": "2024-04-01-preview" ,
-      },
-      headers: {
-        "api-key": apiKey,
-      },
-      timeout: 5 * 60 * 1000
-    });
-     */
+    if (!enableCommands) { return; }
     ctx
       .command("chat <message:text>", "Talk with chatgpt")
-      .option("new", "-n Create a new session")
-      .option("clean", "-c Clean all conversations", { authority: 3 })
+      .option("new", "-n New conversation session (clean conversation history) (TODO: Long conversation not implemented)")
+      .option("clean", "-c Clean conversations in all channels (TODO: Long conversation not not implemented)", { authority: 3 })
       .option("on", "-o Turn on/off chat", { authority: 3 })
-      .option("queue", "-q Queue messages of all channels", { authority: 3 })
-      .option("system", "-s Set system message", { authority: 3 })
+      .option("queue", "-q Send message in queue or send concurrently", { authority: 3 })
+      .option("system", "-s Set system message in current channel", { authority: 3 })
       .action(async ({ session, options = {} }, message) => {
         const channelId = session?.channelId;
         if (!channelId) {
@@ -68,38 +42,34 @@ class AzureOpenAIPlugin extends Service {
         }
         if (options.on) {
           enabled = !enabled;
-          return `聊天功能已${enabled ? "开启" : "关闭"}`;
+          return `Chat ${enabled ? "enabled" : "disabled"}`;
         }
         if (options.queue) {
           queueAllMessages = !queueAllMessages;
-          return `消息队列已${queueAllMessages ? "开启" : "关闭"}`;
+          return `Message queue ${queueAllMessages ? "enabled" : "disabled"}`;
         }
         if (options.clean) {
           channelMessageCache = {};
-          return "所有对话历史已清理";
+          return "Cleaned all conversations";
         }
         if (options.new) {
           delete channelMessageCache[channelId];
           if (!message) {
-            return "对话历史已清理";
+            return "New session started";
           }
         }
         if (message?.length > 1500) { // check this before you use message in system or user
-          return "消息太长啦";
+          return "Message too long";
         }
         if (options.system) {
           channelSystemCache[channelId] = message || "";
-          return `唔...我...${channelSystemCache[channelId]?.replace("你", "我")}...`;
+          return `唔...我...${channelSystemCache[channelId]?.replace("你", "我").replace("请", "")}...`;
         }
         if (!enabled) {
-          return "兔兔的脑细胞烧完了，聊天功能暂停中...";
+          return "Sleeping...zzz";
         }
-        // const chatStatus = channelMessageStatus[channelId];
-        // if (chatStatus) {
-        //   return "还在回复上一条消息";
-        // }
         if (!message) {
-          return "你什么都没说呢";
+          return "";
         }
         channelMessageStatus[channelId] = true;
         if (queueAllMessages && currentJobPromise != null) {
@@ -107,9 +77,6 @@ class AzureOpenAIPlugin extends Service {
           while (lastAwaitJob !== currentJobPromise) {
             lastAwaitJob = currentJobPromise;
             await currentJobPromise;
-            if (lastAwaitJob !== currentJobPromise) {
-              console.log(`${channelId} waits again`);
-            }
           }
         }
         const sendMessage = async () => {
@@ -121,7 +88,6 @@ class AzureOpenAIPlugin extends Service {
             }
             return await this.chatCompletion(messages);
           } catch (e) {
-            console.log(e);
             return e + "";
           }
         };
@@ -144,15 +110,19 @@ class AzureOpenAIPlugin extends Service {
    * Azure OpenAI Dalle service has 2 concurrent requests limit, so all requests will be queued by default
    */
   public async chatCompletion(messages: ChatCompletionMessageParam[]) {
-    let { endpoint, apiKey, deployment, banWordString = "", defaultSystemMessage = "" } = this._options;
+    let { endpoint, apiKey, deployment } = this._options;
     const client = new AzureOpenAI({ apiKey, endpoint, deployment, apiVersion: "2024-05-01-preview" });
 
     try {
       const response = await client.chat.completions.create({
         messages,
         model: "",
-        max_tokens: 128,
+        max_tokens: 800,
         stream: false,
+        // temperature: 0.8,
+        // top_p: 1.0,
+        // presence_penalty: 1.0,
+        // frequency_penalty: 0,
       });
       const responseMessage = response.choices?.[0]?.message;
       const content = responseMessage?.content;
@@ -173,8 +143,8 @@ class AzureOpenAIPlugin extends Service {
   /**
    * Azure OpenAI Dalle service has 2 concurrent requests limit, so all requests will be queued by default
    */
-  public dalle() {
-
+  public async dalle() {
+    // TODO
   }
 }
 
@@ -183,6 +153,8 @@ namespace AzureOpenAIPlugin {
     endpoint: string;
     apiKey: string;
     deployment: string;
+    enableImageInChat: boolean;
+    enableCommands: boolean;
     banWordString?: string;
     defaultSystemMessage?: string;
   }
@@ -191,8 +163,10 @@ namespace AzureOpenAIPlugin {
     endpoint: Schema.string().required().description("Azure OpenAI endpoint ({name}.openai.azure.com)"),
     apiKey: Schema.string().required().description("Azure OpenAI api key"),
     deployment: Schema.string().required().description("Deployment name"),
-    banWordString: Schema.string().description("Sensitive words that you don't want to respond"),
-    defaultSystemMessage: Schema.string().description("Default system message"),
+    enableImageInChat: Schema.boolean().default(false).description("Support image in chat (Need be a gpt-4o model) (Not tested in all adapter"),
+    enableCommands: Schema.boolean().default(true).description("Enable commands (chat), if disabled, the plugin will only provide service"),
+    banWordString: Schema.string().description("Sensitive words that you don't want to send to prevent your bot from being banned, sperated by ,"),
+    defaultSystemMessage: Schema.string().description("Default system message for chat completion"),
   })
 }
 
